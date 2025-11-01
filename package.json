@@ -1,12 +1,13 @@
 {
   "name": "voedseljournaal-app",
-  "version": "3.4.0",
-  "description": "Voedseljournaal - Modulaire versie met single-file deployment",
+  "version": "1.0.0",
+  "description": "BiteBudget - Progressive Web App voor food tracking met OpenFoodFacts integratie",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node -e \"require('fs').renameSync('dist/index.html', 'dist/bitebudget.html')\"",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "chart.js": "^4.5.1",

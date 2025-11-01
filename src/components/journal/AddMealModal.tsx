@@ -23,7 +23,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
   const [productGrams, setProductGrams] = useState<Record<string, number>>({});
   const [productSearch, setProductSearch] = useState('');
   const [manualMeal, setManualMeal] = useState({
-    time: '', name: '', calories: '', protein: '', fat: '', saturatedFat: '', fiber: '', sodium: ''
+    time: '', name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: ''
   });
   const [mealJson, setMealJson] = useState('');
 
@@ -35,7 +35,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     setSelectedProducts([]);
     setProductGrams({});
     setProductSearch('');
-    setManualMeal({ time: '', name: '', calories: '', protein: '', fat: '', saturatedFat: '', fiber: '', sodium: '' });
+    setManualMeal({ time: '', name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: '' });
     setMealJson('');
     onClose();
   };
@@ -44,7 +44,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     if (selectedProducts.length === 0) return;
 
     const time = mealTime || getCurrentTime();
-    let totals = { calories: 0, protein: 0, fat: 0, saturatedFat: 0, fiber: 0, sodium: 0 };
+    let totals = { calories: 0, protein: 0, carbohydrates: 0, sugars: 0, fat: 0, saturatedFat: 0, fiber: 0, sodium: 0 };
     const productDetails: Array<{ name: string; grams: number }> = [];
 
     selectedProducts.forEach(prodName => {
@@ -55,6 +55,8 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
       totals.calories += nutrition.calories;
       totals.protein += nutrition.protein;
+      totals.carbohydrates += nutrition.carbohydrates;
+      totals.sugars += nutrition.sugars;
       totals.fat += nutrition.fat;
       totals.saturatedFat += nutrition.saturatedFat;
       totals.fiber += nutrition.fiber;
@@ -81,6 +83,8 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       name: manualMeal.name,
       calories: parseInt(manualMeal.calories) || 0,
       protein: parseFloat(manualMeal.protein) || 0,
+      carbohydrates: parseFloat(manualMeal.carbohydrates) || 0,
+      sugars: parseFloat(manualMeal.sugars) || 0,
       fat: parseFloat(manualMeal.fat) || 0,
       saturatedFat: parseFloat(manualMeal.saturatedFat) || 0,
       fiber: parseFloat(manualMeal.fiber) || 0,
@@ -98,6 +102,8 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         name: data.name || 'Geïmporteerde maaltijd',
         calories: parseInt(data.calories) || 0,
         protein: parseFloat(data.protein) || 0,
+        carbohydrates: parseFloat(data.carbohydrates) || 0,
+        sugars: parseFloat(data.sugars) || 0,
         fat: parseFloat(data.fat) || 0,
         saturatedFat: parseFloat(data.saturatedFat) || 0,
         fiber: parseFloat(data.fiber) || 0,
@@ -188,8 +194,8 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
               <div><label className="block text-sm font-medium mb-1">Tijd</label><input type="time" value={manualMeal.time} onChange={(e) => setManualMeal({...manualMeal, time: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
               <div><label className="block text-sm font-medium mb-1">Naam</label><input type="text" value={manualMeal.name} onChange={(e) => setManualMeal({...manualMeal, name: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
               <div className="grid grid-cols-2 gap-3">
-                {(['calories', 'protein', 'fat', 'saturatedFat', 'fiber', 'sodium'] as const).map(field => (
-                  <div key={field}><label className="block text-xs font-medium mb-1">{field === 'calories' ? 'Calorieën' : field === 'protein' ? 'Eiwit (g)' : field === 'fat' ? 'Vet (g)' : field === 'saturatedFat' ? 'Verz. vet (g)' : field === 'fiber' ? 'Vezels (g)' : 'Natrium (mg)'}</label><input type="number" step={field === 'calories' || field === 'sodium' ? '1' : '0.1'} value={manualMeal[field]} onChange={(e) => setManualMeal({...manualMeal, [field]: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
+                {(['calories', 'protein', 'carbohydrates', 'sugars', 'fat', 'saturatedFat', 'fiber', 'sodium'] as const).map(field => (
+                  <div key={field}><label className="block text-xs font-medium mb-1">{field === 'calories' ? 'Calorieën' : field === 'protein' ? 'Eiwit (g)' : field === 'carbohydrates' ? 'Koolh (g)' : field === 'sugars' ? 'Suikers (g)' : field === 'fat' ? 'Vet (g)' : field === 'saturatedFat' ? 'Verz. vet (g)' : field === 'fiber' ? 'Vezels (g)' : 'Natrium (mg)'}</label><input type="number" step={field === 'calories' || field === 'sodium' ? '1' : '0.1'} value={manualMeal[field]} onChange={(e) => setManualMeal({...manualMeal, [field]: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
                 ))}
               </div>
               <button onClick={handleAddManually} className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">Toevoegen</button>

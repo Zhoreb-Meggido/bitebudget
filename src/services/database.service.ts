@@ -66,6 +66,36 @@ export class VoedseljournaalDB extends Dexie {
       });
       console.log('✅ Migrated products to v5 (added source field)');
     });
+
+    // Version 6 - Add carbohydrates and sugars to products and entries
+    this.version(6).stores({
+      entries: 'id, date, created_at, updated_at',
+      products: 'id, name, ean, source, created_at, updated_at',
+      weights: 'id, date, created_at',
+      settings: 'key'
+    }).upgrade(async tx => {
+      // Migrate existing products to add carbs and sugars fields
+      await tx.table('products').toCollection().modify(product => {
+        if (product.carbohydrates === undefined) {
+          product.carbohydrates = 0;
+        }
+        if (product.sugars === undefined) {
+          product.sugars = 0;
+        }
+      });
+      console.log('✅ Migrated products to v6 (added carbohydrates and sugars)');
+
+      // Migrate existing entries to add carbs and sugars fields
+      await tx.table('entries').toCollection().modify(entry => {
+        if (entry.carbohydrates === undefined) {
+          entry.carbohydrates = 0;
+        }
+        if (entry.sugars === undefined) {
+          entry.sugars = 0;
+        }
+      });
+      console.log('✅ Migrated entries to v6 (added carbohydrates and sugars)');
+    });
   }
 }
 

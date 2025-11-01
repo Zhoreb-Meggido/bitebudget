@@ -116,6 +116,8 @@ class OpenFoodFactsService {
       // Extract nutrition data (with fallbacks to 0)
       const calories = nutriments['energy-kcal_100g'] || 0;
       const protein = nutriments.proteins_100g || 0;
+      const carbohydrates = nutriments.carbohydrates_100g || 0;
+      const sugars = nutriments.sugars_100g || 0;
       const fat = nutriments.fat_100g || 0;
       const saturatedFat = nutriments['saturated-fat_100g'] || 0;
       const fiber = nutriments.fiber_100g || 0;
@@ -136,6 +138,8 @@ class OpenFoodFactsService {
         name: offProduct.product_name,
         calories,
         protein,
+        carbohydrates,
+        sugars,
         fat,
         saturatedFat,
         fiber,

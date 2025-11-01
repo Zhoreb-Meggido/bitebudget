@@ -36,12 +36,16 @@ export default defineConfig({
         inlineDynamicImports: true,
         // Single output file
         manualChunks: undefined
-      }
+      },
+      // Copy PWA assets to dist
+      external: []
     },
     // Minify voor kleinere output
     minify: 'esbuild',
     // Source maps voor development (optioneel)
-    sourcemap: false
+    sourcemap: false,
+    // Copy public assets (manifest, service worker, icons)
+    copyPublicDir: true
   },
   // Server configuratie voor development
   server: {

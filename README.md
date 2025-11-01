@@ -1,8 +1,8 @@
-# BiteBudget (Voedseljournaal) v0.9.0
+# BiteBudget (Voedseljournaal) v1.0.0
 
-**Modern React + TypeScript food tracking app met single-file deployment**
+**Progressive Web App (PWA) voor food tracking - werkt volledig offline!**
 
-Standalone voedingstracking app voor desktop en mobile browsers - geen server vereist, alle data lokaal.
+Modern React + TypeScript food tracking app met OpenFoodFacts integratie. Installeerbaar als native app op desktop en mobile - geen server vereist, alle data lokaal.
 
 ---
 
@@ -18,12 +18,33 @@ npm run dev
 ### Production Build
 ```bash
 npm run build
-# Output: dist/bitebudget.html (single file - 1.26 MB, alles inline)
+# Output:
+#   - dist/bitebudget.html (single file met inline assets)
+#   - dist/manifest.json (PWA manifest)
+#   - dist/sw.js (service worker voor offline support)
+#   - dist/icon-*.png (app icons)
 ```
+
+### PWA Deployment
+1. Host de bestanden uit `dist/` op een HTTPS server (GitHub Pages, Netlify, Vercel, etc.)
+2. Open de URL op je mobiel/desktop
+3. Browser vraagt: "Install BiteBudget?" → Klik "Install"
+4. App werkt nu volledig offline met camera toegang!
 
 ---
 
-## ✅ v0.9.0 - Feature Complete (Huidige Versie)
+## 📱 PWA Features (v1.0.0)
+
+- ✅ **Installeerbaar** - "Add to Home Screen" op iOS/Android
+- ✅ **Offline First** - Service Worker cachet alle assets
+- ✅ **Camera Toegang** - Barcode scanner werkt in standalone mode
+- ✅ **Auto-Updates** - Nieuwe versies worden automatisch gedetecteerd
+- ✅ **Native Feel** - Standalone mode zonder browser UI
+- ✅ **App Shortcuts** - Snelkoppelingen naar Vandaag en Producten
+
+---
+
+## ✅ v1.0.0 - PWA + OpenFoodFacts (Huidige Versie)
 
 ### **Core Functionaliteit**
 - ✅ **Journaal** - Dagelijkse maaltijd tracking met nutrition cards
@@ -57,21 +78,26 @@ npm run build
 
 ---
 
-## 🔮 v1.0.0 Roadmap - OpenFoodFacts Integration
+### **v1.0.0 New Features**
 
-### **Phase 1: OpenFoodFacts Integration** (Game Changer - IN PROGRESS)
-- [ ] **Barcode Scanner**
-  - Camera access voor mobiele devices
-  - QuaggaJS of ZXing voor barcode detection
-  - Direct product lookup via EAN
-- [ ] **Text Search**
-  - OpenFoodFacts API v2 integratie
-  - Zoeken op product naam
-  - Auto-fill nutritie data
-- [ ] **Product Type Update**
-  - EAN/barcode veld toevoegen
-  - OpenFoodFacts metadata (nutri-score, foto's)
-  - Source tracking (manual/barcode/search)
+#### **OpenFoodFacts Integration** ✅
+- ✅ **Barcode Scanner** - html5-qrcode camera integratie
+- ✅ **Text Search** - OpenFoodFacts API v2 product zoeken
+- ✅ **Auto-fill** - Nutritie data automatisch invullen
+- ✅ **Product Metadata** - Nutri-score, brand, foto's
+- ✅ **Source Tracking** - Visual badges (manual/barcode/search)
+- ✅ **Carbohydrates & Sugars** - Complete macro tracking
+
+#### **Progressive Web App (PWA)** ✅
+- ✅ **Service Worker** - Offline-first caching strategie
+- ✅ **Web App Manifest** - Installeerbaar op alle platforms
+- ✅ **Standalone Mode** - Native app ervaring
+- ✅ **Auto-Updates** - Versie detectie en update prompts
+- ✅ **HTTPS Ready** - Deployment via GitHub Pages/Netlify
+
+---
+
+## 🔮 v1.1.0 Roadmap (Future)
 
 ### **Product Schema v2.0**
 ```typescript

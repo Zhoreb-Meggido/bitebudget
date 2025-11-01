@@ -22,7 +22,7 @@ interface Props {
 export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdateProduct, onDeleteProduct, onToggleFavorite, onImportJson }: Props) {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState({ name: '', calories: '', protein: '', fat: '', saturatedFat: '', fiber: '', sodium: '', favorite: false });
+  const [productForm, setProductForm] = useState({ name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: '', favorite: false });
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('favorite');
   const [jsonInput, setJsonInput] = useState('');
@@ -34,7 +34,7 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
   if (!isOpen) return null;
 
   const resetForm = () => {
-    setProductForm({ name: '', calories: '', protein: '', fat: '', saturatedFat: '', fiber: '', sodium: '', favorite: false });
+    setProductForm({ name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: '', favorite: false });
     setEditingProduct(null);
     setShowAddProduct(false);
   };
@@ -45,6 +45,8 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
       name: productForm.name,
       calories: parseFloat(productForm.calories) || 0,
       protein: parseFloat(productForm.protein) || 0,
+      carbohydrates: parseFloat(productForm.carbohydrates) || 0,
+      sugars: parseFloat(productForm.sugars) || 0,
       fat: parseFloat(productForm.fat) || 0,
       saturatedFat: parseFloat(productForm.saturatedFat) || 0,
       fiber: parseFloat(productForm.fiber) || 0,
@@ -85,6 +87,8 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
           name: product.name,
           calories: product.calories,
           protein: product.protein,
+          carbohydrates: product.carbohydrates,
+          sugars: product.sugars,
           fat: product.fat,
           saturatedFat: product.saturatedFat,
           fiber: product.fiber,
@@ -113,6 +117,8 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
       name: product.name,
       calories: product.calories,
       protein: product.protein,
+      carbohydrates: product.carbohydrates,
+      sugars: product.sugars,
       fat: product.fat,
       saturatedFat: product.saturatedFat,
       fiber: product.fiber,
@@ -188,7 +194,7 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
                     <span className="font-semibold">{p.name}</span>
                     {p.brand && <span className="text-xs text-gray-500">({p.brand})</span>}
                   </div>
-                  <div className="text-xs text-gray-600 mt-1">{p.calories} kcal • {p.protein}g eiw • {p.saturatedFat}g v.vet • {p.fiber}g vez • {p.sodium}mg natr</div>
+                  <div className="text-xs text-gray-600 mt-1">{p.calories} kcal • {p.protein}g eiw • {p.carbohydrates}g koolh • {p.sugars}g suik • {p.saturatedFat}g v.vet • {p.fiber}g vez • {p.sodium}mg natr</div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     {/* Source Badge */}
                     <span className={`text-xs px-2 py-0.5 rounded ${
@@ -228,8 +234,8 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
             <div className="space-y-3">
               <div><label className="block text-sm font-medium mb-1">Naam</label><input type="text" value={productForm.name} onChange={(e) => setProductForm({...productForm, name: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
               <div className="grid grid-cols-2 gap-3">
-                {(['calories', 'protein', 'fat', 'saturatedFat', 'fiber', 'sodium'] as const).map(field => (
-                  <div key={field}><label className="block text-xs font-medium mb-1">{field === 'calories' ? 'Cal' : field === 'protein' ? 'Eiw' : field === 'fat' ? 'Vet' : field === 'saturatedFat' ? 'V.vet' : field === 'fiber' ? 'Vez' : 'Natr'} (per 100g)</label><input type="number" step={field === 'calories' || field === 'sodium' ? '1' : '0.1'} value={productForm[field]} onChange={(e) => setProductForm({...productForm, [field]: e.target.value})} className="w-full px-2 py-2 border rounded-lg text-sm" /></div>
+                {(['calories', 'protein', 'carbohydrates', 'sugars', 'fat', 'saturatedFat', 'fiber', 'sodium'] as const).map(field => (
+                  <div key={field}><label className="block text-xs font-medium mb-1">{field === 'calories' ? 'Cal' : field === 'protein' ? 'Eiw' : field === 'carbohydrates' ? 'Koolh' : field === 'sugars' ? 'Suik' : field === 'fat' ? 'Vet' : field === 'saturatedFat' ? 'V.vet' : field === 'fiber' ? 'Vez' : 'Natr'} (per 100g)</label><input type="number" step={field === 'calories' || field === 'sodium' ? '1' : '0.1'} value={productForm[field]} onChange={(e) => setProductForm({...productForm, [field]: e.target.value})} className="w-full px-2 py-2 border rounded-lg text-sm" /></div>
                 ))}
               </div>
               <div className="flex items-center gap-2"><input type="checkbox" checked={productForm.favorite} onChange={(e) => setProductForm({...productForm, favorite: e.target.checked})} /><label className="text-sm">Favoriet ⭐</label></div>

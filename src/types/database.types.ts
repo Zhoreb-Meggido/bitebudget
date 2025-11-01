@@ -15,6 +15,8 @@ export interface Entry {
   products?: ProductInEntry[];  // Producten in deze maaltijd
   calories: number;
   protein: number;
+  carbohydrates: number;
+  sugars: number;
   fat: number;
   saturatedFat: number;
   fiber: number;
@@ -39,6 +41,8 @@ export interface Product {
   name: string;
   calories: number;       // per 100g
   protein: number;        // per 100g
+  carbohydrates: number;  // per 100g
+  sugars: number;         // per 100g
   fat: number;           // per 100g
   saturatedFat: number;  // per 100g
   fiber: number;         // per 100g
@@ -68,6 +72,8 @@ export interface OpenFoodFactsProduct {
   nutriments: {
     'energy-kcal_100g'?: number;
     proteins_100g?: number;
+    carbohydrates_100g?: number;
+    sugars_100g?: number;
     fat_100g?: number;
     'saturated-fat_100g'?: number;
     fiber_100g?: number;
@@ -177,6 +183,8 @@ export interface DailyData {
   dayType: DayType;
   calories: number;
   protein: number;
+  carbohydrates: number;
+  sugars: number;
   fat: number;
   saturatedFat: number;
   fiber: number;

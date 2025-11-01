@@ -1,5 +1,5 @@
 // Main entry point voor de Voedseljournaal app
-import React from 'react'
+import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import './styles/main.css'
 import { useDatabase } from '@/hooks'
@@ -10,11 +10,25 @@ import { DashboardPage } from '@/components/dashboard/DashboardPage'
 import { AnalysePage } from '@/components/analyse/AnalysePage'
 import { DataPage } from '@/components/data/DataPage'
 import { SettingsPage } from '@/components/settings/SettingsPage'
+import { registerServiceWorker, setupInstallPrompt } from '@/utils/pwa'
 
 // App component met database initialisatie
 function App() {
   const { isInitialized, error } = useDatabase();
   const [activeTab, setActiveTab] = useActiveTab();
+
+  // Register PWA service worker and install prompt
+  useEffect(() => {
+    // Register service worker
+    registerServiceWorker().then((registration) => {
+      if (registration) {
+        console.log('✅ PWA ready for offline use');
+      }
+    });
+
+    // Setup install prompt handler
+    setupInstallPrompt();
+  }, []);
 
   if (error) {
     return (

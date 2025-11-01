@@ -1,0 +1,42 @@
+{
+  "name": "BiteBudget - Voedseljournaal",
+  "short_name": "BiteBudget",
+  "description": "Track your daily food intake, calories, and macros with ease",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "lifestyle", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Vandaag",
+      "short_name": "Vandaag",
+      "description": "Open vandaag's journaal",
+      "url": "/?page=journal",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Producten",
+      "short_name": "Producten",
+      "description": "Beheer producten database",
+      "url": "/?page=journal&modal=products",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
