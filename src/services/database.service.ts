@@ -50,6 +50,22 @@ export class VoedseljournaalDB extends Dexie {
       weights: 'id, date, created_at',
       settings: 'key'
     });
+
+    // Version 5 - Add OpenFoodFacts fields to products
+    this.version(5).stores({
+      entries: 'id, date, created_at, updated_at',
+      products: 'id, name, ean, source, created_at, updated_at',
+      weights: 'id, date, created_at',
+      settings: 'key'
+    }).upgrade(async tx => {
+      // Migrate existing products to add 'source' field
+      await tx.table('products').toCollection().modify(product => {
+        if (!product.source) {
+          product.source = 'manual'; // All existing products were added manually
+        }
+      });
+      console.log('✅ Migrated products to v5 (added source field)');
+    });
   }
 }
 

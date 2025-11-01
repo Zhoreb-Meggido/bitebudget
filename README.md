@@ -57,17 +57,9 @@ npm run build
 
 ---
 
-## 🔮 v1.0.0 Roadmap - SQLite + OpenFoodFacts
+## 🔮 v1.0.0 Roadmap - OpenFoodFacts Integration
 
-### **Phase 1: SQLite Migration** (Foundation)
-- [ ] **WASP (WebAssembly SQLite)** integratie
-  - File-based storage in plaats van IndexedDB
-  - Betere portability & backup
-  - SQL queries voor complexere analytics
-- [ ] **Migration tool** - IndexedDB → SQLite converter
-- [ ] **Backward compatibility** - Import oude JSON backups
-
-### **Phase 2: OpenFoodFacts Integration** (Game Changer)
+### **Phase 1: OpenFoodFacts Integration** (Game Changer - IN PROGRESS)
 - [ ] **Barcode Scanner**
   - Camera access voor mobiele devices
   - QuaggaJS of ZXing voor barcode detection
@@ -108,13 +100,20 @@ interface Product {
 }
 ```
 
-### **Future Considerations**
+### **Phase 2: SQLite Migration** (Deprioritized - Browser support issues)
+- [ ] **Note:** SQLite migration postponed due to limited mobile browser support
+- [ ] File System Access API not yet available on Android/iOS
+- [ ] Will revisit when browser support improves or native app wrapper is considered
+- [ ] Current IndexedDB + JSON export/import works well for portability
+
+### **Future Considerations (v1.1+)**
+- [ ] Improved JSON sync (timestamps, conflict detection, delta sync)
 - [ ] PWA features (offline caching, install prompt)
 - [ ] Photo attachments voor meals
 - [ ] Recipe builder (meerdere producten → opslaan als nieuw product)
-- [ ] Sync options (optioneel, via file sharing)
-  - Syncthing, Dropbox, Google Drive
-  - CRDT voor conflict resolution?
+- [ ] Light/Dark theme toggle
+- [ ] Internationalization (i18n - Engels)
+- [ ] Device API integration (Garmin, Sacoma scale imports)
 
 ---
 
@@ -401,5 +400,5 @@ Personal project - All rights reserved
 ---
 
 **Last Updated:** October 31, 2024
-**Status:** v0.9.0 Feature Complete - Planning v1.0
-**Next:** SQLite migration + OpenFoodFacts integration
+**Status:** v0.9.0 Feature Complete - Starting v1.0
+**Next:** OpenFoodFacts integration (barcode scanner + product database)

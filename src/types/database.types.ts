@@ -32,6 +32,8 @@ export interface ProductInEntry {
 // PRODUCTS (Product Database)
 // ============================================
 
+export type ProductSource = 'manual' | 'barcode' | 'search';
+
 export interface Product {
   id?: string | number;
   name: string;
@@ -40,10 +42,57 @@ export interface Product {
   fat: number;           // per 100g
   saturatedFat: number;  // per 100g
   fiber: number;         // per 100g
-  sodium: number;        // per 100g
+  sodium: number;        // per 100g (mg)
   favorite: boolean;
   created_at: string;
   updated_at: string;
+
+  // OpenFoodFacts integration (v2.0)
+  ean?: string;                    // Barcode/EAN-13
+  source: ProductSource;           // How this product was added
+  openfoodfacts_id?: string;       // OFF product code (same as EAN)
+  nutri_score?: string;            // A-E rating
+  image_url?: string;              // Product photo
+  brand?: string;                  // Brand name
+  last_synced?: string;            // ISO timestamp of last OFF sync
+}
+
+// ============================================
+// OPENFOODFACTS API
+// ============================================
+
+export interface OpenFoodFactsProduct {
+  code: string;                     // EAN barcode
+  product_name: string;
+  brands?: string;
+  nutriments: {
+    'energy-kcal_100g'?: number;
+    proteins_100g?: number;
+    fat_100g?: number;
+    'saturated-fat_100g'?: number;
+    fiber_100g?: number;
+    sodium_100g?: number;           // In grams! Need to convert to mg
+    salt_100g?: number;
+  };
+  nutriscore_grade?: string;        // a-e (lowercase)
+  image_url?: string;
+  image_front_url?: string;
+  image_front_small_url?: string;
+}
+
+export interface OpenFoodFactsResponse {
+  status: number;                   // 1 = found, 0 = not found
+  status_verbose: string;
+  code: string;
+  product?: OpenFoodFactsProduct;
+}
+
+export interface OpenFoodFactsSearchResponse {
+  count: number;
+  page: number;
+  page_count: number;
+  page_size: number;
+  products: OpenFoodFactsProduct[];
 }
 
 // ============================================

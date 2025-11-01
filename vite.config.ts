@@ -46,6 +46,15 @@ export default defineConfig({
   // Server configuratie voor development
   server: {
     port: 3000,
-    open: true
+    open: true,
+    proxy: {
+      // Proxy OpenFoodFacts API requests to avoid CORS issues in development
+      '/api/openfoodfacts': {
+        target: 'https://world.openfoodfacts.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/openfoodfacts/, ''),
+        secure: true,
+      }
+    }
   }
 })

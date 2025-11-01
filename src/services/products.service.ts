@@ -34,6 +34,18 @@ class ProductsService {
   }
 
   /**
+   * Laad product by EAN barcode
+   */
+  async getProductByEAN(ean: string): Promise<Product | undefined> {
+    try {
+      return await db.products.where('ean').equals(ean).first();
+    } catch (error) {
+      console.error('❌ Error loading product by EAN:', error);
+      return undefined;
+    }
+  }
+
+  /**
    * Laad favoriete producten
    */
   async getFavoriteProducts(): Promise<Product[]> {
@@ -53,6 +65,7 @@ class ProductsService {
       const now = getTimestamp();
       const newProduct: Product = {
         ...product,
+        source: product.source || 'manual', // Default to manual if not specified
         id: generateId(),
         created_at: now,
         updated_at: now,
@@ -129,7 +142,7 @@ class ProductsService {
         const existing = await this.getProductByName(product.name);
 
         if (existing) {
-          // Update bestaand product (behoud favorite status)
+          // Update bestaand product (behoud favorite status en id)
           await db.products.update(existing.id!, {
             calories: product.calories,
             protein: product.protein,
@@ -137,6 +150,14 @@ class ProductsService {
             saturatedFat: product.saturatedFat,
             fiber: product.fiber,
             sodium: product.sodium,
+            // Update OpenFoodFacts fields if present
+            ...(product.ean && { ean: product.ean }),
+            ...(product.source && { source: product.source }),
+            ...(product.openfoodfacts_id && { openfoodfacts_id: product.openfoodfacts_id }),
+            ...(product.nutri_score && { nutri_score: product.nutri_score }),
+            ...(product.image_url && { image_url: product.image_url }),
+            ...(product.brand && { brand: product.brand }),
+            ...(product.last_synced && { last_synced: product.last_synced }),
             updated_at: now,
           });
           updated++;
