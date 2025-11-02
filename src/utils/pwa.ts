@@ -12,8 +12,9 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    // Register service worker at root of app (./sw.js)
-    const registration = await navigator.serviceWorker.register('./sw.js');
+    // Register service worker with absolute path for GitHub Pages
+    // Vite's base path will transform /sw.js to /bitebudget/sw.js
+    const registration = await navigator.serviceWorker.register('/sw.js');
 
     console.log('✅ Service Worker registered:', registration.scope);
 
