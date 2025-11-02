@@ -3,19 +3,19 @@
  * Provides offline functionality and caching
  */
 
-const CACHE_NAME = 'bitebudget-v1.0.2';
-const RUNTIME_CACHE = 'bitebudget-runtime-v1.0.2';
+const CACHE_NAME = 'bitebudget-v1.0.3';
+const RUNTIME_CACHE = 'bitebudget-runtime-v1.0.3';
 
 // Files to cache immediately on install
 // Note: Use relative paths from service worker location
+// DO NOT precache index.html - it needs to be fresh to load new bundles
 const PRECACHE_URLS = [
-  './',
-  './index.html',
+  // Empty - we'll cache everything on-demand via RUNTIME_CACHE
 ];
 
 // Install event - precache critical assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker v1.0.2...');
+  console.log('[SW] Installing service worker v1.0.3...');
 
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -67,7 +67,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first strategy for app assets
+  // Network-first strategy for index.html to ensure fresh bundles
+  if (request.url.endsWith('/') || request.url.includes('index.html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // Cache the fresh index.html for offline use
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cache if offline
+          return caches.match(request);
+        })
+    );
+    return;
+  }
+
+  // Cache-first strategy for app assets (JS, CSS, images)
   event.respondWith(
     caches.match(request)
       .then((cachedResponse) => {
