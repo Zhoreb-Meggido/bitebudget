@@ -2,7 +2,7 @@
  * JournalPage - Main meal tracking component
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useEntries, useProducts, useSettings } from '@/hooks';
 import { getTodayDate, calculateTotals } from '@/utils';
 import { productsService } from '@/services';
@@ -22,6 +22,75 @@ export function JournalPage() {
 
   const todayEntries = getEntriesByDate(selectedDate);
   const totals = calculateTotals(todayEntries);
+
+  // Calculate previous day data
+  const previousDayData = useMemo(() => {
+    const currentDate = new Date(selectedDate + 'T12:00:00');
+    const previousDate = new Date(currentDate);
+    previousDate.setDate(currentDate.getDate() - 1);
+    const prevDateStr = previousDate.toISOString().split('T')[0];
+
+    const prevEntries = getEntriesByDate(prevDateStr);
+    const prevTotals = calculateTotals(prevEntries);
+
+    return {
+      date: prevDateStr,
+      entries: prevEntries,
+      totals: prevTotals,
+    };
+  }, [selectedDate, entries]);
+
+  // Calculate last 7 days average
+  const weekAverage = useMemo(() => {
+    const currentDate = new Date(selectedDate + 'T12:00:00');
+    const daysData = [];
+
+    for (let i = 1; i <= 7; i++) {
+      const date = new Date(currentDate);
+      date.setDate(currentDate.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayEntries = getEntriesByDate(dateStr);
+      if (dayEntries.length > 0) {
+        daysData.push(calculateTotals(dayEntries));
+      }
+    }
+
+    if (daysData.length === 0) {
+      return null;
+    }
+
+    const sum = daysData.reduce((acc, day) => ({
+      calories: acc.calories + day.calories,
+      protein: acc.protein + day.protein,
+      carbohydrates: acc.carbohydrates + day.carbohydrates,
+      sugars: acc.sugars + day.sugars,
+      fat: acc.fat + day.fat,
+      saturatedFat: acc.saturatedFat + day.saturatedFat,
+      fiber: acc.fiber + day.fiber,
+      sodium: acc.sodium + day.sodium,
+    }), {
+      calories: 0,
+      protein: 0,
+      carbohydrates: 0,
+      sugars: 0,
+      fat: 0,
+      saturatedFat: 0,
+      fiber: 0,
+      sodium: 0,
+    });
+
+    return {
+      daysWithData: daysData.length,
+      calories: Math.round(sum.calories / daysData.length),
+      protein: (sum.protein / daysData.length).toFixed(1),
+      carbohydrates: (sum.carbohydrates / daysData.length).toFixed(1),
+      sugars: (sum.sugars / daysData.length).toFixed(1),
+      fat: (sum.fat / daysData.length).toFixed(1),
+      saturatedFat: (sum.saturatedFat / daysData.length).toFixed(1),
+      fiber: (sum.fiber / daysData.length).toFixed(1),
+      sodium: Math.round(sum.sodium / daysData.length),
+    };
+  }, [selectedDate, entries]);
 
   // Goals based on day type
   const goals = dayType === 'sport'
@@ -182,7 +251,74 @@ export function JournalPage() {
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Maaltijden vandaag</h2>
           {todayEntries.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Nog geen maaltijden toegevoegd</p>
+            <div>
+              <p className="text-gray-500 text-center py-4">Nog geen maaltijden toegevoegd</p>
+
+              {/* Historical Data Section */}
+              {(previousDayData.entries.length > 0 || weekAverage) && (
+                <div className="mt-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Historische data</h3>
+
+                  {/* Previous Day */}
+                  {previousDayData.entries.length > 0 && (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-semibold text-gray-800">
+                          Gisteren ({new Date(previousDayData.date).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' })})
+                        </h4>
+                        <span className="text-sm text-gray-600">{previousDayData.entries.length} maaltijden</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-600">Calorieën:</span>
+                          <span className="font-semibold ml-1">{previousDayData.totals.calories}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Eiwit:</span>
+                          <span className="font-semibold ml-1">{previousDayData.totals.protein.toFixed(1)}g</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Koolh.:</span>
+                          <span className="font-semibold ml-1">{previousDayData.totals.carbohydrates.toFixed(1)}g</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Vezels:</span>
+                          <span className="font-semibold ml-1">{previousDayData.totals.fiber.toFixed(1)}g</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Last Week Average */}
+                  {weekAverage && (
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-semibold text-gray-800">Gemiddelde afgelopen week</h4>
+                        <span className="text-sm text-gray-600">{weekAverage.daysWithData} van 7 dagen</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-600">Calorieën:</span>
+                          <span className="font-semibold ml-1">{weekAverage.calories}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Eiwit:</span>
+                          <span className="font-semibold ml-1">{weekAverage.protein}g</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Koolh.:</span>
+                          <span className="font-semibold ml-1">{weekAverage.carbohydrates}g</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Vezels:</span>
+                          <span className="font-semibold ml-1">{weekAverage.fiber}g</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="space-y-3">
               {todayEntries.map(entry => (
