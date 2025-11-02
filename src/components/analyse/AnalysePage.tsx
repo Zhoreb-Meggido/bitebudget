@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useEntries } from '@/hooks';
 
-type MetricType = 'calories' | 'protein' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
+type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
 
 interface DayData {
   date: string;
   calories: number;
   protein: number;
+  carbohydrates: number;
+  sugars: number;
   fat: number;
   saturatedFat: number;
   fiber: number;
@@ -19,6 +21,8 @@ interface WeekData {
   days: number;
   avgCalories: number;
   avgProtein: number;
+  avgCarbohydrates: number;
+  avgSugars: number;
   avgSaturatedFat: number;
   avgFiber: number;
   avgSodium: number;
@@ -38,6 +42,8 @@ export function AnalysePage() {
         date: entry.date,
         calories: 0,
         protein: 0,
+        carbohydrates: 0,
+        sugars: 0,
         fat: 0,
         saturatedFat: 0,
         fiber: 0,
@@ -48,6 +54,8 @@ export function AnalysePage() {
         date: entry.date,
         calories: existing.calories + entry.calories,
         protein: existing.protein + entry.protein,
+        carbohydrates: existing.carbohydrates + entry.carbohydrates,
+        sugars: existing.sugars + entry.sugars,
         fat: existing.fat + entry.fat,
         saturatedFat: existing.saturatedFat + entry.saturatedFat,
         fiber: existing.fiber + entry.fiber,
@@ -94,10 +102,12 @@ export function AnalysePage() {
         const sum = days.reduce((acc, day) => ({
           calories: acc.calories + day.calories,
           protein: acc.protein + day.protein,
+          carbohydrates: acc.carbohydrates + day.carbohydrates,
+          sugars: acc.sugars + day.sugars,
           saturatedFat: acc.saturatedFat + day.saturatedFat,
           fiber: acc.fiber + day.fiber,
           sodium: acc.sodium + day.sodium,
-        }), { calories: 0, protein: 0, saturatedFat: 0, fiber: 0, sodium: 0 });
+        }), { calories: 0, protein: 0, carbohydrates: 0, sugars: 0, saturatedFat: 0, fiber: 0, sodium: 0 });
 
         const daysUnderCalories = days.filter(d => d.calories < 1900).length;
 
@@ -107,6 +117,8 @@ export function AnalysePage() {
           days: days.length,
           avgCalories: Math.round(sum.calories / days.length),
           avgProtein: Math.round(sum.protein / days.length),
+          avgCarbohydrates: Math.round(sum.carbohydrates / days.length),
+          avgSugars: Math.round(sum.sugars / days.length),
           avgSaturatedFat: Math.round(sum.saturatedFat / days.length),
           avgFiber: Math.round(sum.fiber / days.length),
           avgSodium: Math.round(sum.sodium / days.length),
@@ -242,6 +254,8 @@ export function AnalysePage() {
   const metricLabels: Record<MetricType, string> = {
     calories: 'Calorieën',
     protein: 'Eiwit',
+    carbohydrates: 'Koolhydraten',
+    sugars: 'Suikers',
     saturatedFat: 'Verzadigd Vet',
     fiber: 'Vezels',
     sodium: 'Natrium',
@@ -283,6 +297,12 @@ export function AnalysePage() {
                     Ø Eiwit
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ø Koolh.
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ø Suikers
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ø V.vet
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -318,6 +338,12 @@ export function AnalysePage() {
                         week.avgProtein >= 72 ? 'text-green-600' : week.avgProtein >= 36 ? 'text-yellow-600' : 'text-red-600'
                       }`}>
                         {week.avgProtein}g
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {week.avgCarbohydrates}g
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {week.avgSugars}g
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${week.avgSaturatedFat < 20 ? 'text-green-600' : 'text-gray-900'}`}>
                         {week.avgSaturatedFat}g
@@ -355,6 +381,8 @@ export function AnalysePage() {
             <option value="overall">Alles (gemiddelde)</option>
             <option value="calories">Calorieën</option>
             <option value="protein">Eiwit</option>
+            <option value="carbohydrates">Koolhydraten</option>
+            <option value="sugars">Suikers</option>
             <option value="saturatedFat">Verzadigd Vet</option>
             <option value="fiber">Vezels</option>
             <option value="sodium">Natrium</option>
@@ -443,6 +471,8 @@ export function AnalysePage() {
               const avg = {
                 calories: Math.round(weekday.days.reduce((sum, d) => sum + d.calories, 0) / weekday.days.length),
                 protein: (weekday.days.reduce((sum, d) => sum + d.protein, 0) / weekday.days.length).toFixed(1),
+                carbohydrates: (weekday.days.reduce((sum, d) => sum + d.carbohydrates, 0) / weekday.days.length).toFixed(1),
+                sugars: (weekday.days.reduce((sum, d) => sum + d.sugars, 0) / weekday.days.length).toFixed(1),
                 saturatedFat: (weekday.days.reduce((sum, d) => sum + d.saturatedFat, 0) / weekday.days.length).toFixed(1),
                 fiber: (weekday.days.reduce((sum, d) => sum + d.fiber, 0) / weekday.days.length).toFixed(1),
                 sodium: Math.round(weekday.days.reduce((sum, d) => sum + d.sodium, 0) / weekday.days.length)
@@ -505,6 +535,18 @@ export function AnalysePage() {
                       <span className="text-gray-600">Eiwit:</span>
                       <span className={`font-semibold ${getProteinColor(avg.protein)}`}>
                         {avg.protein}g
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Koolhydr.:</span>
+                      <span className="font-semibold text-gray-700">
+                        {avg.carbohydrates}g
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Suikers:</span>
+                      <span className="font-semibold text-gray-700">
+                        {avg.sugars}g
                       </span>
                     </div>
                     <div className="flex justify-between">

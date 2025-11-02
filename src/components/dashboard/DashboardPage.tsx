@@ -23,12 +23,14 @@ ChartJS.register(
 );
 
 type TimeRange = '7' | '14' | '30' | '90' | 'this-week' | 'last-week' | 'this-month' | 'last-month' | 'all' | 'custom';
-type MetricKey = 'calories' | 'protein' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium';
+type MetricKey = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium';
 
 interface DayData {
   date: string;
   calories: number;
   protein: number;
+  carbohydrates: number;
+  sugars: number;
   fat: number;
   saturatedFat: number;
   fiber: number;
@@ -45,7 +47,9 @@ interface MetricConfig {
 const METRICS: MetricConfig[] = [
   { key: 'calories', label: 'Calorieën', color: 'rgb(59, 130, 246)', unit: 'kcal' },
   { key: 'protein', label: 'Eiwit', color: 'rgb(147, 51, 234)', unit: 'g' },
-  { key: 'fat', label: 'Vet', color: 'rgb(234, 179, 8)', unit: 'g' },
+  { key: 'carbohydrates', label: 'Koolhydraten', color: 'rgb(245, 158, 11)', unit: 'g' },
+  { key: 'sugars', label: 'Suikers', color: 'rgb(251, 191, 36)', unit: 'g' },
+  { key: 'fat', label: 'Vet', color: 'rgb(156, 163, 175)', unit: 'g' },
   { key: 'saturatedFat', label: 'Verzadigd Vet', color: 'rgb(239, 68, 68)', unit: 'g' },
   { key: 'fiber', label: 'Vezels', color: 'rgb(34, 197, 94)', unit: 'g' },
   { key: 'sodium', label: 'Natrium', color: 'rgb(249, 115, 22)', unit: 'mg' },
@@ -56,7 +60,7 @@ export function DashboardPage() {
   const { settings } = useSettings();
 
   const [timeRange, setTimeRange] = useState<TimeRange>('30');
-  const [selectedMetrics, setSelectedMetrics] = useState<Set<MetricKey>>(new Set(['calories', 'protein', 'fat', 'saturatedFat', 'fiber', 'sodium']));
+  const [selectedMetrics, setSelectedMetrics] = useState<Set<MetricKey>>(new Set(['calories', 'protein', 'carbohydrates']));
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
@@ -139,6 +143,8 @@ export function DashboardPage() {
           date: entry.date,
           calories: 0,
           protein: 0,
+          carbohydrates: 0,
+          sugars: 0,
           fat: 0,
           saturatedFat: 0,
           fiber: 0,
@@ -149,6 +155,8 @@ export function DashboardPage() {
           date: entry.date,
           calories: existing.calories + entry.calories,
           protein: existing.protein + entry.protein,
+          carbohydrates: existing.carbohydrates + entry.carbohydrates,
+          sugars: existing.sugars + entry.sugars,
           fat: existing.fat + entry.fat,
           saturatedFat: existing.saturatedFat + entry.saturatedFat,
           fiber: existing.fiber + entry.fiber,
@@ -166,6 +174,8 @@ export function DashboardPage() {
       return {
         calories: 0,
         protein: 0,
+        carbohydrates: 0,
+        sugars: 0,
         fat: 0,
         saturatedFat: 0,
         fiber: 0,
@@ -176,6 +186,8 @@ export function DashboardPage() {
     const sum = dailyData.reduce((acc, day) => ({
       calories: acc.calories + day.calories,
       protein: acc.protein + day.protein,
+      carbohydrates: acc.carbohydrates + day.carbohydrates,
+      sugars: acc.sugars + day.sugars,
       fat: acc.fat + day.fat,
       saturatedFat: acc.saturatedFat + day.saturatedFat,
       fiber: acc.fiber + day.fiber,
@@ -183,6 +195,8 @@ export function DashboardPage() {
     }), {
       calories: 0,
       protein: 0,
+      carbohydrates: 0,
+      sugars: 0,
       fat: 0,
       saturatedFat: 0,
       fiber: 0,
@@ -193,6 +207,8 @@ export function DashboardPage() {
     return {
       calories: Math.round(sum.calories / count),
       protein: Math.round(sum.protein / count),
+      carbohydrates: Math.round(sum.carbohydrates / count),
+      sugars: Math.round(sum.sugars / count),
       fat: Math.round(sum.fat / count),
       saturatedFat: Math.round(sum.saturatedFat / count),
       fiber: Math.round(sum.fiber / count),
@@ -223,7 +239,7 @@ export function DashboardPage() {
   const getYAxisId = (key: MetricKey): string => {
     if (key === 'calories') return 'y-calories';
     if (key === 'sodium') return 'y-sodium';
-    return 'y'; // protein, fat, saturatedFat, fiber (all in grams)
+    return 'y'; // protein, carbohydrates, sugars, fat, saturatedFat, fiber (all in grams)
   };
 
   const datasets = METRICS
@@ -246,7 +262,8 @@ export function DashboardPage() {
   const scales: any = {
     y: {
       type: 'linear',
-      display: selectedMetrics.has('protein') || selectedMetrics.has('fat') ||
+      display: selectedMetrics.has('protein') || selectedMetrics.has('carbohydrates') ||
+              selectedMetrics.has('sugars') || selectedMetrics.has('fat') ||
               selectedMetrics.has('saturatedFat') || selectedMetrics.has('fiber'),
       position: 'left',
       beginAtZero: true,
