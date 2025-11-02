@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSettings } from '@/hooks';
 import type { UserSettings } from '@/types/database.types';
+import { CloudSyncSettings } from './CloudSyncSettings';
 
 export function SettingsPage() {
   const { settings, updateSettings, saveSettings, resetSettings, reloadSettings } = useSettings();
@@ -180,6 +181,11 @@ export function SettingsPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+        </div>
+
+        {/* Cloud Sync */}
+        <div className="p-6 border-b border-gray-200">
+          <CloudSyncSettings />
         </div>
 
         {/* Action Buttons */}

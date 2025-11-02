@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-const APP_VERSION = '1.0.5';
+const APP_VERSION = '1.1.0';
 const BUILD_DATE = new Date().toISOString().split('T')[0];
 
 export function AppFooter() {

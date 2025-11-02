@@ -1,6 +1,6 @@
 {
   "name": "voedseljournaal-app",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "BiteBudget - Progressive Web App voor food tracking met OpenFoodFacts integratie",
   "type": "module",
   "scripts": {
