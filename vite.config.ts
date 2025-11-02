@@ -5,6 +5,8 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Base path for GitHub Pages (repo name)
+  base: '/bitebudget/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
