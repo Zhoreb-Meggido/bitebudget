@@ -11,7 +11,9 @@
       "Bash(npm run build:*)",
       "Bash(icons-placeholder.txt)",
       "Bash(curl -s https://zhoreb-meggido.github.io/bitebudget/)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(where magick:*)",
+      "Bash(node scripts/generate-icons.js:*)"
     ],
     "deny": [],
     "ask": []

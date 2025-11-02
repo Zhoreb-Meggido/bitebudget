@@ -9,17 +9,13 @@
  * Installeer: npm install --save-dev sharp
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import sharp from 'sharp';
 
-// Check if sharp is available
-let sharp;
-try {
-  sharp = require('sharp');
-} catch (e) {
-  console.error('❌ Sharp is not installed. Install it with: npm install --save-dev sharp');
-  process.exit(1);
-}
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const sizes = [
   { size: 192, name: 'icon-192.png' },
