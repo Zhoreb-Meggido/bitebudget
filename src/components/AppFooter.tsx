@@ -9,7 +9,7 @@ const BUILD_DATE = new Date().toISOString().split('T')[0];
 
 export function AppFooter() {
   return (
-    <footer className="bg-gray-100 border-t border-gray-200 py-2 px-4 mt-auto">
+    <footer className="bg-gray-100 border-t border-gray-200 py-2 px-4 flex-shrink-0">
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-1 text-xs text-gray-600">
         <div className="flex items-center gap-4">
           <span>BiteBudget v{APP_VERSION}</span>
