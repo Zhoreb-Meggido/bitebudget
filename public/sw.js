@@ -7,9 +7,10 @@ const CACHE_NAME = 'bitebudget-v1.0.0';
 const RUNTIME_CACHE = 'bitebudget-runtime';
 
 // Files to cache immediately on install
+// Note: Paths are relative to the service worker's scope (/bitebudget/)
 const PRECACHE_URLS = [
-  '/',
-  '/bitebudget.html',
+  '/bitebudget/',
+  '/bitebudget/bitebudget.html',
 ];
 
 // Install event - precache critical assets
