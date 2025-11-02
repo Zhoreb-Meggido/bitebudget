@@ -37,7 +37,15 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
             );
             // Prefer back camera on mobile
             const backCamera = devices.find((d) => d.label.toLowerCase().includes('back'));
-            setSelectedCamera(backCamera?.id || devices[0].id);
+            const cameraId = backCamera?.id || devices[0].id;
+            setSelectedCamera(cameraId);
+
+            // Auto-start scanning after selecting camera
+            setTimeout(() => {
+              if (cameraId) {
+                startScanning();
+              }
+            }, 200);
           } else {
             setError('Geen camera gevonden');
           }
