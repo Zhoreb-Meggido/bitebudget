@@ -2,7 +2,7 @@
  * AddMealModal - Modal voor maaltijd toevoegen (3 tabs: producten/handmatig/JSON)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Product, Entry } from '@/types';
 import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from '@/utils';
 
@@ -12,11 +12,13 @@ interface Props {
   onAddMeal: (meal: Omit<Entry, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
   products: Product[];
   selectedDate: string;
+  editEntry?: Entry; // Optional: when editing an existing entry
+  onUpdateMeal?: (id: number | string, meal: Omit<Entry, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
 }
 
 type Tab = 'products' | 'manual' | 'json';
 
-export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDate }: Props) {
+export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDate, editEntry, onUpdateMeal }: Props) {
   const [tab, setTab] = useState<Tab>('products');
   const [mealTime, setMealTime] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
@@ -27,7 +29,51 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
   });
   const [mealJson, setMealJson] = useState('');
 
+  // Load entry data when editing
+  useEffect(() => {
+    if (editEntry && isOpen) {
+      // Check if entry has products array - use products tab
+      if (editEntry.products && Array.isArray(editEntry.products) && editEntry.products.length > 0) {
+        setTab('products');
+        setMealTime(editEntry.time);
+        const prodNames = editEntry.products.map(p => p.name);
+        const grams: Record<string, number> = {};
+        editEntry.products.forEach(p => {
+          grams[p.name] = p.grams;
+        });
+        setSelectedProducts(prodNames);
+        setProductGrams(grams);
+      } else {
+        // Use manual tab for entries without products
+        setTab('manual');
+        setManualMeal({
+          time: editEntry.time,
+          name: editEntry.name,
+          calories: editEntry.calories.toString(),
+          protein: editEntry.protein.toString(),
+          carbohydrates: editEntry.carbohydrates?.toString() || '0',
+          sugars: editEntry.sugars?.toString() || '0',
+          fat: editEntry.fat.toString(),
+          saturatedFat: editEntry.saturatedFat.toString(),
+          fiber: editEntry.fiber.toString(),
+          sodium: editEntry.sodium.toString(),
+        });
+      }
+    } else if (!isOpen) {
+      // Reset when modal closes
+      setTab('products');
+      setMealTime('');
+      setSelectedProducts([]);
+      setProductGrams({});
+      setProductSearch('');
+      setManualMeal({ time: '', name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: '' });
+      setMealJson('');
+    }
+  }, [editEntry, isOpen]);
+
   if (!isOpen) return null;
+
+  const isEditMode = !!editEntry;
 
   const resetForm = () => {
     setTab('products');
@@ -66,18 +112,24 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     });
 
     const name = productDetails.map(p => `${p.name} (${p.grams}g)`).join(' + ');
-    await onAddMeal({
+    const mealData = {
       date: selectedDate,
       time,
       name,
       products: productDetails,
       ...roundNutritionValues(totals)
-    });
+    };
+
+    if (isEditMode && editEntry && onUpdateMeal) {
+      await onUpdateMeal(editEntry.id!, mealData);
+    } else {
+      await onAddMeal(mealData);
+    }
     resetForm();
   };
 
   const handleAddManually = async () => {
-    await onAddMeal({
+    const mealData = {
       date: selectedDate,
       time: manualMeal.time || getCurrentTime(),
       name: manualMeal.name,
@@ -89,7 +141,13 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       saturatedFat: parseFloat(manualMeal.saturatedFat) || 0,
       fiber: parseFloat(manualMeal.fiber) || 0,
       sodium: parseInt(manualMeal.sodium) || 0,
-    });
+    };
+
+    if (isEditMode && editEntry && onUpdateMeal) {
+      await onUpdateMeal(editEntry.id!, mealData);
+    } else {
+      await onAddMeal(mealData);
+    }
     resetForm();
   };
 
@@ -126,7 +184,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-gray-800">Maaltijd toevoegen</h3>
+          <h3 className="text-xl font-bold text-gray-800">{isEditMode ? 'Maaltijd bewerken' : 'Maaltijd toevoegen'}</h3>
           <button onClick={resetForm} className="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
         </div>
 
@@ -183,7 +241,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 </div>
               )}
               <button onClick={handleAddFromProducts} disabled={selectedProducts.length === 0} className={`w-full px-4 py-2 rounded-lg font-semibold ${selectedProducts.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}>
-                Toevoegen {selectedProducts.length > 0 && `(${selectedProducts.length})`}
+                {isEditMode ? 'Opslaan' : 'Toevoegen'} {selectedProducts.length > 0 && `(${selectedProducts.length})`}
               </button>
             </div>
           )}
@@ -198,7 +256,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                   <div key={field}><label className="block text-xs font-medium mb-1">{field === 'calories' ? 'Calorieën' : field === 'protein' ? 'Eiwit (g)' : field === 'carbohydrates' ? 'Koolh (g)' : field === 'sugars' ? 'Suikers (g)' : field === 'fat' ? 'Vet (g)' : field === 'saturatedFat' ? 'Verz. vet (g)' : field === 'fiber' ? 'Vezels (g)' : 'Natrium (mg)'}</label><input type="number" step={field === 'calories' || field === 'sodium' ? '1' : '0.1'} value={manualMeal[field]} onChange={(e) => setManualMeal({...manualMeal, [field]: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
                 ))}
               </div>
-              <button onClick={handleAddManually} className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">Toevoegen</button>
+              <button onClick={handleAddManually} className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">{isEditMode ? 'Opslaan' : 'Toevoegen'}</button>
             </div>
           )}
 

@@ -11,13 +11,14 @@ import { AddMealModal } from './AddMealModal';
 import { ProductsModal } from './ProductsModal';
 
 export function JournalPage() {
-  const { entries, addEntry, deleteEntry, getEntriesByDate } = useEntries();
+  const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
   const { products, addProduct, updateProduct, deleteProduct, toggleFavorite, reloadProducts } = useProducts();
   const { settings } = useSettings();
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [dayType, setDayType] = useState<DayType>('rust');
   const [showAddMeal, setShowAddMeal] = useState(false);
+  const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
   const [showProducts, setShowProducts] = useState(false);
 
   const todayEntries = getEntriesByDate(selectedDate);
@@ -336,17 +337,29 @@ export function JournalPage() {
                         {entry.calories} kcal • {entry.protein}g eiw • {entry.carbohydrates}g koolh • {entry.sugars}g suik • {entry.saturatedFat}g v.vet • {entry.fiber}g vez • {entry.sodium}mg natr
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        if (confirm('Verwijder deze maaltijd?')) {
-                          deleteEntry(entry.id!);
-                        }
-                      }}
-                      className="text-red-600 hover:text-red-800 text-lg flex-shrink-0"
-                      aria-label="Verwijder maaltijd"
-                    >
-                      🗑️
-                    </button>
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => {
+                          setEditingEntry(entry);
+                          setShowAddMeal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 text-lg"
+                        aria-label="Bewerk maaltijd"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Verwijder deze maaltijd?')) {
+                            deleteEntry(entry.id!);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-800 text-lg"
+                        aria-label="Verwijder maaltijd"
+                      >
+                        🗑️
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -357,8 +370,13 @@ export function JournalPage() {
         {/* Modals */}
         <AddMealModal
           isOpen={showAddMeal}
-          onClose={() => setShowAddMeal(false)}
+          onClose={() => {
+            setShowAddMeal(false);
+            setEditingEntry(undefined);
+          }}
           onAddMeal={addEntry}
+          onUpdateMeal={updateEntry}
+          editEntry={editingEntry}
           products={products}
           selectedDate={selectedDate}
         />

@@ -27,6 +27,11 @@ export function useEntries() {
     return newEntry;
   }, []);
 
+  const updateEntry = useCallback(async (id: number | string, updates: Omit<Entry, 'id' | 'created_at' | 'updated_at'>) => {
+    await entriesService.updateEntry(id, updates);
+    setEntries(prev => prev.map(e => e.id === id ? { ...e, ...updates } : e));
+  }, []);
+
   const deleteEntry = useCallback(async (id: number | string) => {
     await entriesService.deleteEntry(id);
     setEntries(prev => prev.filter(e => e.id !== id));
@@ -40,6 +45,7 @@ export function useEntries() {
     entries,
     isLoading,
     addEntry,
+    updateEntry,
     deleteEntry,
     getEntriesByDate,
     reloadEntries: loadEntries,
