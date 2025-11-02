@@ -101,6 +101,8 @@ export function JournalPage() {
     saturatedFat: settings.saturatedFatMax,
     fiber: settings.fiberMin,
     sodium: settings.sodiumMax,
+    sugars: 50, // WHO recommendation: max 50g per day
+    fat: 70, // General guideline: ~70g per day for 2000 kcal diet
   };
 
   return (
@@ -163,12 +165,14 @@ export function JournalPage() {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-600">Suikers</span>
-                <span className="font-medium text-gray-700">{totals.sugars.toFixed(1)}g</span>
+                <span className={`font-medium ${totals.sugars > limits.sugars ? 'text-red-600' : 'text-gray-700'}`}>
+                  {totals.sugars.toFixed(1)}g / {limits.sugars}g
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-yellow-500 h-2 rounded-full transition-all"
-                  style={{ width: '50%' }}
+                  className={`h-2 rounded-full transition-all ${totals.sugars > limits.sugars ? 'bg-red-500' : 'bg-yellow-500'}`}
+                  style={{ width: `${Math.min((totals.sugars / limits.sugars) * 100, 100)}%` }}
                 ></div>
               </div>
             </div>
@@ -177,12 +181,14 @@ export function JournalPage() {
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-600">Totaal vet</span>
-                <span className="font-medium text-gray-700">{totals.fat.toFixed(1)}g</span>
+                <span className={`font-medium ${totals.fat > limits.fat ? 'text-red-600' : 'text-gray-700'}`}>
+                  {totals.fat.toFixed(1)}g / {limits.fat}g
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div
-                  className="bg-gray-500 h-2 rounded-full transition-all"
-                  style={{ width: '50%' }}
+                  className={`h-2 rounded-full transition-all ${totals.fat > limits.fat ? 'bg-red-500' : 'bg-gray-500'}`}
+                  style={{ width: `${Math.min((totals.fat / limits.fat) * 100, 100)}%` }}
                 ></div>
               </div>
             </div>

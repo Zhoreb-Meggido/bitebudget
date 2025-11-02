@@ -6,18 +6,19 @@ import type { Entry, Product } from '@/types';
 
 /**
  * Bereken totalen van entries
+ * Note: Uses fallback to 0 for undefined values (backward compatibility with old entries)
  */
 export function calculateTotals(entries: Entry[]) {
   return entries.reduce(
     (acc, entry) => ({
-      calories: acc.calories + entry.calories,
-      protein: acc.protein + entry.protein,
-      carbohydrates: acc.carbohydrates + entry.carbohydrates,
-      sugars: acc.sugars + entry.sugars,
-      fat: acc.fat + entry.fat,
-      saturatedFat: acc.saturatedFat + entry.saturatedFat,
-      fiber: acc.fiber + entry.fiber,
-      sodium: acc.sodium + entry.sodium,
+      calories: acc.calories + (entry.calories || 0),
+      protein: acc.protein + (entry.protein || 0),
+      carbohydrates: acc.carbohydrates + (entry.carbohydrates || 0),
+      sugars: acc.sugars + (entry.sugars || 0),
+      fat: acc.fat + (entry.fat || 0),
+      saturatedFat: acc.saturatedFat + (entry.saturatedFat || 0),
+      fiber: acc.fiber + (entry.fiber || 0),
+      sodium: acc.sodium + (entry.sodium || 0),
     }),
     { calories: 0, protein: 0, carbohydrates: 0, sugars: 0, fat: 0, saturatedFat: 0, fiber: 0, sodium: 0 }
   );
