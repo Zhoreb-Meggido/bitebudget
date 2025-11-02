@@ -71,7 +71,8 @@ class OpenFoodFactsService {
    */
   async searchProducts(query: string, pageSize: number = 10): Promise<Product[]> {
     try {
-      const url = `${OFF_API_BASE}/cgi/search.pl?search_terms=${encodeURIComponent(query)}&page_size=${pageSize}&json=true`;
+      // Try v3 API first (better CORS support)
+      const url = `${OFF_API_BASE}/api/v3/search?q=${encodeURIComponent(query)}&page_size=${pageSize}&fields=code,product_name,brands,nutriments,nutriscore_grade,image_front_small_url,image_front_url,image_url`;
 
       const response = await fetch(url, {
         headers: {
