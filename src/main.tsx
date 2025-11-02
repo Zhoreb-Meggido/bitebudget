@@ -11,6 +11,7 @@ import { AnalysePage } from '@/components/analyse/AnalysePage'
 import { DataPage } from '@/components/data/DataPage'
 import { SettingsPage } from '@/components/settings/SettingsPage'
 import { registerServiceWorker, setupInstallPrompt } from '@/utils/pwa'
+import { AppFooter } from '@/components/AppFooter'
 
 // App component met database initialisatie
 function App() {
@@ -55,9 +56,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="py-6">
+      <div className="py-6 flex-1">
         {activeTab === 'journaal' && <JournalPage />}
         {activeTab === 'tracking' && <TrackingPage />}
         {activeTab === 'dashboard' && <DashboardPage />}
@@ -65,6 +66,7 @@ function App() {
         {activeTab === 'data' && <DataPage />}
         {activeTab === 'instellingen' && <SettingsPage />}
       </div>
+      <AppFooter />
     </div>
   );
 }
