@@ -22,9 +22,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 
     console.log('✅ Service Worker registered:', registration.scope);
 
-    // Check for updates on page load
-    registration.update();
-
     // Listen for updates
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
