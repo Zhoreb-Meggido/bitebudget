@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { viteSingleFile } from 'vite-plugin-singlefile'
 import path from 'path'
 
 // https://vitejs.dev/config/
@@ -13,40 +12,13 @@ export default defineConfig({
     },
   },
   plugins: [
-    react({
-      // React plugin configuratie
-      babel: {
-        // Babel transformaties voor JSX
-      }
-    }),
-    viteSingleFile({
-      // Plugin om alles in één HTML bestand te bundelen
-      removeViteModuleLoader: true
-    })
+    react()
   ],
   build: {
     target: 'esnext',
-    // Inline alle assets (geen aparte bestanden)
-    assetsInlineLimit: 100000000, // 100MB - inline alles
-    cssCodeSplit: false,
-    // Output configuratie
     outDir: 'dist',
-    // Rollup opties voor optimale bundeling
-    rollupOptions: {
-      output: {
-        // Alle imports inline (geen code splitting)
-        inlineDynamicImports: true,
-        // Single output file
-        manualChunks: undefined
-      },
-      // Copy PWA assets to dist
-      external: []
-    },
-    // Minify voor kleinere output
     minify: 'esbuild',
-    // Source maps voor development (optioneel)
     sourcemap: false,
-    // Copy public assets (manifest, service worker, icons)
     copyPublicDir: true
   },
   // Server configuratie voor development

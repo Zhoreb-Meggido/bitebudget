@@ -10,7 +10,7 @@ const RUNTIME_CACHE = 'bitebudget-runtime';
 // Note: Use relative paths from service worker location
 const PRECACHE_URLS = [
   './',
-  './bitebudget.html',
+  './index.html',
 ];
 
 // Install event - precache critical assets

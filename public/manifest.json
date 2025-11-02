@@ -2,7 +2,7 @@
   "name": "BiteBudget - Voedseljournaal",
   "short_name": "BiteBudget",
   "description": "Track your daily food intake, calories, and macros with ease",
-  "start_url": "/bitebudget/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
