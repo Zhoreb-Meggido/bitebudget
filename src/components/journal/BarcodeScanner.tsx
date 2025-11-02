@@ -56,6 +56,17 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
 
     try {
       setError(null);
+
+      // Stop any existing scanner first
+      if (scannerRef.current) {
+        try {
+          await scannerRef.current.stop();
+          scannerRef.current.clear();
+        } catch (e) {
+          console.log('No active scanner to stop');
+        }
+      }
+
       const scanner = new Html5Qrcode('barcode-reader');
       scannerRef.current = scanner;
 
