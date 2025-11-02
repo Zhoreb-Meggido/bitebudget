@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useEntries } from '@/hooks';
+import { downloadTextReport, downloadPDFReport } from '@/utils/export.utils';
+import { getTodayDate } from '@/utils';
 
 type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
 
@@ -32,6 +34,14 @@ interface WeekData {
 export function AnalysePage() {
   const { entries } = useEntries();
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('overall');
+
+  // Export state
+  const [exportStartDate, setExportStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30); // Default: last 30 days
+    return date.toISOString().split('T')[0];
+  });
+  const [exportEndDate, setExportEndDate] = useState(getTodayDate());
 
   // Aggregate entries per day
   const dailyData = useMemo(() => {
@@ -262,11 +272,85 @@ export function AnalysePage() {
     overall: 'Overall Score',
   };
 
+  // Export handlers
+  const handleExport = (format: 'txt' | 'pdf') => {
+    const filteredEntries = entries.filter(
+      (entry) => entry.date >= exportStartDate && entry.date <= exportEndDate
+    );
+
+    if (filteredEntries.length === 0) {
+      alert('Geen data beschikbaar voor de geselecteerde periode.');
+      return;
+    }
+
+    const options = {
+      startDate: exportStartDate,
+      endDate: exportEndDate,
+      entries: filteredEntries,
+      format,
+    };
+
+    if (format === 'txt') {
+      downloadTextReport(options);
+    } else {
+      downloadPDFReport(options);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Analyse</h1>
         <p className="text-gray-600 mt-2">Week vergelijking en kalender overzicht</p>
+      </div>
+
+      {/* Export Section */}
+      <div className="bg-white rounded-lg shadow mb-6 p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">📊 Rapportage Exporteren</h2>
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Van
+            </label>
+            <input
+              type="date"
+              value={exportStartDate}
+              onChange={(e) => setExportStartDate(e.target.value)}
+              max={exportEndDate}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tot
+            </label>
+            <input
+              type="date"
+              value={exportEndDate}
+              onChange={(e) => setExportEndDate(e.target.value)}
+              min={exportStartDate}
+              max={getTodayDate()}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleExport('txt')}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition whitespace-nowrap"
+            >
+              📄 Export TXT
+            </button>
+            <button
+              onClick={() => handleExport('pdf')}
+              className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition whitespace-nowrap"
+            >
+              📕 Export PDF
+            </button>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 mt-3">
+          Genereer een overzichtsrapport van je voedingsinname voor de geselecteerde periode.
+        </p>
       </div>
 
       {/* Week Comparison */}

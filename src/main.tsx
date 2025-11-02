@@ -56,9 +56,9 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="py-6 flex-1">
+      <div className="flex-1 overflow-y-auto py-6">
         {activeTab === 'journaal' && <JournalPage />}
         {activeTab === 'tracking' && <TrackingPage />}
         {activeTab === 'dashboard' && <DashboardPage />}
