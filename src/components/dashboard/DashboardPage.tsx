@@ -153,14 +153,14 @@ export function DashboardPage() {
 
         days.set(entry.date, {
           date: entry.date,
-          calories: existing.calories + entry.calories,
-          protein: existing.protein + entry.protein,
-          carbohydrates: existing.carbohydrates + entry.carbohydrates,
-          sugars: existing.sugars + entry.sugars,
-          fat: existing.fat + entry.fat,
-          saturatedFat: existing.saturatedFat + entry.saturatedFat,
-          fiber: existing.fiber + entry.fiber,
-          sodium: existing.sodium + entry.sodium,
+          calories: existing.calories + (entry.calories || 0),
+          protein: existing.protein + (entry.protein || 0),
+          carbohydrates: existing.carbohydrates + (entry.carbohydrates || 0),
+          sugars: existing.sugars + (entry.sugars || 0),
+          fat: existing.fat + (entry.fat || 0),
+          saturatedFat: existing.saturatedFat + (entry.saturatedFat || 0),
+          fiber: existing.fiber + (entry.fiber || 0),
+          sodium: existing.sodium + (entry.sodium || 0),
         });
       }
     });
