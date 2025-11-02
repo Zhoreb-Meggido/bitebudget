@@ -62,6 +62,15 @@ class ProductsService {
    */
   async addProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> {
     try {
+      // Check for duplicate EAN if present
+      if (product.ean) {
+        const existing = await db.products.where('ean').equals(product.ean).first();
+        if (existing) {
+          console.log('⚠️ Product with EAN already exists:', existing.name);
+          throw new Error(`Product met barcode ${product.ean} bestaat al: ${existing.name}`);
+        }
+      }
+
       const now = getTimestamp();
       const newProduct: Product = {
         ...product,

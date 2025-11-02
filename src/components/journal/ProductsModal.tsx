@@ -83,26 +83,31 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
 
       if (product) {
         // Directly add the product with all OpenFoodFacts fields
-        await onAddProduct({
-          name: product.name,
-          calories: product.calories,
-          protein: product.protein,
-          carbohydrates: product.carbohydrates,
-          sugars: product.sugars,
-          fat: product.fat,
-          saturatedFat: product.saturatedFat,
-          fiber: product.fiber,
-          sodium: product.sodium,
-          favorite: false,
-          source: product.source,
-          ean: product.ean,
-          brand: product.brand,
-          nutri_score: product.nutri_score,
-          image_url: product.image_url,
-          openfoodfacts_id: product.openfoodfacts_id,
-          last_synced: product.last_synced,
-        });
-        alert(`✅ Product toegevoegd: ${product.name}`);
+        try {
+          await onAddProduct({
+            name: product.name,
+            calories: product.calories,
+            protein: product.protein,
+            carbohydrates: product.carbohydrates,
+            sugars: product.sugars,
+            fat: product.fat,
+            saturatedFat: product.saturatedFat,
+            fiber: product.fiber,
+            sodium: product.sodium,
+            favorite: false,
+            source: product.source,
+            ean: product.ean,
+            brand: product.brand,
+            nutri_score: product.nutri_score,
+            image_url: product.image_url,
+            openfoodfacts_id: product.openfoodfacts_id,
+            last_synced: product.last_synced,
+          });
+          alert(`✅ Product toegevoegd: ${product.name}`);
+        } catch (error: any) {
+          // Handle duplicate error
+          alert(error.message || 'Fout bij toevoegen product');
+        }
       } else {
         alert('❌ Product niet gevonden in OpenFoodFacts database');
       }
