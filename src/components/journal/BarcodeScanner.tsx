@@ -17,6 +17,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [cameras, setCameras] = useState<Array<{ id: string; label: string }>>([]);
   const [selectedCamera, setSelectedCamera] = useState<string>('');
+  const readerDivRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -54,9 +55,14 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
       return;
     }
 
-    try {
-      setError(null);
+    // First set isScanning to true so the div is rendered
+    setIsScanning(true);
+    setError(null);
 
+    // Wait for the div to be in the DOM
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    try {
       // Stop any existing scanner first
       if (scannerRef.current) {
         try {
@@ -65,6 +71,11 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
         } catch (e) {
           console.log('No active scanner to stop');
         }
+      }
+
+      // Check if the div exists
+      if (!document.getElementById('barcode-reader')) {
+        throw new Error('Scanner div not found in DOM');
       }
 
       const scanner = new Html5Qrcode('barcode-reader');
@@ -88,11 +99,10 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
           // console.log('Scanning...', errorMessage);
         }
       );
-
-      setIsScanning(true);
     } catch (err: any) {
       console.error('Error starting scanner:', err);
-      setError(err?.message || 'Kon scanner niet starten');
+      console.error('Full error details:', JSON.stringify(err, null, 2));
+      setError(`Fout: ${err?.message || 'Kon scanner niet starten'}`);
       setIsScanning(false);
     }
   };
