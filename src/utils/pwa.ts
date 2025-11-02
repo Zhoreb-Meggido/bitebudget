@@ -12,13 +12,8 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
-    // Get base path from current location (works in subdirectories like /bitebudget/)
-    const basePath = new URL(document.baseURI).pathname.replace(/\/[^/]*$/, '/');
-    const swPath = `${basePath}sw.js`;
-
-    const registration = await navigator.serviceWorker.register(swPath, {
-      scope: basePath,
-    });
+    // Register service worker at root of app (./sw.js)
+    const registration = await navigator.serviceWorker.register('./sw.js');
 
     console.log('✅ Service Worker registered:', registration.scope);
 
