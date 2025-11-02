@@ -18,9 +18,13 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   const [cameras, setCameras] = useState<Array<{ id: string; label: string }>>([]);
   const [selectedCamera, setSelectedCamera] = useState<string>('');
   const readerDivRef = useRef<HTMLDivElement>(null);
+  const hasScannedRef = useRef(false); // Prevent multiple scans
 
   useEffect(() => {
     if (isOpen) {
+      // Reset the scanned flag when modal opens
+      hasScannedRef.current = false;
+
       // Get available cameras
       Html5Qrcode.getCameras()
         .then((devices) => {
@@ -88,11 +92,21 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
         },
-        (decodedText) => {
+        async (decodedText) => {
+          // Prevent multiple scans
+          if (hasScannedRef.current) {
+            return;
+          }
+          hasScannedRef.current = true;
+
           // Success callback
           console.log('✅ Barcode scanned:', decodedText);
+
+          // Stop scanning FIRST to prevent multiple scans
+          await stopScanning();
+
+          // Then call the callback
           onScan(decodedText);
-          stopScanning();
         },
         (errorMessage) => {
           // Error callback (we can ignore most of these as they're just "no barcode found")
