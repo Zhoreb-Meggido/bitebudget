@@ -34,14 +34,14 @@ export function calculateProductNutrition(
   const multiplier = grams / 100;
 
   return {
-    calories: Math.round(product.calories * multiplier),
-    protein: parseFloat((product.protein * multiplier).toFixed(1)),
-    carbohydrates: parseFloat((product.carbohydrates * multiplier).toFixed(1)),
-    sugars: parseFloat((product.sugars * multiplier).toFixed(1)),
-    fat: parseFloat((product.fat * multiplier).toFixed(1)),
-    saturatedFat: parseFloat((product.saturatedFat * multiplier).toFixed(1)),
-    fiber: parseFloat((product.fiber * multiplier).toFixed(1)),
-    sodium: Math.round(product.sodium * multiplier),
+    calories: Math.round((product.calories || 0) * multiplier),
+    protein: parseFloat(((product.protein || 0) * multiplier).toFixed(1)),
+    carbohydrates: parseFloat(((product.carbohydrates || 0) * multiplier).toFixed(1)),
+    sugars: parseFloat(((product.sugars || 0) * multiplier).toFixed(1)),
+    fat: parseFloat(((product.fat || 0) * multiplier).toFixed(1)),
+    saturatedFat: parseFloat(((product.saturatedFat || 0) * multiplier).toFixed(1)),
+    fiber: parseFloat(((product.fiber || 0) * multiplier).toFixed(1)),
+    sodium: Math.round((product.sodium || 0) * multiplier),
   };
 }
 
