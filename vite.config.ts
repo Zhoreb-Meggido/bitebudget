@@ -19,7 +19,15 @@ export default defineConfig({
     outDir: 'dist',
     minify: 'esbuild',
     sourcemap: false,
-    copyPublicDir: true
+    copyPublicDir: true,
+    rollupOptions: {
+      output: {
+        // Add timestamp to force new hashes on each build (helpful for cache busting during development)
+        entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+        chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
+        assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`
+      }
+    }
   },
   // Server configuratie voor development
   server: {

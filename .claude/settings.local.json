@@ -10,7 +10,8 @@
       "Bash(findstr:*)",
       "Bash(npm run build:*)",
       "Bash(icons-placeholder.txt)",
-      "Bash(curl -s https://zhoreb-meggido.github.io/bitebudget/)"
+      "Bash(curl -s https://zhoreb-meggido.github.io/bitebudget/)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
