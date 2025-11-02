@@ -62,8 +62,9 @@ export function JournalPage() {
             </div>
           </div>
 
-          {/* Nutrition Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+          {/* Nutrition Overview - Hybrid Layout */}
+          {/* Top 3 Cards: Most Important Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="text-sm text-gray-600">Calorieën</div>
               <div className={`text-2xl font-bold ${totals.calories > goals.calories ? 'text-red-600' : 'text-blue-600'}`}>
@@ -78,31 +79,90 @@ export function JournalPage() {
               </div>
               <div className="text-xs text-gray-500">Doel: {goals.protein}g</div>
             </div>
-            <div className="bg-orange-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Vezels</div>
-              <div className={`text-2xl font-bold ${totals.fiber < limits.fiber ? 'text-orange-600' : 'text-green-600'}`}>
-                {totals.fiber.toFixed(1)}g
+            <div className="bg-amber-50 p-4 rounded-lg">
+              <div className="text-sm text-gray-600">Koolhydraten</div>
+              <div className="text-2xl font-bold text-amber-600">
+                {totals.carbohydrates.toFixed(1)}g
               </div>
-              <div className="text-xs text-gray-500">Min: {limits.fiber}g</div>
+              <div className="text-xs text-gray-500">Totaal</div>
             </div>
-            <div className="bg-red-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Verzadigd vet</div>
-              <div className={`text-2xl font-bold ${totals.saturatedFat > limits.saturatedFat ? 'text-red-600' : 'text-green-600'}`}>
-                {totals.saturatedFat.toFixed(1)}g
+          </div>
+
+          {/* Progress Bars: Secondary Metrics */}
+          <div className="space-y-3 mb-6">
+            {/* Sugars */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Suikers</span>
+                <span className="font-medium text-gray-700">{totals.sugars.toFixed(1)}g</span>
               </div>
-              <div className="text-xs text-gray-500">Max: {limits.saturatedFat}g</div>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Natrium</div>
-              <div className={`text-2xl font-bold ${totals.sodium > limits.sodium ? 'text-red-600' : 'text-green-600'}`}>
-                {totals.sodium}mg
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-yellow-500 h-2 rounded-full transition-all"
+                  style={{ width: '50%' }}
+                ></div>
               </div>
-              <div className="text-xs text-gray-500">Max: {limits.sodium}mg</div>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Totaal vet</div>
-              <div className="text-2xl font-bold text-gray-700">
-                {totals.fat.toFixed(1)}g
+
+            {/* Total Fat */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Totaal vet</span>
+                <span className="font-medium text-gray-700">{totals.fat.toFixed(1)}g</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-gray-500 h-2 rounded-full transition-all"
+                  style={{ width: '50%' }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Saturated Fat */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Verzadigd vet</span>
+                <span className={`font-medium ${totals.saturatedFat > limits.saturatedFat ? 'text-red-600' : 'text-green-600'}`}>
+                  {totals.saturatedFat.toFixed(1)}g / {limits.saturatedFat}g
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all ${totals.saturatedFat > limits.saturatedFat ? 'bg-red-500' : 'bg-green-500'}`}
+                  style={{ width: `${Math.min((totals.saturatedFat / limits.saturatedFat) * 100, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Fiber */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Vezels</span>
+                <span className={`font-medium ${totals.fiber < limits.fiber ? 'text-orange-600' : 'text-green-600'}`}>
+                  {totals.fiber.toFixed(1)}g / {limits.fiber}g
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all ${totals.fiber < limits.fiber ? 'bg-orange-500' : 'bg-green-500'}`}
+                  style={{ width: `${Math.min((totals.fiber / limits.fiber) * 100, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Sodium */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Natrium</span>
+                <span className={`font-medium ${totals.sodium > limits.sodium ? 'text-red-600' : 'text-green-600'}`}>
+                  {totals.sodium}mg / {limits.sodium}mg
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all ${totals.sodium > limits.sodium ? 'bg-red-500' : 'bg-green-500'}`}
+                  style={{ width: `${Math.min((totals.sodium / limits.sodium) * 100, 100)}%` }}
+                ></div>
               </div>
             </div>
           </div>
