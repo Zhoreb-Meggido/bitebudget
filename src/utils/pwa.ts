@@ -17,7 +17,12 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     const swPath = `${base}sw.js`;
 
     console.log('🔧 Registering service worker at:', swPath);
-    const registration = await navigator.serviceWorker.register(swPath);
+    console.log('🔧 Base URL:', base);
+
+    // Register with explicit scope
+    const registration = await navigator.serviceWorker.register(swPath, {
+      scope: base
+    });
 
     console.log('✅ Service Worker registered:', registration.scope);
 
