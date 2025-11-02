@@ -12,6 +12,17 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
   }
 
   try {
+    // First, unregister any old service workers that might be stuck
+    const existingRegistrations = await navigator.serviceWorker.getRegistrations();
+    console.log('🔍 Found', existingRegistrations.length, 'existing service worker(s)');
+
+    for (const reg of existingRegistrations) {
+      if (reg.scope !== window.location.origin + import.meta.env.BASE_URL) {
+        console.log('🗑️ Unregistering old service worker with scope:', reg.scope);
+        await reg.unregister();
+      }
+    }
+
     // Get base path from import.meta.env (Vite injects this at build time)
     const base = import.meta.env.BASE_URL || '/';
     const swPath = `${base}sw.js`;
@@ -21,10 +32,14 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 
     // Register with explicit scope
     const registration = await navigator.serviceWorker.register(swPath, {
-      scope: base
+      scope: base,
+      updateViaCache: 'none' // Always fetch fresh SW file
     });
 
     console.log('✅ Service Worker registered:', registration.scope);
+
+    // Force update check
+    registration.update();
 
     // Listen for updates
     registration.addEventListener('updatefound', () => {

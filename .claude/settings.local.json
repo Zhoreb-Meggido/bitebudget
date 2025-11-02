@@ -9,7 +9,8 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(npm run build:*)",
-      "Bash(icons-placeholder.txt)"
+      "Bash(icons-placeholder.txt)",
+      "Bash(curl -s https://zhoreb-meggido.github.io/bitebudget/)"
     ],
     "deny": [],
     "ask": []
