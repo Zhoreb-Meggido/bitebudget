@@ -28,7 +28,7 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
       const results = await openFoodFactsService.searchProducts(searchQuery, 20);
 
       if (results.length === 0) {
-        setError('Geen producten gevonden');
+        setError('Geen producten gevonden. Probeer een andere zoekterm of gebruik de barcode scanner.');
       }
 
       // Update source to 'search' instead of 'barcode'
@@ -40,7 +40,13 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
       setSearchResults(searchResults);
     } catch (err: any) {
       console.error('Search error:', err);
-      setError('Zoeken mislukt. Probeer opnieuw.');
+
+      // Detect CORS error
+      if (err.message && err.message.includes('NetworkError')) {
+        setError('⚠️ Browser blokkering: Firefox blokkeert OpenFoodFacts zoeken. Gebruik de barcode scanner of probeer Chrome/Edge.');
+      } else {
+        setError('Zoeken mislukt. Probeer opnieuw of gebruik de barcode scanner.');
+      }
     } finally {
       setIsSearching(false);
     }
@@ -73,6 +79,12 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
         </div>
 
         <div className="p-6">
+          {/* Browser compatibility warning */}
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+            ℹ️ <strong>Let op:</strong> Zoeken werkt mogelijk niet in Firefox vanwege API beperkingen.
+            Barcode scannen werkt wel in alle browsers!
+          </div>
+
           <div className="flex gap-2 mb-4">
             <input
               type="text"

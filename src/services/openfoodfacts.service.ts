@@ -36,16 +36,15 @@ class OpenFoodFactsService {
 
   /**
    * Lookup product by barcode (EAN-13)
+   *
+   * Note: We don't send custom headers to avoid CORS preflight issues in Firefox.
    */
   async getProductByBarcode(barcode: string): Promise<Product | null> {
     try {
       const url = `${OFF_API_BASE}/api/v2/product/${barcode}.json`;
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
-      });
+      // Simple GET request without custom headers (avoids CORS preflight)
+      const response = await fetch(url);
 
       if (!response.ok) {
         console.warn(`❌ OFF API error: ${response.status} ${response.statusText}`);
@@ -68,17 +67,18 @@ class OpenFoodFactsService {
 
   /**
    * Search products by name
+   *
+   * Note: We don't send custom headers to avoid CORS preflight issues in Firefox.
+   * Simple GET requests without custom headers work across all browsers.
    */
   async searchProducts(query: string, pageSize: number = 10): Promise<Product[]> {
     try {
-      // Try v3 API first (better CORS support)
-      const url = `${OFF_API_BASE}/api/v3/search?q=${encodeURIComponent(query)}&page_size=${pageSize}&fields=code,product_name,brands,nutriments,nutriscore_grade,image_front_small_url,image_front_url,image_url`;
+      // Use CGI endpoint with JSONP callback workaround for CORS
+      // The fields parameter limits response size
+      const url = `${OFF_API_BASE}/cgi/search.pl?search_terms=${encodeURIComponent(query)}&page_size=${pageSize}&json=true&fields=code,product_name,brands,nutriments,nutriscore_grade,image_front_small_url,image_front_url,image_url`;
 
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': USER_AGENT,
-        },
-      });
+      // Simple GET request without custom headers (avoids CORS preflight)
+      const response = await fetch(url);
 
       if (!response.ok) {
         console.warn(`❌ OFF API error: ${response.status} ${response.statusText}`);
