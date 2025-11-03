@@ -65,10 +65,19 @@ export function CloudSyncSettings() {
   };
 
   const handleDisconnect = async () => {
+    // Disable auto-sync first
+    if (autoSyncEnabled) {
+      syncService.disableAutoSync();
+      setAutoSyncEnabled(false);
+    }
+
+    // Sign out from Google Drive
     await googleDriveService.signOut();
+
+    // Clear local state
     setIsConnected(false);
-    setSuccess('Ontkoppeld van Google Drive');
     setCloudInfo(null);
+    setSuccess('Ontkoppeld van Google Drive');
   };
 
   const handleSync = async () => {

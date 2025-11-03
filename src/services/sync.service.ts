@@ -24,18 +24,35 @@ class SyncService {
   private autoSyncInterval: number | null = null;
   private syncDebounceTimeout: number | null = null;
 
-  /**
-   * Enable auto-sync (will check for updates every 5 minutes)
-   */
-  enableAutoSync(password: string): void {
-    this.autoSyncEnabled = true;
-    this.storePassword(password);
+  constructor() {
+    // Restore auto-sync state on startup
+    this.initializeAutoSync();
+  }
 
-    // Check for updates every 5 minutes
+  /**
+   * Initialize auto-sync on app startup if it was previously enabled
+   */
+  private initializeAutoSync(): void {
+    const autoSyncEnabled = localStorage.getItem('auto_sync_enabled') === 'true';
+    const password = this.getStoredPassword();
+
+    if (autoSyncEnabled && password) {
+      this.autoSyncEnabled = true;
+      this.startAutoSyncInterval(password);
+      console.log('Auto-sync restored from previous session');
+    }
+  }
+
+  /**
+   * Start the auto-sync interval timer
+   */
+  private startAutoSyncInterval(password: string): void {
+    // Clear existing interval if any
     if (this.autoSyncInterval) {
       clearInterval(this.autoSyncInterval);
     }
 
+    // Check for updates every 5 minutes
     this.autoSyncInterval = window.setInterval(async () => {
       try {
         await this.pullIfNewer(password);
@@ -46,10 +63,23 @@ class SyncService {
   }
 
   /**
+   * Enable auto-sync (will check for updates every 5 minutes)
+   */
+  enableAutoSync(password: string): void {
+    this.autoSyncEnabled = true;
+    this.storePassword(password);
+    localStorage.setItem('auto_sync_enabled', 'true');
+
+    this.startAutoSyncInterval(password);
+  }
+
+  /**
    * Disable auto-sync
    */
   disableAutoSync(): void {
     this.autoSyncEnabled = false;
+    localStorage.setItem('auto_sync_enabled', 'false');
+
     if (this.autoSyncInterval) {
       clearInterval(this.autoSyncInterval);
       this.autoSyncInterval = null;
