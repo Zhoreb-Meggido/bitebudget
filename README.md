@@ -1,8 +1,8 @@
-# BiteBudget (Voedseljournaal) v1.0.0
+# BiteBudget (Voedseljournaal) v1.1.0
 
-**Progressive Web App (PWA) voor food tracking - werkt volledig offline!**
+**Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
-Modern React + TypeScript food tracking app met OpenFoodFacts integratie. Installeerbaar als native app op desktop en mobile - geen server vereist, alle data lokaal.
+Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
 ---
 
@@ -18,22 +18,23 @@ npm run dev
 ### Production Build
 ```bash
 npm run build
-# Output:
-#   - dist/bitebudget.html (single file met inline assets)
-#   - dist/manifest.json (PWA manifest)
-#   - dist/sw.js (service worker voor offline support)
-#   - dist/icon-*.png (app icons)
+# Output in dist/:
+#   - index.html (main app)
+#   - assets/ (JS/CSS chunks)
+#   - manifest.json (PWA manifest)
+#   - sw.js (service worker)
+#   - icon-*.png (app icons)
 ```
 
 ### PWA Deployment
 1. Host de bestanden uit `dist/` op een HTTPS server (GitHub Pages, Netlify, Vercel, etc.)
 2. Open de URL op je mobiel/desktop
 3. Browser vraagt: "Install BiteBudget?" → Klik "Install"
-4. App werkt nu volledig offline met camera toegang!
+4. App werkt nu volledig offline met camera en cloud sync!
 
 ---
 
-## 📱 PWA Features (v1.0.0)
+## 📱 PWA Features
 
 - ✅ **Installeerbaar** - "Add to Home Screen" op iOS/Android
 - ✅ **Offline First** - Service Worker cachet alle assets
@@ -41,18 +42,56 @@ npm run build
 - ✅ **Auto-Updates** - Nieuwe versies worden automatisch gedetecteerd
 - ✅ **Native Feel** - Standalone mode zonder browser UI
 - ✅ **App Shortcuts** - Snelkoppelingen naar Vandaag en Producten
+- ✅ **Cloud Sync** - End-to-end encrypted backup naar Google Drive
 
 ---
 
-## ✅ v1.0.0 - PWA + OpenFoodFacts (Huidige Versie)
+## ✨ v1.1.0 - Cloud Sync + Enhancements (Huidige Versie)
+
+### **Nieuwe Features**
+
+#### **Google Drive Sync** ☁️
+- ✅ **End-to-End Encryption** - AES-GCM met PBKDF2 (100k iterations)
+- ✅ **Automatische Synchronisatie** - Debounced uploads (30s) + periodic pulls (5 min)
+- ✅ **Smart Merge** - Bidirectionale sync met timestamp-based conflict resolution
+- ✅ **Complete Data** - Entries, Products, Weights, Settings
+- ✅ **Persistent State** - Auto-sync blijft actief na app herstart
+- ✅ **OAuth 2.0** - Veilige Google Drive authenticatie met restricted scope
+- ✅ **Privacy First** - Alleen jij kunt je data lezen
+
+#### **Dashboard Verbeteringen**
+- ✅ **8 Metrics Tracking** - Calories, Protein, Carbs, Sugars, Fat, Saturated Fat, Fiber, Sodium
+- ✅ **Gewichtsprojectie** - Wekelijkse voorspelling gebaseerd op calorietekort
+- ✅ **Optimized Layout** - Chart bovenaan, metrics eronder
+
+#### **Analyse Verbeteringen**
+- ✅ **ISO Week Numbers** - Correcte weeknummering in kalender heatmap
+- ✅ **Real Week Tracking** - Geen reversed numbering meer
+
+#### **Technical Improvements**
+- ✅ **Persistent Auto-Sync** - State survives page reload
+- ✅ **Token Management** - OAuth tokens worden veilig opgeslagen
+- ✅ **Cleanup on Disconnect** - Auto-sync wordt uitgeschakeld bij uitloggen
+
+---
+
+## ✅ v1.0.0 - PWA + OpenFoodFacts
 
 ### **Core Functionaliteit**
 - ✅ **Journaal** - Dagelijkse maaltijd tracking met nutrition cards
 - ✅ **Tracking** - Gewicht tracking met grafieken en geschiedenis
-- ✅ **Dashboard** - Multi-metric visualisaties (6 metrics, 10 time ranges)
+- ✅ **Dashboard** - Multi-metric visualisaties (8 metrics, 10 time ranges)
 - ✅ **Analyse** - Week vergelijking, kalender heatmap, weekday trends
 - ✅ **Data** - Import/Export met duplicaat-detectie, rapportage (TXT/PDF)
 - ✅ **Instellingen** - Volledig configureerbare doelen en limieten
+
+### **OpenFoodFacts Integration**
+- ✅ **Barcode Scanner** - html5-qrcode camera integratie
+- ✅ **Text Search** - OpenFoodFacts API v2 product zoeken
+- ✅ **Auto-fill** - Nutritie data automatisch invullen
+- ✅ **Product Metadata** - Nutri-score, brand, foto's
+- ✅ **Source Tracking** - Visual badges (manual/barcode/search)
+- ✅ **Carbohydrates & Sugars** - Complete macro tracking
 
 ### **UI/UX**
 - ✅ Responsive design (desktop & mobile optimized)
@@ -67,79 +106,26 @@ npm run build
 - ✅ Export opties (Full backup, entries, products, weights)
 - ✅ Rapport generatie (TXT en PDF met grafieken)
 - ✅ Timezone-safe date handling
-
-### **Technical Features**
-- ✅ Single-file deployment (vite-plugin-singlefile)
-- ✅ All metrics met multi-axis charts
-- ✅ Custom hooks voor state management
-- ✅ Service pattern met singletons
-- ✅ TypeScript strict mode
-- ✅ Tailwind CSS v3
+- ✅ Cloud backup met encryption
 
 ---
 
-### **v1.0.0 New Features**
+## 🔮 v1.2.0 Roadmap (Future)
 
-#### **OpenFoodFacts Integration** ✅
-- ✅ **Barcode Scanner** - html5-qrcode camera integratie
-- ✅ **Text Search** - OpenFoodFacts API v2 product zoeken
-- ✅ **Auto-fill** - Nutritie data automatisch invullen
-- ✅ **Product Metadata** - Nutri-score, brand, foto's
-- ✅ **Source Tracking** - Visual badges (manual/barcode/search)
-- ✅ **Carbohydrates & Sugars** - Complete macro tracking
+### **Export Improvements**
+- [ ] PDF export met alle nieuwe metrics (koolhydraten, suikers, vet)
+- [ ] Lijngrafiek per week in PDF export
+- [ ] TXT export met koolhydraten en suikers
+- [ ] Export feedback op mobiel (success melding + direct openen)
+- [ ] PDF automatisch openen na export
 
-#### **Progressive Web App (PWA)** ✅
-- ✅ **Service Worker** - Offline-first caching strategie
-- ✅ **Web App Manifest** - Installeerbaar op alle platforms
-- ✅ **Standalone Mode** - Native app ervaring
-- ✅ **Auto-Updates** - Versie detectie en update prompts
-- ✅ **HTTPS Ready** - Deployment via GitHub Pages/Netlify
-
----
-
-## 🔮 v1.1.0 Roadmap (Future)
-
-### **Product Schema v2.0**
-```typescript
-interface Product {
-  // Existing
-  id: string;
-  name: string;
-  calories: number;  // per 100g
-  protein: number;
-  fat: number;
-  saturatedFat: number;
-  fiber: number;
-  sodium: number;
-  favorite: boolean;
-  created_at: string;
-  updated_at: string;
-
-  // New in v2.0
-  ean?: string;                    // Barcode/EAN-13
-  source: 'manual' | 'barcode' | 'search';
-  openfoodfacts_id?: string;       // OFF product code
-  nutri_score?: string;            // A-E rating
-  image_url?: string;              // Product foto
-  brand?: string;                  // Merk
-  last_synced?: string;            // Voor updates from OFF
-}
-```
-
-### **Phase 2: SQLite Migration** (Deprioritized - Browser support issues)
-- [ ] **Note:** SQLite migration postponed due to limited mobile browser support
-- [ ] File System Access API not yet available on Android/iOS
-- [ ] Will revisit when browser support improves or native app wrapper is considered
-- [ ] Current IndexedDB + JSON export/import works well for portability
-
-### **Future Considerations (v1.1+)**
-- [ ] Improved JSON sync (timestamps, conflict detection, delta sync)
-- [ ] PWA features (offline caching, install prompt)
+### **Future Considerations**
 - [ ] Photo attachments voor meals
 - [ ] Recipe builder (meerdere producten → opslaan als nieuw product)
 - [ ] Light/Dark theme toggle
 - [ ] Internationalization (i18n - Engels)
 - [ ] Device API integration (Garmin, Sacoma scale imports)
+- [ ] Meal templates en favorites
 
 ---
 
@@ -151,67 +137,72 @@ src/
 │   ├── journal/
 │   │   ├── JournalPage.tsx           ✅ Daily meal tracking
 │   │   ├── AddMealModal.tsx          ✅ Add meals (3 methods)
-│   │   └── ProductsModal.tsx         ✅ Product CRUD
+│   │   ├── ProductsModal.tsx         ✅ Product CRUD
+│   │   ├── BarcodeScanner.tsx        ✅ Camera barcode scanning
+│   │   └── OpenFoodFactsSearch.tsx   ✅ Product search
 │   ├── tracking/
 │   │   └── TrackingPage.tsx          ✅ Weight tracking + charts
 │   ├── dashboard/
-│   │   └── DashboardPage.tsx         ✅ Multi-metric visualizations
+│   │   └── DashboardPage.tsx         ✅ 8 metrics + projections
 │   ├── analyse/
-│   │   └── AnalysePage.tsx           ✅ Week comparison + heatmap + trends
+│   │   └── AnalysePage.tsx           ✅ Week comparison + heatmap
 │   ├── data/
 │   │   └── DataPage.tsx              ✅ Import/Export + Reports
 │   ├── settings/
-│   │   └── SettingsPage.tsx          ✅ User preferences
+│   │   ├── SettingsPage.tsx          ✅ User preferences
+│   │   └── CloudSyncSettings.tsx     ✅ Google Drive sync
 │   └── TabNavigation.tsx             ✅ Responsive nav (6 tabs)
 ├── services/
 │   ├── database.service.ts           ✅ Dexie DB initialization
-│   ├── entries.service.ts            ✅ Meal entries CRUD (w/ dedup)
-│   ├── products.service.ts           ✅ Products CRUD (w/ smart merge)
+│   ├── entries.service.ts            ✅ Meal entries CRUD
+│   ├── products.service.ts           ✅ Products CRUD
 │   ├── settings.service.ts           ✅ User settings
-│   └── weights.service.ts            ✅ Weight tracking CRUD (w/ dedup)
+│   ├── weights.service.ts            ✅ Weight tracking CRUD
+│   ├── openfoodfacts.service.ts      ✅ OFF API integration
+│   ├── encryption.service.ts         ✅ AES-GCM encryption
+│   ├── googledrive.service.ts        ✅ OAuth + Drive API
+│   └── sync.service.ts               ✅ Sync orchestration
 ├── hooks/
 │   ├── useDatabase.ts                ✅ DB connection hook
-│   ├── useEntries.ts                 ✅ Entries state management
-│   ├── useProducts.ts                ✅ Products state management
-│   ├── useSettings.ts                ✅ Settings state management
-│   └── useWeights.ts                 ✅ Weights state management
+│   ├── useEntries.ts                 ✅ Entries with auto-sync
+│   ├── useProducts.ts                ✅ Products state
+│   ├── useSettings.ts                ✅ Settings state
+│   └── useWeights.ts                 ✅ Weights with auto-sync
 ├── utils/
 │   ├── date.utils.ts                 ✅ Date helpers (UTC-safe)
-│   ├── download.utils.ts             ✅ File download helpers
+│   ├── download.utils.ts             ✅ File download
 │   ├── calculations.ts               ✅ Nutrition calculations
-│   └── report.utils.ts               ✅ TXT/PDF generation
+│   └── export.utils.ts               ✅ TXT/PDF generation
 ├── types/
-│   └── database.types.ts             ✅ All TypeScript interfaces
+│   └── database.types.ts             ✅ TypeScript interfaces
 └── main.tsx                          ✅ App entry point
 
-dist/
-└── bitebudget.html                   ✅ Single-file production build
+public/
+├── manifest.json                     ✅ PWA manifest
+├── sw.js                             ✅ Service worker
+└── icons/                            ✅ PWA icons (192x192, 512x512)
 ```
 
 ---
 
 ## 🔧 Tech Stack
 
-### Current (v0.9.0)
+### Current (v1.1.0)
 - **React 18** + **TypeScript 5**
 - **Vite 5** - Build tool
 - **Tailwind CSS 3** - Styling
 - **Dexie.js 3.2** - IndexedDB wrapper
 - **Chart.js 4.5** + **react-chartjs-2** - Visualizations
 - **jsPDF 2.5** + **jspdf-autotable** - PDF generation
-- **vite-plugin-singlefile** - Single HTML deployment
-
-### Planned (v1.0.0)
-- **sql.js-httpvfs** or **wa-sqlite** - SQLite in browser
-- **OpenFoodFacts API v2** - Product database
-- **QuaggaJS** or **ZXing** - Barcode scanning
-- **Workbox** - PWA/offline support
+- **html5-qrcode** - Barcode scanning
+- **Google Identity Services** - OAuth 2.0
+- **Web Crypto API** - End-to-end encryption
 
 ---
 
 ## 📊 Database Schema
 
-### Current: IndexedDB (Dexie)
+### IndexedDB (Dexie)
 
 **Entries** (Maaltijden)
 ```typescript
@@ -223,6 +214,8 @@ dist/
   products?: Array<{name: string, grams: number}>;
   calories: number;
   protein: number;
+  carbohydrates: number;     // v1.0+
+  sugars: number;            // v1.0+
   fat: number;
   saturatedFat: number;
   fiber: number;
@@ -237,12 +230,19 @@ dist/
 {
   id: string;
   name: string;
-  calories: number;          // per 100g
-  protein: number;           // per 100g
-  fat: number;               // per 100g
-  saturatedFat: number;      // per 100g
-  fiber: number;             // per 100g
-  sodium: number;            // per 100g (mg)
+  ean?: string;                   // v1.0+ Barcode
+  source: 'manual' | 'barcode' | 'search';  // v1.0+
+  calories: number;               // per 100g
+  protein: number;
+  carbohydrates: number;          // v1.0+
+  sugars: number;                 // v1.0+
+  fat: number;
+  saturatedFat: number;
+  fiber: number;
+  sodium: number;                 // mg
+  brand?: string;                 // v1.0+
+  nutri_score?: string;           // v1.0+ (A-E)
+  image_url?: string;             // v1.0+
   favorite: boolean;
   created_at: string;
   updated_at: string;
@@ -277,96 +277,96 @@ dist/
 }
 ```
 
+### Cloud Sync Data Format (v1.1.0)
+```typescript
+interface SyncData {
+  version: '1.1';
+  timestamp: string;
+  entries: Entry[];
+  products: Product[];
+  weights: Weight[];          // v1.1+
+  settings: UserSettings;     // v1.1+
+}
+```
+
+**Encryption:** AES-GCM 256-bit
+**Key Derivation:** PBKDF2 (100,000 iterations)
+**Storage:** Google Drive (restricted scope: drive.file)
+
 ---
 
-## 🎯 OpenFoodFacts API Integration Plan
+## ☁️ Cloud Sync Architecture
 
-### API Endpoints
-```typescript
-// Barcode lookup
-GET https://world.openfoodfacts.org/api/v2/product/{ean}.json
+### Sync Flow
 
-// Text search
-GET https://world.openfoodfacts.org/cgi/search.pl?search_terms={query}&json=true
+**Auto-Sync (Bidirectional Merge):**
+1. User makes change → 30s debounce timer starts
+2. Timer expires → Pull latest from cloud
+3. Merge cloud changes with local (newest wins)
+4. Upload merged data
+5. Periodic pull every 5 minutes (when online)
 
-// Headers
-{
-  'User-Agent': 'BiteBudget - Food Tracking App - Version 1.0'
-}
-```
+**Manual Sync:**
+- Force upload (no merge) - overwrites cloud with local
 
-### Response Mapping
-```typescript
-interface OpenFoodFactsProduct {
-  code: string;              // EAN
-  product_name: string;
-  brands?: string;
-  nutriments: {
-    energy_kcal_100g: number;
-    proteins_100g: number;
-    fat_100g: number;
-    'saturated-fat_100g': number;
-    fiber_100g: number;
-    sodium_100g: number;      // gram! (convert to mg)
-  };
-  nutriscore_grade?: string;  // a-e
-  image_url?: string;
-}
+**Manual Restore:**
+- Full restore (no merge) - overwrites local with cloud
 
-// Conversion helper
-function offToProduct(off: OpenFoodFactsProduct): Product {
-  return {
-    name: off.product_name,
-    ean: off.code,
-    brand: off.brands,
-    calories: off.nutriments.energy_kcal_100g,
-    protein: off.nutriments.proteins_100g,
-    fat: off.nutriments.fat_100g,
-    saturatedFat: off.nutriments['saturated-fat_100g'],
-    fiber: off.nutriments.fiber_100g,
-    sodium: off.nutriments.sodium_100g * 1000, // g → mg
-    nutri_score: off.nutriscore_grade,
-    image_url: off.image_url,
-    source: 'barcode',
-    openfoodfacts_id: off.code,
-    favorite: false,
-    // ... timestamps
-  };
-}
-```
+### Conflict Resolution
 
-### UX Flow
-1. **Scan Barcode** → Lookup EAN → Auto-fill product
-2. **Search by Name** → Select from results → Auto-fill product
-3. **Manual Entry** → Fallback option (always available)
+**Entries:** Composite key (date + time + name), newest `updated_at` wins
+**Products:** Add new only, preserve local customizations
+**Weights:** By date, newest `created_at` wins
+**Settings:** Cloud always wins (no timestamps yet)
 
-### Smart Features
-- Cache OFF responses (reduce API calls)
-- Update button for synced products
-- Highlight when OFF data is newer
-- Merge conflicts: user wins vs. OFF wins option
+### Security
+
+- **End-to-End Encrypted** - Google cannot read your data
+- **OAuth 2.0** - Restricted scope (drive.file only)
+- **No Server** - Direct client-to-Drive communication
+- **Password-Based** - Use same password on all devices
 
 ---
 
 ## 🚢 Deployment
 
-### Standalone HTML File
+### GitHub Pages (Recommended)
 ```bash
 npm run build
-# Output: dist/bitebudget.html (1.26 MB, gzipped: 395 KB)
+# Push dist/ to gh-pages branch
+# Enable GitHub Pages in repo settings
 ```
 
 ### Features
-- **No server required** - Open HTML file directly
-- **Offline capable** - All assets inline
-- **Cross-platform** - Windows, Android browsers
-- **Privacy-first** - All data stays local (IndexedDB)
+- **HTTPS by default** - Required for PWA
+- **Fast CDN** - Global edge network
+- **Free hosting** - For public repos
+- **Auto deploy** - Via GitHub Actions
 
 ### Browser Support
-- ✅ Chrome/Edge (recommended)
-- ✅ Firefox
-- ✅ Safari (iOS/macOS)
-- ✅ Android browsers
+- ✅ Chrome/Edge 90+ (recommended)
+- ✅ Firefox 88+
+- ✅ Safari 14+ (iOS/macOS)
+- ✅ Android browsers (Chrome, Samsung Internet)
+
+**Note:** Camera access requires HTTPS or localhost
+
+---
+
+## 🔒 Privacy & Security
+
+### Data Storage
+- **Local First** - All data in IndexedDB (browser storage)
+- **Optional Cloud** - Opt-in encrypted backup
+- **No Analytics** - Zero tracking
+- **No Cookies** - Pure client-side app
+
+### Cloud Sync Security
+- **AES-GCM 256-bit** encryption
+- **PBKDF2** key derivation (100k iterations)
+- **Google Drive restricted scope** - Only app-created files
+- **OAuth 2.0** - Secure authentication
+- **Your password = your encryption key** - We never see it
 
 ---
 
@@ -374,35 +374,55 @@ npm run build
 
 ### Non-Critical
 - HMR Fast Refresh warnings in dev mode (doesn't affect functionality)
-- Port auto-increment on conflicts (3000 → 3001 → 3002)
+- OAuth tokens expire after 1 hour (requires re-login)
+
+### Fixed in v1.1.0
+- ✅ Auto-sync state persistence
+- ✅ ISO week numbers in heatmap
+- ✅ Duplicate dashboard cards removed
+- ✅ Settings sync included
+
+### Fixed in v1.0.0
+- ✅ OpenFoodFacts integration
+- ✅ PWA offline support
+- ✅ Barcode scanning
 
 ### Fixed in v0.9.0
-- ✅ Heatmap timezone shifts (UTC-safe parsing)
-- ✅ Import duplicates (smart dedup logic)
-- ✅ Page width inconsistencies (all max-w-7xl)
-- ✅ Mobile navigation overflow (icon-only on small screens)
+- ✅ Heatmap timezone shifts
+- ✅ Import duplicates
+- ✅ Page width inconsistencies
+- ✅ Mobile navigation overflow
 
 ---
 
 ## 📝 Version History
 
-### v0.9.0 (Current - October 2024)
-**Feature Complete - Ready for Public v1.0**
-- ✅ All 6 tabs implemented and polished
-- ✅ Full responsive + adaptive mobile design
+### v1.1.0 (November 2024) - Current
+**Cloud Sync + Enhancements**
+- ✅ End-to-end encrypted Google Drive sync
+- ✅ Automatic bidirectional merge
+- ✅ Persistent auto-sync state
+- ✅ Weights & settings in sync data
+- ✅ 8 metrics dashboard with projections
+- ✅ ISO week numbers in heatmap
+- ✅ Optimized dashboard layout
+
+### v1.0.0 (November 2024)
+**PWA + OpenFoodFacts**
+- ✅ Progressive Web App with offline support
+- ✅ Barcode scanner integration
+- ✅ OpenFoodFacts product database
+- ✅ Carbohydrates & sugars tracking
+- ✅ Service worker for caching
+- ✅ Installable on all platforms
+
+### v0.9.0 (October 2024)
+**Feature Complete**
+- ✅ All 6 tabs implemented
+- ✅ Responsive mobile design
 - ✅ Report generation (TXT/PDF)
-- ✅ Smart import with duplicate detection
-- ✅ Multi-axis charts with all metrics
-- ✅ Single-file build → `bitebudget.html`
-
-### v3.4 (October 2024)
-- ✅ Journal component complete
-- ✅ Database layer (Dexie + services)
-- ✅ Custom hooks for state management
-
-### v1.0 (Legacy)
-- Original single-file monolith (`voedseljournaal-app.html`)
-- 4000+ lines of inline HTML/CSS/JS
+- ✅ Smart import with dedup
+- ✅ Multi-axis charts
 
 ---
 
@@ -410,12 +430,12 @@ npm run build
 
 This is a personal project, but ideas and feedback are welcome!
 
-### Roadmap Input
-Have ideas for v1.0? Open an issue or discussion about:
-- SQLite migration approaches
-- Barcode scanner libraries
-- OpenFoodFacts integration UX
-- PWA features
+### Feature Requests
+Open an issue or discussion about:
+- Export improvements
+- New chart types
+- Additional integrations
+- UI/UX enhancements
 
 ---
 
@@ -425,6 +445,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** October 31, 2024
-**Status:** v0.9.0 Feature Complete - Starting v1.0
-**Next:** OpenFoodFacts integration (barcode scanner + product database)
+**Last Updated:** November 3, 2024
+**Status:** v1.1.0 - Cloud Sync Active
+**Next:** Export improvements (PDF/TXT enhancements)
