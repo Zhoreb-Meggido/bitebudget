@@ -184,7 +184,7 @@ export function SettingsPage() {
         </div>
 
         {/* Cloud Sync */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-white">
           <CloudSyncSettings />
         </div>
 

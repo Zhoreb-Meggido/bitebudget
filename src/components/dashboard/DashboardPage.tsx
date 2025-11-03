@@ -168,18 +168,21 @@ export function DashboardPage() {
     return Array.from(days.values()).sort((a, b) => a.date.localeCompare(b.date));
   }, [entries, dateRange]);
 
-  // Calculate averages
-  const averages = useMemo(() => {
+  // Calculate averages and stats
+  const stats = useMemo(() => {
     if (dailyData.length === 0) {
       return {
-        calories: 0,
-        protein: 0,
-        carbohydrates: 0,
-        sugars: 0,
-        fat: 0,
-        saturatedFat: 0,
-        fiber: 0,
-        sodium: 0,
+        averages: {
+          calories: 0,
+          protein: 0,
+          carbohydrates: 0,
+          sugars: 0,
+          fat: 0,
+          saturatedFat: 0,
+          fiber: 0,
+          sodium: 0,
+        },
+        projectedWeightChange: 0,
       };
     }
 
@@ -204,7 +207,7 @@ export function DashboardPage() {
     });
 
     const count = dailyData.length;
-    return {
+    const averages = {
       calories: Math.round(sum.calories / count),
       protein: Math.round(sum.protein / count),
       carbohydrates: Math.round(sum.carbohydrates / count),
@@ -214,7 +217,21 @@ export function DashboardPage() {
       fiber: Math.round(sum.fiber / count),
       sodium: Math.round(sum.sodium / count),
     };
-  }, [dailyData]);
+
+    // Calculate projected weight change per week
+    // Calorie deficit/surplus per day, assuming 7700 kcal = 1 kg
+    const calorieGoal = settings.caloriesRest; // Use rest day as default
+    const dailyDeficit = calorieGoal - averages.calories;
+    const weeklyDeficit = dailyDeficit * 7;
+    const projectedWeightChange = parseFloat((weeklyDeficit / 7700).toFixed(2));
+
+    return {
+      averages,
+      projectedWeightChange,
+    };
+  }, [dailyData, settings]);
+
+  const averages = stats.averages;
 
   // Toggle metric visibility
   const toggleMetric = (key: MetricKey) => {
@@ -393,7 +410,74 @@ export function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* Summary Cards */}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            {/* Avg Calories */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-gray-600 text-sm font-medium">Gem. Calorieën</h3>
+                <span className="text-xl">🔥</span>
+              </div>
+              <p className="text-2xl font-bold text-blue-600">{averages.calories}</p>
+              <p className="text-xs text-gray-500 mt-1">Max: {settings.caloriesRest} kcal</p>
+            </div>
+
+            {/* Avg Protein */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-gray-600 text-sm font-medium">Gem. Eiwit</h3>
+                <span className="text-xl">💪</span>
+              </div>
+              <p className="text-2xl font-bold text-green-600">{averages.protein}g</p>
+              <p className="text-xs text-gray-500 mt-1">Doel: {settings.proteinRest}g</p>
+            </div>
+
+            {/* Avg Fiber */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-gray-600 text-sm font-medium">Gem. Vezels</h3>
+                <span className="text-xl">🌾</span>
+              </div>
+              <p className="text-2xl font-bold text-amber-600">{averages.fiber}g</p>
+              <p className="text-xs text-gray-500 mt-1">Min: {settings.fiberMin}g/dag</p>
+            </div>
+
+            {/* Avg Saturated Fat */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-gray-600 text-sm font-medium">Gem. Verzadigd vet</h3>
+                <span className="text-xl">🧈</span>
+              </div>
+              <p className="text-2xl font-bold text-red-600">{averages.saturatedFat}g</p>
+              <p className="text-xs text-gray-500 mt-1">Max: {settings.saturatedFatMax}g/dag</p>
+            </div>
+
+            {/* Avg Sodium */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-gray-600 text-sm font-medium">Gem. Natrium</h3>
+                <span className="text-xl">🧂</span>
+              </div>
+              <p className="text-2xl font-bold text-purple-600">{averages.sodium}mg</p>
+              <p className="text-xs text-gray-500 mt-1">Max: {settings.sodiumMax}mg/dag</p>
+            </div>
+
+            {/* Projected Weight Change */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-gray-600 text-sm font-medium">Projectie/week</h3>
+                <span className="text-xl">{stats.projectedWeightChange < 0 ? '📉' : '📈'}</span>
+              </div>
+              <p className={`text-2xl font-bold ${stats.projectedWeightChange < 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {stats.projectedWeightChange > 0 ? '+' : ''}{stats.projectedWeightChange}kg
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {stats.projectedWeightChange < 0 ? 'Gewichtsverlies' : 'Gewichtstoename'}
+              </p>
+            </div>
+          </div>
+
+          {/* Detailed Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             {METRICS.map(metric => (
               <div key={metric.key} className="bg-white rounded-lg shadow p-4">

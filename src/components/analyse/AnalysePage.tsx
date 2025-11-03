@@ -5,6 +5,19 @@ import { getTodayDate } from '@/utils';
 
 type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
 
+// Helper function to calculate ISO week number
+function getISOWeekNumber(date: Date): number {
+  const target = new Date(date.valueOf());
+  const dayNr = (date.getDay() + 6) % 7; // Monday = 0
+  target.setDate(target.getDate() - dayNr + 3); // Thursday in current week
+  const firstThursday = target.valueOf();
+  target.setMonth(0, 1); // First day of year
+  if (target.getDay() !== 4) {
+    target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7); // First Thursday of year
+  }
+  return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000); // 604800000 = 7 * 24 * 3600 * 1000
+}
+
 interface DayData {
   date: string;
   calories: number;
@@ -490,10 +503,15 @@ export function AnalysePage() {
                 </div>
 
                 {/* Heatmap grid */}
-                {heatmapData.map((week, weekIndex) => (
+                {heatmapData.map((week, weekIndex) => {
+                  // Calculate ISO week number for Monday of this week
+                  const mondayDate = new Date(week[0].date + 'T12:00:00');
+                  const weekNumber = getISOWeekNumber(mondayDate);
+
+                  return (
                   <div key={weekIndex} className="flex gap-1 mb-1">
                     <div className="w-12 text-xs text-gray-600 flex items-center">
-                      W{heatmapData.length - weekIndex}
+                      W{weekNumber}
                     </div>
                     {week.map((day, dayIndex) => {
                       const dayDate = new Date(day.date);
@@ -512,7 +530,8 @@ export function AnalysePage() {
                       );
                     })}
                   </div>
-                ))}
+                  );
+                })}
 
                 {/* Legend */}
                 <div className="mt-6 flex gap-6 text-xs text-gray-600">

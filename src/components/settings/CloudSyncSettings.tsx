@@ -10,6 +10,7 @@ export function CloudSyncSettings() {
   const [isConnected, setIsConnected] = useState(false);
   const [encryptionPassword, setEncryptionPassword] = useState('');
   const [rememberPassword, setRememberPassword] = useState(false);
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +31,9 @@ export function CloudSyncSettings() {
       setEncryptionPassword(storedPassword);
       setRememberPassword(true);
     }
+
+    // Check if auto-sync is enabled
+    setAutoSyncEnabled(syncService.isAutoSyncEnabled());
 
     // Load cloud info if connected
     if (googleDriveService.isSignedIn()) {
@@ -78,7 +82,8 @@ export function CloudSyncSettings() {
     setIsSyncing(true);
 
     try {
-      await syncService.syncToCloud(encryptionPassword);
+      // Force upload for manual sync (always upload regardless of cloud state)
+      await syncService.syncToCloud(encryptionPassword, true);
 
       if (rememberPassword) {
         syncService.storePassword(encryptionPassword);
@@ -129,6 +134,25 @@ export function CloudSyncSettings() {
     } finally {
       setIsSyncing(false);
     }
+  };
+
+  const handleToggleAutoSync = () => {
+    if (!encryptionPassword) {
+      setError('Voer eerst een encryptie wachtwoord in voor auto-sync');
+      return;
+    }
+
+    if (autoSyncEnabled) {
+      syncService.disableAutoSync();
+      setAutoSyncEnabled(false);
+      setSuccess('⏸️ Auto-sync uitgeschakeld');
+    } else {
+      syncService.enableAutoSync(encryptionPassword);
+      setAutoSyncEnabled(true);
+      setSuccess('▶️ Auto-sync ingeschakeld - wijzigingen worden automatisch gesynchroniseerd');
+    }
+
+    setTimeout(() => setSuccess(null), 3000);
   };
 
   return (
@@ -243,6 +267,36 @@ export function CloudSyncSettings() {
             >
               📥 Herstel van Drive
             </button>
+          </div>
+
+          {/* Auto-Sync Toggle */}
+          <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="text-sm font-semibold text-gray-900">🔄 Automatische Synchronisatie</h4>
+                <p className="text-xs text-gray-600 mt-1">
+                  Synchroniseer automatisch bij wijzigingen (30 sec vertraging)
+                </p>
+              </div>
+              <button
+                onClick={handleToggleAutoSync}
+                disabled={!encryptionPassword}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  autoSyncEnabled ? 'bg-green-600' : 'bg-gray-300'
+                } ${!encryptionPassword ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    autoSyncEnabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+            {autoSyncEnabled && (
+              <div className="mt-2 text-xs text-green-700">
+                ✓ Auto-sync actief - Wijzigingen worden automatisch gesynchroniseerd
+              </div>
+            )}
           </div>
 
           {/* Last Sync Info */}
