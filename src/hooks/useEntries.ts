@@ -14,7 +14,8 @@ export function useEntries() {
   const loadEntries = useCallback(async () => {
     setIsLoading(true);
     const data = await entriesService.getAllEntries();
-    setEntries(data);
+    // Filter out soft-deleted entries
+    setEntries(data.filter(e => !e.deleted));
     setIsLoading(false);
   }, []);
 

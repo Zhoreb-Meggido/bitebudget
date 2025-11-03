@@ -23,6 +23,8 @@ export interface Entry {
   sodium: number;
   created_at: string;     // ISO timestamp
   updated_at: string;     // ISO timestamp
+  deleted?: boolean;      // Soft delete flag
+  deleted_at?: string;    // ISO timestamp when deleted
 }
 
 export interface ProductInEntry {
@@ -59,6 +61,10 @@ export interface Product {
   image_url?: string;              // Product photo
   brand?: string;                  // Brand name
   last_synced?: string;            // ISO timestamp of last OFF sync
+
+  // Soft delete (v1.2)
+  deleted?: boolean;      // Soft delete flag
+  deleted_at?: string;    // ISO timestamp when deleted
 }
 
 // ============================================
@@ -111,6 +117,8 @@ export interface Weight {
   weight: number;        // in kg
   note?: string;
   created_at: string;    // ISO timestamp
+  deleted?: boolean;     // Soft delete flag
+  deleted_at?: string;   // ISO timestamp when deleted
 }
 
 // ============================================

@@ -88,12 +88,16 @@ class EntriesService {
   }
 
   /**
-   * Verwijder entry
+   * Verwijder entry (soft delete)
    */
   async deleteEntry(id: number | string): Promise<void> {
     try {
-      await db.entries.delete(id);
-      console.log('✅ Entry deleted:', id);
+      await db.entries.update(id, {
+        deleted: true,
+        deleted_at: getTimestamp(),
+        updated_at: getTimestamp(),
+      });
+      console.log('✅ Entry soft deleted:', id);
     } catch (error) {
       console.error('❌ Error deleting entry:', error);
       throw error;

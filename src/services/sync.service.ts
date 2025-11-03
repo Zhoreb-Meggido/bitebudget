@@ -174,7 +174,7 @@ class SyncService {
     const settings = await settingsService.loadSettings();
 
     return {
-      version: '1.1', // Updated version for new format
+      version: '1.2', // Updated version for soft delete support
       timestamp: new Date().toISOString(),
       entries,
       products,
@@ -207,20 +207,24 @@ class SyncService {
         await entriesService.addEntry(cloudEntry);
       } else if (cloudEntry.updated_at && localEntry.updated_at &&
                  new Date(cloudEntry.updated_at) > new Date(localEntry.updated_at)) {
-        // Cloud entry is newer
+        // Cloud entry is newer - propagate all changes including deletion
         await entriesService.updateEntry(localEntry.id!, cloudEntry);
       }
     }
 
-    // Merge products - add cloud products that don't exist locally
+    // Merge products - add cloud products that don't exist locally or propagate deletions
     for (const cloudProduct of cloudData.products) {
       const localProduct = localProductsMap.get(cloudProduct.name);
 
       if (!localProduct) {
         // New product from cloud
         await productsService.addProduct(cloudProduct);
+      } else if (cloudProduct.deleted && cloudProduct.updated_at && localProduct.updated_at &&
+                 new Date(cloudProduct.updated_at) > new Date(localProduct.updated_at)) {
+        // Cloud product is deleted and newer - propagate deletion
+        await productsService.updateProduct(localProduct.id!, cloudProduct);
       }
-      // Note: We don't update existing products to preserve local customizations
+      // Note: We don't update non-deleted products to preserve local customizations
     }
 
     // Merge weights - add cloud weights that don't exist locally or are newer
@@ -231,10 +235,19 @@ class SyncService {
         if (!localWeight) {
           // New weight from cloud
           await weightsService.addWeight(cloudWeight);
-        } else if (cloudWeight.created_at && localWeight.created_at &&
-                   new Date(cloudWeight.created_at) > new Date(localWeight.created_at)) {
-          // Cloud weight is newer (updated later in the day)
-          await weightsService.updateWeight(localWeight.id!, cloudWeight);
+        } else {
+          // Determine which is newer: use deleted_at if deleted, otherwise created_at
+          const cloudTimestamp = cloudWeight.deleted && cloudWeight.deleted_at
+            ? cloudWeight.deleted_at
+            : cloudWeight.created_at;
+          const localTimestamp = localWeight.deleted && localWeight.deleted_at
+            ? localWeight.deleted_at
+            : localWeight.created_at;
+
+          if (cloudTimestamp && localTimestamp && new Date(cloudTimestamp) > new Date(localTimestamp)) {
+            // Cloud weight is newer - propagate all changes including deletion
+            await weightsService.updateWeight(localWeight.id!, cloudWeight);
+          }
         }
       }
     }

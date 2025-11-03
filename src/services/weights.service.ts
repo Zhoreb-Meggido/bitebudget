@@ -64,10 +64,13 @@ class WeightsService {
   }
 
   /**
-   * Verwijder een gewicht
+   * Verwijder een gewicht (soft delete)
    */
   async deleteWeight(id: string): Promise<void> {
-    await db.weights.delete(id);
+    await db.weights.update(id, {
+      deleted: true,
+      deleted_at: getTimestamp(),
+    });
   }
 
   /**

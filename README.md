@@ -1,4 +1,4 @@
-# BiteBudget (Voedseljournaal) v1.1.0
+# BiteBudget (Voedseljournaal) v1.2.0
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
@@ -114,9 +114,24 @@ npm run build
 
 ---
 
-## 🔮 v1.2.0 Roadmap (Future)
+## 🔮 v1.2.0 - Soft Delete & Data Integrity (Current Development)
 
-### **Export Improvements**
+### **New Features**
+
+#### **Soft Delete Implementation** 🗑️
+- ✅ **Deletion Propagation** - Deleted items now sync properly between devices
+- ✅ **Soft Delete Pattern** - Records marked as deleted instead of permanent removal
+- ✅ **Bidirectional Sync** - Deletions propagate from local to cloud and vice versa
+- ✅ **Data Integrity** - No more duplicate items after deletion
+- ✅ **Timestamp Tracking** - `deleted_at` field for deletion history
+
+#### **Technical Improvements**
+- ✅ **Extended Database Schema** - Added `deleted` and `deleted_at` fields to Entries, Products, Weights
+- ✅ **Smart Merge Enhancement** - Sync logic now handles deletion conflicts
+- ✅ **UI Filtering** - Deleted items automatically hidden from all views
+- ✅ **Conflict Resolution** - Newest timestamp wins for delete vs update conflicts
+
+### **Export Improvements** (Planned)
 - [ ] PDF export met alle nieuwe metrics (koolhydraten, suikers, vet)
 - [ ] Lijngrafiek per week in PDF export
 - [ ] TXT export met koolhydraten en suikers
@@ -124,6 +139,7 @@ npm run build
 - [ ] PDF automatisch openen na export
 
 ### **Future Considerations**
+- [ ] Cleanup function voor oude deleted items (>30 dagen)
 - [ ] Photo attachments voor meals
 - [ ] Recipe builder (meerdere producten → opslaan als nieuw product)
 - [ ] Light/Dark theme toggle
@@ -226,6 +242,8 @@ public/
   sodium: number;
   created_at: string;
   updated_at: string;
+  deleted?: boolean;         // v1.2+ Soft delete flag
+  deleted_at?: string;       // v1.2+ Deletion timestamp
 }
 ```
 
@@ -250,6 +268,8 @@ public/
   favorite: boolean;
   created_at: string;
   updated_at: string;
+  deleted?: boolean;              // v1.2+ Soft delete flag
+  deleted_at?: string;            // v1.2+ Deletion timestamp
 }
 ```
 
@@ -261,6 +281,8 @@ public/
   weight: number;            // kg
   note?: string;
   created_at: string;
+  deleted?: boolean;         // v1.2+ Soft delete flag
+  deleted_at?: string;       // v1.2+ Deletion timestamp
 }
 ```
 
@@ -281,21 +303,23 @@ public/
 }
 ```
 
-### Cloud Sync Data Format (v1.1.0)
+### Cloud Sync Data Format (v1.2.0)
 ```typescript
 interface SyncData {
-  version: '1.1';
+  version: '1.2';            // Bumped for soft delete support
   timestamp: string;
-  entries: Entry[];
-  products: Product[];
-  weights: Weight[];          // v1.1+
-  settings: UserSettings;     // v1.1+
+  entries: Entry[];          // Includes deleted items with deleted flag
+  products: Product[];       // Includes deleted items with deleted flag
+  weights: Weight[];         // Includes deleted items with deleted flag (v1.1+)
+  settings: UserSettings;    // v1.1+
 }
 ```
 
 **Encryption:** AES-GCM 256-bit
 **Key Derivation:** PBKDF2 (100,000 iterations)
 **Storage:** Google Drive (restricted scope: drive.file)
+
+**Note:** Soft deleted items (v1.2+) are included in sync data to propagate deletions across devices. UI filters them out automatically.
 
 ---
 
@@ -323,10 +347,16 @@ interface SyncData {
 
 ### Conflict Resolution
 
-**Entries:** Composite key (date + time + name), newest `updated_at` wins
-**Products:** Add new only, preserve local customizations
-**Weights:** By date, newest `created_at` wins
+**Entries:** Composite key (date + time + name), newest `updated_at` wins (including deletions - v1.2+)
+**Products:** Add new only, preserve local customizations (deletions propagate via `updated_at` - v1.2+)
+**Weights:** By date, newest `created_at` or `deleted_at` wins (including deletions - v1.2+)
 **Settings:** Cloud always wins (no timestamps yet)
+
+**Deletion Propagation (v1.2+):**
+- Deleted items remain in database with `deleted: true` flag
+- Deletions sync across devices using timestamp comparison
+- UI automatically filters out deleted items
+- Newest timestamp wins for delete vs update conflicts
 
 ### Security
 
@@ -460,5 +490,5 @@ Personal project - All rights reserved
 ---
 
 **Last Updated:** November 3, 2024
-**Status:** v1.1.0 - Cloud Sync Active
+**Status:** v1.2.0 - Soft Delete + Cloud Sync Active
 **Next:** Export improvements (PDF/TXT enhancements)

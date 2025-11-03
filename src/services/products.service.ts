@@ -122,12 +122,16 @@ class ProductsService {
   }
 
   /**
-   * Verwijder product
+   * Verwijder product (soft delete)
    */
   async deleteProduct(id: number | string): Promise<void> {
     try {
-      await db.products.delete(id);
-      console.log('✅ Product deleted:', id);
+      await db.products.update(id, {
+        deleted: true,
+        deleted_at: getTimestamp(),
+        updated_at: getTimestamp(),
+      });
+      console.log('✅ Product soft deleted:', id);
     } catch (error) {
       console.error('❌ Error deleting product:', error);
       throw error;

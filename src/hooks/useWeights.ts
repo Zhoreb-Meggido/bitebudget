@@ -19,7 +19,8 @@ export function useWeights() {
     try {
       setIsLoading(true);
       const loadedWeights = await weightsService.getAllWeights();
-      setWeights(loadedWeights);
+      // Filter out soft-deleted weights
+      setWeights(loadedWeights.filter(w => !w.deleted));
       setError(null);
     } catch (err) {
       console.error('❌ Failed to load weights:', err);

@@ -13,7 +13,8 @@ export function useProducts() {
   const loadProducts = useCallback(async () => {
     setIsLoading(true);
     const data = await productsService.getAllProducts();
-    setProducts(data);
+    // Filter out soft-deleted products
+    setProducts(data.filter(p => !p.deleted));
     setIsLoading(false);
   }, []);
 
