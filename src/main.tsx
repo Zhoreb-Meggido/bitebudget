@@ -12,11 +12,13 @@ import { DataPage } from '@/components/data/DataPage'
 import { SettingsPage } from '@/components/settings/SettingsPage'
 import { registerServiceWorker, setupInstallPrompt } from '@/utils/pwa'
 import { AppFooter } from '@/components/AppFooter'
+import { AutoSyncWarningModal, useAutoSyncWarning } from '@/components/AutoSyncWarningModal'
 
 // App component met database initialisatie
 function App() {
   const { isInitialized, error } = useDatabase();
   const [activeTab, setActiveTab] = useActiveTab();
+  const { shouldShowWarning, dismissWarning } = useAutoSyncWarning();
 
   // Register PWA service worker and install prompt
   useEffect(() => {
@@ -67,6 +69,11 @@ function App() {
         {activeTab === 'instellingen' && <SettingsPage />}
       </div>
       <AppFooter />
+
+      {/* Auto-Sync Warning Modal */}
+      {shouldShowWarning && (
+        <AutoSyncWarningModal onClose={dismissWarning} />
+      )}
     </div>
   );
 }

@@ -71,6 +71,7 @@ npm run build
 #### **Technical Improvements**
 - ✅ **Persistent Auto-Sync** - State survives page reload
 - ✅ **Token Management** - OAuth tokens worden veilig opgeslagen
+- ✅ **Token Expiry Warning** - Modal popup bij verlopen sessie met directe re-login optie
 - ✅ **Cleanup on Disconnect** - Auto-sync wordt uitgeschakeld bij uitloggen
 - ✅ **Safe Merge Operations** - Alle sync operaties gebruiken smart merge (geen data loss)
 
@@ -380,7 +381,7 @@ npm run build
 
 ### Non-Critical
 - HMR Fast Refresh warnings in dev mode (doesn't affect functionality)
-- OAuth tokens expire after 1 hour (requires re-login)
+- OAuth tokens expire after 1 hour (app toont automatisch popup met re-login optie)
 
 ### Fixed in v1.1.0
 - ✅ Auto-sync state persistence
@@ -410,6 +411,7 @@ npm run build
 - ✅ Automatic bidirectional merge
 - ✅ Persistent auto-sync state
 - ✅ Safe merge for all sync operations (no data loss)
+- ✅ Token expiry warning with one-click re-login
 - ✅ Weights & settings in sync data
 - ✅ 8 metrics dashboard with projections
 - ✅ ISO week numbers in heatmap
