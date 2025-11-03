@@ -72,6 +72,8 @@ npm run build
 - ✅ **Persistent Auto-Sync** - State survives page reload
 - ✅ **Token Management** - OAuth tokens worden veilig opgeslagen
 - ✅ **Token Expiry Warning** - Modal popup bij verlopen sessie met directe re-login optie
+- ✅ **Runtime Token Detection** - Auto-sync detecteert verlopen tokens tijdens runtime (niet alleen bij opstarten)
+- ✅ **Manual Refresh Button** - Quick sync knop in navigatie voor directe cloud pull
 - ✅ **Cleanup on Disconnect** - Auto-sync wordt uitgeschakeld bij uitloggen
 - ✅ **Safe Merge Operations** - Alle sync operaties gebruiken smart merge (geen data loss)
 
@@ -412,6 +414,8 @@ npm run build
 - ✅ Persistent auto-sync state
 - ✅ Safe merge for all sync operations (no data loss)
 - ✅ Token expiry warning with one-click re-login
+- ✅ Runtime token expiry detection (niet alleen bij opstarten)
+- ✅ Manual refresh button voor quick sync
 - ✅ Weights & settings in sync data
 - ✅ 8 metrics dashboard with projections
 - ✅ ISO week numbers in heatmap

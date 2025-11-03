@@ -133,7 +133,20 @@ export function useAutoSyncWarning() {
     // Small delay to ensure services are initialized
     const timer = setTimeout(checkAutoSyncStatus, 500);
 
-    return () => clearTimeout(timer);
+    // Listen for runtime token expiry events
+    const handleTokenExpiry = () => {
+      const autoSyncEnabled = syncService.isAutoSyncEnabled();
+      if (autoSyncEnabled) {
+        setShouldShowWarning(true);
+      }
+    };
+
+    window.addEventListener('google-drive-token-expired', handleTokenExpiry);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('google-drive-token-expired', handleTokenExpiry);
+    };
   }, []);
 
   const dismissWarning = () => {

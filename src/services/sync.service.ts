@@ -95,6 +95,13 @@ class SyncService {
     const password = this.getStoredPassword();
     if (!password) return;
 
+    // Check if token is still valid before attempting sync
+    if (!googleDriveService.isSignedIn()) {
+      console.warn('Auto-sync: Token expired, dispatching warning event');
+      window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
+      return;
+    }
+
     // Clear existing timeout
     if (this.syncDebounceTimeout) {
       clearTimeout(this.syncDebounceTimeout);
@@ -107,6 +114,11 @@ class SyncService {
         console.log('Auto-sync: Data uploaded to Drive');
       } catch (error) {
         console.error('Auto-sync upload failed:', error);
+
+        // Check if failure was due to token expiry
+        if (!googleDriveService.isSignedIn()) {
+          window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
+        }
       }
     }, 30 * 1000); // 30 seconds debounce
   }
