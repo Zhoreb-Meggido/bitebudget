@@ -122,6 +122,9 @@ export interface UserSettings {
   caloriesSport: number;
   proteinRest: number;
   proteinSport: number;
+  carbohydratesMax: number;
+  sugarsMax: number;
+  fatMax: number;
   saturatedFatMax: number;
   fiberMin: number;
   sodiumMax: number;
@@ -133,6 +136,9 @@ export const DEFAULT_SETTINGS: UserSettings = {
   caloriesSport: 2200,
   proteinRest: 110,
   proteinSport: 120,
+  carbohydratesMax: 250,
+  sugarsMax: 50,
+  fatMax: 70,
   saturatedFatMax: 20,
   fiberMin: 35,
   sodiumMax: 2300,

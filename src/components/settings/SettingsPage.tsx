@@ -68,107 +68,125 @@ export function SettingsPage() {
       </div>
 
       <div className="bg-white rounded-lg shadow">
-        {/* Calorieën Sectie */}
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Calorieën</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rustdag (kcal)
-              </label>
-              <input
-                type="number"
-                value={localSettings.caloriesRest}
-                onChange={(e) => handleChange('caloriesRest', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sportdag (kcal)
-              </label>
-              <input
-                type="number"
-                value={localSettings.caloriesSport}
-                onChange={(e) => handleChange('caloriesSport', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+        {/* Dagelijkse Doelen */}
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Dagelijkse Doelen</h2>
+
+          {/* Calorieën */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Calorieën</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Rustdag (kcal)</label>
+                <input
+                  type="number"
+                  value={localSettings.caloriesRest}
+                  onChange={(e) => handleChange('caloriesRest', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Sportdag (kcal)</label>
+                <input
+                  type="number"
+                  value={localSettings.caloriesSport}
+                  onChange={(e) => handleChange('caloriesSport', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Eiwit Sectie */}
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Eiwit</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rustdag (g)
-              </label>
-              <input
-                type="number"
-                value={localSettings.proteinRest}
-                onChange={(e) => handleChange('proteinRest', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sportdag (g)
-              </label>
-              <input
-                type="number"
-                value={localSettings.proteinSport}
-                onChange={(e) => handleChange('proteinSport', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+          {/* Eiwit */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Eiwit (min)</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Rustdag (g)</label>
+                <input
+                  type="number"
+                  value={localSettings.proteinRest}
+                  onChange={(e) => handleChange('proteinRest', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Sportdag (g)</label>
+                <input
+                  type="number"
+                  value={localSettings.proteinSport}
+                  onChange={(e) => handleChange('proteinSport', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Overige Nutriënten */}
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Overige Nutriënten</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Verzadigd Vet Max (g)
-              </label>
-              <input
-                type="number"
-                value={localSettings.saturatedFatMax}
-                onChange={(e) => handleChange('saturatedFatMax', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Vezels Min (g)
-              </label>
-              <input
-                type="number"
-                value={localSettings.fiberMin}
-                onChange={(e) => handleChange('fiberMin', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Natrium Max (mg)
-              </label>
-              <input
-                type="number"
-                value={localSettings.sodiumMax}
-                onChange={(e) => handleChange('sodiumMax', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+          {/* Macros */}
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Macronutriënten (max)</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Koolhydraten (g)</label>
+                <input
+                  type="number"
+                  value={localSettings.carbohydratesMax}
+                  onChange={(e) => handleChange('carbohydratesMax', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Suikers (g)</label>
+                <input
+                  type="number"
+                  value={localSettings.sugarsMax}
+                  onChange={(e) => handleChange('sugarsMax', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Vet (g)</label>
+                <input
+                  type="number"
+                  value={localSettings.fatMax}
+                  onChange={(e) => handleChange('fatMax', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Verzadigd Vet (g)</label>
+                <input
+                  type="number"
+                  value={localSettings.saturatedFatMax}
+                  onChange={(e) => handleChange('saturatedFatMax', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Vezels (g) min</label>
+                <input
+                  type="number"
+                  value={localSettings.fiberMin}
+                  onChange={(e) => handleChange('fiberMin', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Natrium (mg)</label>
+                <input
+                  type="number"
+                  value={localSettings.sodiumMax}
+                  onChange={(e) => handleChange('sodiumMax', e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Gewicht Doel */}
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Gewicht</h2>
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Gewicht</h2>
           <div className="max-w-xs">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Streefgewicht (kg)
@@ -184,14 +202,14 @@ export function SettingsPage() {
         </div>
 
         {/* Cloud Sync */}
-        <div className="p-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-white">
+        <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-white">
           <CloudSyncSettings />
         </div>
 
         {/* Action Buttons */}
-        <div className="p-6 bg-gray-50 rounded-b-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex gap-3">
+        <div className="p-4 sm:p-6 bg-gray-50 rounded-b-lg">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex gap-3 flex-wrap">
               <button
                 onClick={handleSave}
                 disabled={!hasChanges || saveStatus === 'saving'}
