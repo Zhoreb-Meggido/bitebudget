@@ -258,74 +258,7 @@ export function JournalPage() {
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Maaltijden vandaag</h2>
           {todayEntries.length === 0 ? (
-            <div>
-              <p className="text-gray-500 text-center py-4">Nog geen maaltijden toegevoegd</p>
-
-              {/* Historical Data Section */}
-              {(previousDayData.entries.length > 0 || weekAverage) && (
-                <div className="mt-6 space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Historische data</h3>
-
-                  {/* Previous Day */}
-                  {previousDayData.entries.length > 0 && (
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-semibold text-gray-800">
-                          Gisteren ({new Date(previousDayData.date).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' })})
-                        </h4>
-                        <span className="text-sm text-gray-600">{previousDayData.entries.length} maaltijden</span>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                        <div>
-                          <span className="text-gray-600">Calorieën:</span>
-                          <span className="font-semibold ml-1">{previousDayData.totals.calories}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Eiwit:</span>
-                          <span className="font-semibold ml-1">{previousDayData.totals.protein.toFixed(1)}g</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Koolh.:</span>
-                          <span className="font-semibold ml-1">{previousDayData.totals.carbohydrates.toFixed(1)}g</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Vezels:</span>
-                          <span className="font-semibold ml-1">{previousDayData.totals.fiber.toFixed(1)}g</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Last Week Average */}
-                  {weekAverage && (
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-semibold text-gray-800">Gemiddelde afgelopen week</h4>
-                        <span className="text-sm text-gray-600">{weekAverage.daysWithData} van 7 dagen</span>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                        <div>
-                          <span className="text-gray-600">Calorieën:</span>
-                          <span className="font-semibold ml-1">{weekAverage.calories}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Eiwit:</span>
-                          <span className="font-semibold ml-1">{weekAverage.protein}g</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Koolh.:</span>
-                          <span className="font-semibold ml-1">{weekAverage.carbohydrates}g</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Vezels:</span>
-                          <span className="font-semibold ml-1">{weekAverage.fiber}g</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <p className="text-gray-500 text-center py-4">Nog geen maaltijden toegevoegd</p>
           ) : (
             <div className="space-y-3">
               {todayEntries.map(entry => (
@@ -363,6 +296,71 @@ export function JournalPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Historical Data Section - Always visible when data exists */}
+          {(previousDayData.entries.length > 0 || weekAverage) && (
+            <div className="mt-6 space-y-4 border-t pt-4">
+              <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Historische data</h3>
+
+              {/* Previous Day */}
+              {previousDayData.entries.length > 0 && (
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-gray-800">
+                      Gisteren ({new Date(previousDayData.date).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' })})
+                    </h4>
+                    <span className="text-sm text-gray-600">{previousDayData.entries.length} maaltijden</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Calorieën:</span>
+                      <span className="font-semibold ml-1">{previousDayData.totals.calories}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Eiwit:</span>
+                      <span className="font-semibold ml-1">{previousDayData.totals.protein.toFixed(1)}g</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Koolh.:</span>
+                      <span className="font-semibold ml-1">{previousDayData.totals.carbohydrates.toFixed(1)}g</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Vezels:</span>
+                      <span className="font-semibold ml-1">{previousDayData.totals.fiber.toFixed(1)}g</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Last Week Average */}
+              {weekAverage && (
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-gray-800">Gemiddelde afgelopen week</h4>
+                    <span className="text-sm text-gray-600">{weekAverage.daysWithData} van 7 dagen</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Calorieën:</span>
+                      <span className="font-semibold ml-1">{weekAverage.calories}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Eiwit:</span>
+                      <span className="font-semibold ml-1">{weekAverage.protein}g</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Koolh.:</span>
+                      <span className="font-semibold ml-1">{weekAverage.carbohydrates}g</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Vezels:</span>
+                      <span className="font-semibold ml-1">{weekAverage.fiber}g</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
