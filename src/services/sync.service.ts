@@ -171,7 +171,7 @@ class SyncService {
     const entries = await entriesService.getAllEntries();
     const products = await productsService.getAllProducts();
     const weights = await weightsService.getAllWeights();
-    const settings = await settingsService.getSettings();
+    const settings = await settingsService.loadSettings();
 
     return {
       version: '1.1', // Updated version for new format
@@ -241,7 +241,7 @@ class SyncService {
 
     // Merge settings - always take the newest timestamp
     if (cloudData.settings) {
-      const localSettings = await settingsService.getSettings();
+      const localSettings = await settingsService.loadSettings();
 
       // Settings don't have timestamps in current implementation, so we just update
       // You could add a timestamp field to settings for proper conflict resolution

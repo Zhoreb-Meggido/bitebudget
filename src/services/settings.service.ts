@@ -28,6 +28,13 @@ class SettingsService {
   }
 
   /**
+   * Alias for loadSettings (for backwards compatibility)
+   */
+  async getSettings(): Promise<UserSettings> {
+    return this.loadSettings();
+  }
+
+  /**
    * Sla gebruikersinstellingen op in database
    */
   async saveSettings(settings: UserSettings): Promise<void> {
