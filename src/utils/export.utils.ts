@@ -120,8 +120,10 @@ export function generatePDFReport(options: ExportOptions): jsPDF {
   const dailyReports = groupEntriesByDate(entries);
 
   const doc = new jsPDF();
+  const marginLeft = 15; // 15mm margins
+  const marginRight = 15;
   let yPos = 20;
-  const lineHeight = 7;
+  const lineHeight = 6; // Reduced from 7 to fit more content
   const pageHeight = doc.internal.pageSize.height;
 
   // Helper function to add new page if needed
@@ -143,9 +145,9 @@ export function generatePDFReport(options: ExportOptions): jsPDF {
   // Period
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Periode: ${new Date(startDate).toLocaleDateString('nl-NL')} - ${new Date(endDate).toLocaleDateString('nl-NL')}`, 20, yPos);
+  doc.text(`Periode: ${new Date(startDate).toLocaleDateString('nl-NL')} - ${new Date(endDate).toLocaleDateString('nl-NL')}`, marginLeft, yPos);
   yPos += lineHeight;
-  doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL')} ${new Date().toLocaleTimeString('nl-NL')}`, 20, yPos);
+  doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL')} ${new Date().toLocaleTimeString('nl-NL')}`, marginLeft, yPos);
   yPos += lineHeight * 2;
 
   // Summary
@@ -154,68 +156,99 @@ export function generatePDFReport(options: ExportOptions): jsPDF {
 
   if (daysWithData > 0) {
     doc.setFont('helvetica', 'bold');
-    doc.text('SAMENVATTING', 20, yPos);
+    doc.text('SAMENVATTING', marginLeft, yPos);
     yPos += lineHeight;
 
     doc.setFont('helvetica', 'normal');
-    doc.text(`Dagen met data: ${daysWithData} | Totaal maaltijden: ${entries.length}`, 20, yPos);
+    doc.text(`Dagen met data: ${daysWithData} | Totaal maaltijden: ${entries.length}`, marginLeft, yPos);
     yPos += lineHeight * 1.5;
 
     doc.setFont('helvetica', 'bold');
-    doc.text('Gemiddelde per dag:', 20, yPos);
+    doc.text('Gemiddelde per dag:', marginLeft, yPos);
     yPos += lineHeight;
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text(`Calorieën: ${Math.round(allTotals.calories / daysWithData)} kcal`, 25, yPos);
-    doc.text(`Eiwit: ${(allTotals.protein / daysWithData).toFixed(1)} g`, 80, yPos);
-    doc.text(`Koolhydraten: ${(allTotals.carbohydrates / daysWithData).toFixed(1)} g`, 130, yPos);
+    doc.setFontSize(8); // Reduced to 8pt
+    const col1 = marginLeft + 5;
+    const col2 = 75;
+    const col3 = 135;
+
+    doc.text(`Cal: ${Math.round(allTotals.calories / daysWithData)} kcal`, col1, yPos);
+    doc.text(`Prot: ${(allTotals.protein / daysWithData).toFixed(1)}g`, col2, yPos);
+    doc.text(`Carb: ${(allTotals.carbohydrates / daysWithData).toFixed(1)}g`, col3, yPos);
     yPos += lineHeight;
 
-    doc.text(`Suikers: ${(allTotals.sugars / daysWithData).toFixed(1)} g`, 25, yPos);
-    doc.text(`Vet: ${(allTotals.fat / daysWithData).toFixed(1)} g`, 80, yPos);
-    doc.text(`Vezels: ${(allTotals.fiber / daysWithData).toFixed(1)} g`, 130, yPos);
+    doc.text(`Sugr: ${(allTotals.sugars / daysWithData).toFixed(1)}g`, col1, yPos);
+    doc.text(`Fat: ${(allTotals.fat / daysWithData).toFixed(1)}g`, col2, yPos);
+    doc.text(`SFat: ${(allTotals.saturatedFat / daysWithData).toFixed(1)}g`, col3, yPos);
     yPos += lineHeight;
 
-    doc.text(`Verzadigd vet: ${(allTotals.saturatedFat / daysWithData).toFixed(1)} g`, 25, yPos);
-    doc.text(`Natrium: ${Math.round(allTotals.sodium / daysWithData)} mg`, 80, yPos);
+    doc.text(`Fiber: ${(allTotals.fiber / daysWithData).toFixed(1)}g`, col1, yPos);
+    doc.text(`Na: ${Math.round(allTotals.sodium / daysWithData)}mg`, col2, yPos);
     yPos += lineHeight * 2;
   }
 
   // Daily breakdown
   doc.setFontSize(10);
   dailyReports.forEach((day, dayIndex) => {
-    checkPageBreak(lineHeight * 5);
+    checkPageBreak(lineHeight * 6);
 
     const date = new Date(day.date);
     const dayName = date.toLocaleDateString('nl-NL', { weekday: 'long' });
 
     doc.setFont('helvetica', 'bold');
-    doc.text(`${dayName} ${date.toLocaleDateString('nl-NL')}`, 20, yPos);
+    doc.text(`${dayName} ${date.toLocaleDateString('nl-NL')}`, marginLeft, yPos);
     yPos += lineHeight;
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
+    doc.setFontSize(8); // 8pt for meal entries
+
+    const col1 = marginLeft + 5;
+    const col2 = 75;
+    const col3 = 135;
 
     day.entries.forEach((entry) => {
-      checkPageBreak(lineHeight * 2);
+      checkPageBreak(lineHeight * 3); // Need 3 lines: name + 2 metric lines
 
-      doc.text(`${entry.time} - ${entry.name}`, 25, yPos);
+      // Line 1: Time and meal name
+      doc.text(`${entry.time} - ${entry.name}`, col1, yPos);
       yPos += lineHeight;
 
-      const nutritionText = `${entry.calories} kcal | Eiwit: ${entry.protein.toFixed(1)}g | Koolh: ${entry.carbohydrates.toFixed(1)}g | Vet: ${entry.fat.toFixed(1)}g`;
-      doc.text(nutritionText, 30, yPos);
+      // Line 2: Cal, Prot, Carb, Sugr (4 metrics)
+      doc.text(`Cal: ${entry.calories}`, col1 + 5, yPos);
+      doc.text(`Prot: ${entry.protein.toFixed(1)}g`, col2 - 10, yPos);
+      doc.text(`Carb: ${entry.carbohydrates.toFixed(1)}g`, col2 + 20, yPos);
+      doc.text(`Sugr: ${entry.sugars.toFixed(1)}g`, col3, yPos);
+      yPos += lineHeight;
+
+      // Line 3: Fat, SFat, Fiber, Na (4 metrics)
+      doc.text(`Fat: ${entry.fat.toFixed(1)}g`, col1 + 5, yPos);
+      doc.text(`SFat: ${entry.saturatedFat.toFixed(1)}g`, col2 - 10, yPos);
+      doc.text(`Fiber: ${entry.fiber.toFixed(1)}g`, col2 + 20, yPos);
+      doc.text(`Na: ${entry.sodium}mg`, col3, yPos);
       yPos += lineHeight;
     });
 
-    checkPageBreak(lineHeight * 3);
+    checkPageBreak(lineHeight * 4);
 
     doc.setFont('helvetica', 'bold');
-    doc.text('Dag totaal:', 25, yPos);
+    doc.text('Dag totaal:', col1, yPos);
     yPos += lineHeight;
 
     doc.setFont('helvetica', 'normal');
-    doc.text(`${day.totals.calories} kcal | Eiwit: ${day.totals.protein.toFixed(1)}g | Koolh: ${day.totals.carbohydrates.toFixed(1)}g | Vet: ${day.totals.fat.toFixed(1)}g`, 30, yPos);
+    // Day totals - same 2-line format as meals
+    // Line 1: Cal, Prot, Carb, Sugr
+    doc.text(`Cal: ${day.totals.calories}`, col1 + 5, yPos);
+    doc.text(`Prot: ${day.totals.protein.toFixed(1)}g`, col2 - 10, yPos);
+    doc.text(`Carb: ${day.totals.carbohydrates.toFixed(1)}g`, col2 + 20, yPos);
+    doc.text(`Sugr: ${day.totals.sugars.toFixed(1)}g`, col3, yPos);
+    yPos += lineHeight;
+
+    // Line 2: Fat, SFat, Fiber, Na
+    doc.text(`Fat: ${day.totals.fat.toFixed(1)}g`, col1 + 5, yPos);
+    doc.text(`SFat: ${day.totals.saturatedFat.toFixed(1)}g`, col2 - 10, yPos);
+    doc.text(`Fiber: ${day.totals.fiber.toFixed(1)}g`, col2 + 20, yPos);
+    doc.text(`Na: ${day.totals.sodium}mg`, col3, yPos);
     yPos += lineHeight;
 
     if (dayIndex < dailyReports.length - 1) {

@@ -132,12 +132,44 @@ npm run build
 - ✅ **Conflict Resolution** - Newest timestamp wins for delete vs update conflicts
 - ✅ **Automatic Cleanup** - Old deleted items (>14 days) are permanently removed during sync
 
-### **Export Improvements** (Planned)
-- [ ] PDF export met alle nieuwe metrics (koolhydraten, suikers, vet)
-- [ ] Lijngrafiek per week in PDF export
-- [ ] TXT export met koolhydraten en suikers
-- [ ] Export feedback op mobiel (success melding + direct openen)
-- [ ] PDF automatisch openen na export
+### **Export Improvements** (Planned - Ready for Implementation)
+
+**Design Completed - Ready to Code**
+
+#### **Phase 1: Fix Missing Metrics** (Priority: HIGH, ~10-15K tokens)
+- [ ] **PDF Export Enhancement**
+  - Update meal entries to 2-line layout (8 metrics)
+  - Line 1: Cal, Prot, Carb, Sugr
+  - Line 2: Fat, SFat, Fiber, Na
+  - Day totals in same format
+  - Font: 8pt, Margins: 15mm L/R
+
+- [ ] **TXT → CSV Migration**
+  - Replace TXT export with CSV format
+  - Flat structure (1 row per meal)
+  - All 8 metrics in columns
+  - Excel-compatible (UTF-8 BOM, CRLF)
+  - Header: Date,Weekday,Time,Meal Name,Calories,Protein,Carbohydrates,Sugars,Fat,Saturated Fat,Fiber,Sodium
+
+#### **Phase 2: Weekly Summaries** (Priority: MEDIUM, ~15-20K tokens)
+- [ ] Add weekly summary tables for periods 8-30 days
+- [ ] Table format with all 8 metrics per day
+- [ ] Week average calculation row
+- [ ] Auto-collapse to day totals only for periods >30 days
+
+#### **Phase 3: Charts Appendix** (Priority: LOW, ~20-25K tokens)
+- [ ] Canvas-to-image chart rendering (html2canvas)
+- [ ] Chart 1: Calories + Protein (dual Y-axis)
+- [ ] Chart 2: Carbs + Sugars + Fat + SatFat
+- [ ] Chart 3: Fiber + Sodium
+- [ ] Place all charts as appendix after detail pages
+
+**Total Estimate**: 45-60K tokens (fits comfortably in weekly budget)
+
+**Layout Decisions Made**:
+- Hybrid approach (Optie C): Weekly tables inline, charts as appendix
+- 2-line meal layout (Optie B): Best balance of completeness and readability
+- CSV over TXT: Better for Excel analysis and dietist use case
 
 ### **Future Considerations**
 - [ ] Photo attachments voor meals
