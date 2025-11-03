@@ -410,86 +410,6 @@ export function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-            {/* Avg Calories */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-gray-600 text-sm font-medium">Gem. Calorieën</h3>
-                <span className="text-xl">🔥</span>
-              </div>
-              <p className="text-2xl font-bold text-blue-600">{averages.calories}</p>
-              <p className="text-xs text-gray-500 mt-1">Max: {settings.caloriesRest} kcal</p>
-            </div>
-
-            {/* Avg Protein */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-gray-600 text-sm font-medium">Gem. Eiwit</h3>
-                <span className="text-xl">💪</span>
-              </div>
-              <p className="text-2xl font-bold text-green-600">{averages.protein}g</p>
-              <p className="text-xs text-gray-500 mt-1">Doel: {settings.proteinRest}g</p>
-            </div>
-
-            {/* Avg Fiber */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-gray-600 text-sm font-medium">Gem. Vezels</h3>
-                <span className="text-xl">🌾</span>
-              </div>
-              <p className="text-2xl font-bold text-amber-600">{averages.fiber}g</p>
-              <p className="text-xs text-gray-500 mt-1">Min: {settings.fiberMin}g/dag</p>
-            </div>
-
-            {/* Avg Saturated Fat */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-gray-600 text-sm font-medium">Gem. Verzadigd vet</h3>
-                <span className="text-xl">🧈</span>
-              </div>
-              <p className="text-2xl font-bold text-red-600">{averages.saturatedFat}g</p>
-              <p className="text-xs text-gray-500 mt-1">Max: {settings.saturatedFatMax}g/dag</p>
-            </div>
-
-            {/* Avg Sodium */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-gray-600 text-sm font-medium">Gem. Natrium</h3>
-                <span className="text-xl">🧂</span>
-              </div>
-              <p className="text-2xl font-bold text-purple-600">{averages.sodium}mg</p>
-              <p className="text-xs text-gray-500 mt-1">Max: {settings.sodiumMax}mg/dag</p>
-            </div>
-
-            {/* Projected Weight Change */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-gray-600 text-sm font-medium">Projectie/week</h3>
-                <span className="text-xl">{stats.projectedWeightChange < 0 ? '📉' : '📈'}</span>
-              </div>
-              <p className={`text-2xl font-bold ${stats.projectedWeightChange < 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {stats.projectedWeightChange > 0 ? '+' : ''}{stats.projectedWeightChange}kg
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                {stats.projectedWeightChange < 0 ? 'Gewichtsverlies' : 'Gewichtstoename'}
-              </p>
-            </div>
-          </div>
-
-          {/* Detailed Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-            {METRICS.map(metric => (
-              <div key={metric.key} className="bg-white rounded-lg shadow p-4">
-                <p className="text-sm text-gray-600 mb-1">Gem. {metric.label}</p>
-                <p className="text-2xl font-bold" style={{ color: metric.color }}>
-                  {averages[metric.key]}
-                </p>
-                <p className="text-xs text-gray-500">{metric.unit}/dag</p>
-              </div>
-            ))}
-          </div>
-
           {/* Metric Toggle Buttons */}
           <div className="bg-white rounded-lg shadow mb-6 p-4 sm:p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -514,10 +434,40 @@ export function DashboardPage() {
           </div>
 
           {/* Chart */}
-          <div className="bg-white rounded-lg shadow p-4 sm:p-6">
+          <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
             <div className="h-96">
               <Line data={chartData} options={chartOptions} />
             </div>
+          </div>
+
+          {/* Detailed Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            {METRICS.map(metric => (
+              <div key={metric.key} className="bg-white rounded-lg shadow p-4">
+                <p className="text-sm text-gray-600 mb-1">Gem. {metric.label}</p>
+                <p className="text-2xl font-bold" style={{ color: metric.color }}>
+                  {averages[metric.key]}
+                </p>
+                <p className="text-xs text-gray-500">{metric.unit}/dag</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Projected Weight Change Card */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-gray-700 text-base font-semibold">Gewichtsprojectie per week</h3>
+              <span className="text-2xl">{stats.projectedWeightChange < 0 ? '📉' : '📈'}</span>
+            </div>
+            <p className={`text-3xl font-bold ${stats.projectedWeightChange < 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {stats.projectedWeightChange > 0 ? '+' : ''}{stats.projectedWeightChange}kg
+            </p>
+            <p className="text-sm text-gray-600 mt-2">
+              {stats.projectedWeightChange < 0 ? 'Verwacht gewichtsverlies' : 'Verwachte gewichtstoename'} bij huidig gemiddeld calorietekort
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Gebaseerd op 7700 kcal = 1 kg lichaamsgewicht
+            </p>
           </div>
         </>
       )}
