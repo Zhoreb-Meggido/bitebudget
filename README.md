@@ -130,6 +130,7 @@ npm run build
 - ✅ **Smart Merge Enhancement** - Sync logic now handles deletion conflicts
 - ✅ **UI Filtering** - Deleted items automatically hidden from all views
 - ✅ **Conflict Resolution** - Newest timestamp wins for delete vs update conflicts
+- ✅ **Automatic Cleanup** - Old deleted items (>14 days) are permanently removed during sync
 
 ### **Export Improvements** (Planned)
 - [ ] PDF export met alle nieuwe metrics (koolhydraten, suikers, vet)
@@ -139,7 +140,6 @@ npm run build
 - [ ] PDF automatisch openen na export
 
 ### **Future Considerations**
-- [ ] Cleanup function voor oude deleted items (>30 dagen)
 - [ ] Photo attachments voor meals
 - [ ] Recipe builder (meerdere producten → opslaan als nieuw product)
 - [ ] Light/Dark theme toggle
@@ -357,6 +357,7 @@ interface SyncData {
 - Deletions sync across devices using timestamp comparison
 - UI automatically filters out deleted items
 - Newest timestamp wins for delete vs update conflicts
+- Old deleted items (>14 days) are permanently removed during sync to keep database clean
 
 ### Security
 

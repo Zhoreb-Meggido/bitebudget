@@ -8,6 +8,7 @@ import { entriesService } from './entries.service';
 import { productsService } from './products.service';
 import { weightsService } from './weights.service';
 import { settingsService } from './settings.service';
+import { db } from './database.service';
 import type { Entry, Product, Weight, UserSettings } from '@/types';
 
 export interface SyncData {
@@ -162,6 +163,62 @@ class SyncService {
    */
   isAutoSyncEnabled(): boolean {
     return this.autoSyncEnabled;
+  }
+
+  /**
+   * Cleanup old soft-deleted items (>14 days)
+   * Permanently removes items that have been deleted for more than 2 weeks
+   */
+  async cleanupOldDeletedItems(): Promise<void> {
+    const twoWeeksAgo = new Date();
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+    const cutoffDate = twoWeeksAgo.toISOString();
+
+    try {
+      // Cleanup entries
+      const entries = await entriesService.getAllEntries();
+      const oldDeletedEntries = entries.filter(
+        e => e.deleted && e.deleted_at && e.deleted_at < cutoffDate
+      );
+      for (const entry of oldDeletedEntries) {
+        if (entry.id) {
+          await db.entries.delete(entry.id);
+        }
+      }
+      if (oldDeletedEntries.length > 0) {
+        console.log(`🗑️ Cleaned up ${oldDeletedEntries.length} old deleted entries`);
+      }
+
+      // Cleanup products
+      const products = await productsService.getAllProducts();
+      const oldDeletedProducts = products.filter(
+        p => p.deleted && p.deleted_at && p.deleted_at < cutoffDate
+      );
+      for (const product of oldDeletedProducts) {
+        if (product.id) {
+          await db.products.delete(product.id);
+        }
+      }
+      if (oldDeletedProducts.length > 0) {
+        console.log(`🗑️ Cleaned up ${oldDeletedProducts.length} old deleted products`);
+      }
+
+      // Cleanup weights
+      const weights = await weightsService.getAllWeights();
+      const oldDeletedWeights = weights.filter(
+        w => w.deleted && w.deleted_at && w.deleted_at < cutoffDate
+      );
+      for (const weight of oldDeletedWeights) {
+        if (weight.id) {
+          await db.weights.delete(weight.id);
+        }
+      }
+      if (oldDeletedWeights.length > 0) {
+        console.log(`🗑️ Cleaned up ${oldDeletedWeights.length} old deleted weights`);
+      }
+    } catch (error) {
+      console.error('❌ Error during cleanup of old deleted items:', error);
+    }
   }
 
   /**
@@ -334,6 +391,9 @@ class SyncService {
         console.warn('Auto-sync: Could not pull cloud data, continuing with upload', err);
       }
     }
+
+    // Cleanup old deleted items before syncing (>14 days)
+    await this.cleanupOldDeletedItems();
 
     // Export current (possibly merged) data
     const data = await this.exportAllData();
