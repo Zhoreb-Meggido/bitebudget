@@ -339,7 +339,33 @@ class SyncService {
   }
 
   /**
-   * Restore from Google Drive
+   * Merge from Google Drive (safer than full restore)
+   */
+  async mergeFromCloud(password: string): Promise<void> {
+    if (!googleDriveService.isSignedIn()) {
+      throw new Error('Not signed in to Google Drive');
+    }
+
+    if (!password) {
+      throw new Error('Encryptie wachtwoord is vereist');
+    }
+
+    const cloudData = await this.downloadCloudData(password);
+
+    if (!cloudData) {
+      throw new Error('Geen backup gevonden in Google Drive');
+    }
+
+    // Merge cloud data with local
+    await this.mergeData(cloudData);
+
+    // Store last sync time
+    localStorage.setItem('last_sync_time', new Date().toISOString());
+  }
+
+  /**
+   * Restore from Google Drive (DEPRECATED - use mergeFromCloud instead)
+   * Full restore that overwrites all local data
    */
   async restoreFromCloud(password: string): Promise<void> {
     if (!googleDriveService.isSignedIn()) {

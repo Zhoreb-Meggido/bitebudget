@@ -91,8 +91,8 @@ export function CloudSyncSettings() {
     setIsSyncing(true);
 
     try {
-      // Force upload for manual sync (always upload regardless of cloud state)
-      await syncService.syncToCloud(encryptionPassword, true);
+      // Manual sync also merges (safer - won't lose data)
+      await syncService.syncToCloud(encryptionPassword, false);
 
       if (rememberPassword) {
         syncService.storePassword(encryptionPassword);
@@ -115,7 +115,7 @@ export function CloudSyncSettings() {
       return;
     }
 
-    if (!confirm('⚠️ Dit vervangt al je huidige data met de data uit Google Drive. Weet je het zeker?')) {
+    if (!confirm('⚠️ Dit haalt data op uit Google Drive en voegt samen met je lokale data. Cloud data heeft voorrang bij conflicten. Doorgaan?')) {
       return;
     }
 
@@ -124,7 +124,8 @@ export function CloudSyncSettings() {
     setIsSyncing(true);
 
     try {
-      await syncService.restoreFromCloud(encryptionPassword);
+      // Restore now also merges instead of full overwrite
+      await syncService.mergeFromCloud(encryptionPassword);
 
       if (rememberPassword) {
         syncService.storePassword(encryptionPassword);
@@ -132,9 +133,9 @@ export function CloudSyncSettings() {
 
       const now = new Date();
       setLastSync(now);
-      setSuccess('✅ Data hersteld van Google Drive');
+      setSuccess('✅ Data samengevoegd met Google Drive');
 
-      // Reload page to show new data
+      // Reload page to show merged data
       setTimeout(() => {
         window.location.reload();
       }, 1500);
@@ -260,7 +261,7 @@ export function CloudSyncSettings() {
                 </>
               ) : (
                 <>
-                  ☁️ Sync naar Drive
+                  ☁️ Sync (Merge)
                 </>
               )}
             </button>
@@ -274,7 +275,7 @@ export function CloudSyncSettings() {
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              📥 Herstel van Drive
+              📥 Pull (Merge)
             </button>
           </div>
 

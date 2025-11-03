@@ -72,6 +72,7 @@ npm run build
 - ✅ **Persistent Auto-Sync** - State survives page reload
 - ✅ **Token Management** - OAuth tokens worden veilig opgeslagen
 - ✅ **Cleanup on Disconnect** - Auto-sync wordt uitgeschakeld bij uitloggen
+- ✅ **Safe Merge Operations** - Alle sync operaties gebruiken smart merge (geen data loss)
 
 ---
 
@@ -306,11 +307,16 @@ interface SyncData {
 4. Upload merged data
 5. Periodic pull every 5 minutes (when online)
 
-**Manual Sync:**
-- Force upload (no merge) - overwrites cloud with local
+**Manual Sync (Safe Merge):**
+- Pull cloud changes first
+- Merge with local (timestamp-based conflict resolution)
+- Upload merged result
+- **No data loss** - nieuwste items van beide kanten worden behouden
 
-**Manual Restore:**
-- Full restore (no merge) - overwrites local with cloud
+**Manual Pull (Safe Merge):**
+- Download cloud backup
+- Merge with local data (cloud has priority in conflicts)
+- **No data loss** - beide kanten worden samengevoegd
 
 ### Conflict Resolution
 
@@ -381,6 +387,7 @@ npm run build
 - ✅ ISO week numbers in heatmap
 - ✅ Duplicate dashboard cards removed
 - ✅ Settings sync included
+- ✅ Manual sync/restore data loss risk - nu safe merge
 
 ### Fixed in v1.0.0
 - ✅ OpenFoodFacts integration
@@ -402,6 +409,7 @@ npm run build
 - ✅ End-to-end encrypted Google Drive sync
 - ✅ Automatic bidirectional merge
 - ✅ Persistent auto-sync state
+- ✅ Safe merge for all sync operations (no data loss)
 - ✅ Weights & settings in sync data
 - ✅ 8 metrics dashboard with projections
 - ✅ ISO week numbers in heatmap
