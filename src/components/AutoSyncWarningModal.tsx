@@ -21,6 +21,9 @@ export function AutoSyncWarningModal({ onClose }: AutoSyncWarningModalProps) {
     try {
       await googleDriveService.signIn();
 
+      // Dispatch event to notify components to refresh
+      window.dispatchEvent(new CustomEvent('google-drive-reconnected'));
+
       // Auto-sync blijft enabled, alleen token is vernieuwd
       onClose();
     } catch (err: any) {

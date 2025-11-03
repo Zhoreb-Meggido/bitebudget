@@ -17,7 +17,7 @@ export function CloudSyncSettings() {
   const [success, setSuccess] = useState<string | null>(null);
   const [cloudInfo, setCloudInfo] = useState<{ date: Date; size: number } | null>(null);
 
-  useEffect(() => {
+  const refreshConnectionState = () => {
     // Check if already connected
     setIsConnected(googleDriveService.isSignedIn());
 
@@ -39,6 +39,21 @@ export function CloudSyncSettings() {
     if (googleDriveService.isSignedIn()) {
       loadCloudInfo();
     }
+  };
+
+  useEffect(() => {
+    refreshConnectionState();
+
+    // Listen for reconnection events from modal
+    const handleReconnect = () => {
+      refreshConnectionState();
+    };
+
+    window.addEventListener('google-drive-reconnected', handleReconnect);
+
+    return () => {
+      window.removeEventListener('google-drive-reconnected', handleReconnect);
+    };
   }, []);
 
   const loadCloudInfo = async () => {
