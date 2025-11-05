@@ -11,6 +11,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { PeriodSelector } from '@/components/shared/PeriodSelector';
+import type { Entry } from '@/types';
 
 ChartJS.register(
   CategoryScale,
@@ -22,7 +24,6 @@ ChartJS.register(
   Legend
 );
 
-type TimeRange = '7' | '14' | '30' | '90' | 'this-week' | 'last-week' | 'this-month' | 'last-month' | 'all' | 'custom';
 type MetricKey = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium';
 
 interface DayData {
@@ -59,114 +60,41 @@ export function DashboardPage() {
   const { entries } = useEntries();
   const { settings } = useSettings();
 
-  const [timeRange, setTimeRange] = useState<TimeRange>('30');
   const [selectedMetrics, setSelectedMetrics] = useState<Set<MetricKey>>(new Set(['calories', 'protein', 'carbohydrates']));
-  const [customStartDate, setCustomStartDate] = useState('');
-  const [customEndDate, setCustomEndDate] = useState('');
-
-  // Calculate date range
-  const dateRange = useMemo(() => {
-    const today = new Date();
-    let start: Date;
-    let end: Date = today;
-
-    switch (timeRange) {
-      case '7':
-        start = new Date(today);
-        start.setDate(today.getDate() - 6);
-        break;
-      case '14':
-        start = new Date(today);
-        start.setDate(today.getDate() - 13);
-        break;
-      case '30':
-        start = new Date(today);
-        start.setDate(today.getDate() - 29);
-        break;
-      case '90':
-        start = new Date(today);
-        start.setDate(today.getDate() - 89);
-        break;
-      case 'this-week': {
-        const dayOfWeek = today.getDay();
-        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday as start
-        start = new Date(today);
-        start.setDate(today.getDate() - diff);
-        break;
-      }
-      case 'last-week': {
-        const dayOfWeek = today.getDay();
-        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        start = new Date(today);
-        start.setDate(today.getDate() - diff - 7);
-        end = new Date(start);
-        end.setDate(start.getDate() + 6);
-        break;
-      }
-      case 'this-month':
-        start = new Date(today.getFullYear(), today.getMonth(), 1);
-        break;
-      case 'last-month':
-        start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        end = new Date(today.getFullYear(), today.getMonth(), 0);
-        break;
-      case 'custom':
-        if (customStartDate && customEndDate) {
-          start = new Date(customStartDate);
-          end = new Date(customEndDate);
-        } else {
-          start = new Date(today);
-          start.setDate(today.getDate() - 29);
-        }
-        break;
-      case 'all':
-        start = new Date(0); // Beginning of time
-        break;
-      default:
-        start = new Date(today);
-        start.setDate(today.getDate() - 29);
-    }
-
-    return {
-      start: start.toISOString().split('T')[0],
-      end: end.toISOString().split('T')[0],
-    };
-  }, [timeRange, customStartDate, customEndDate]);
+  const [filteredEntries, setFilteredEntries] = useState<Entry[]>(entries);
 
   // Aggregate entries per day
   const dailyData = useMemo(() => {
     const days: Map<string, DayData> = new Map();
 
-    entries.forEach(entry => {
-      if (entry.date >= dateRange.start && entry.date <= dateRange.end) {
-        const existing = days.get(entry.date) || {
-          date: entry.date,
-          calories: 0,
-          protein: 0,
-          carbohydrates: 0,
-          sugars: 0,
-          fat: 0,
-          saturatedFat: 0,
-          fiber: 0,
-          sodium: 0,
-        };
+    filteredEntries.forEach(entry => {
+      const existing = days.get(entry.date) || {
+        date: entry.date,
+        calories: 0,
+        protein: 0,
+        carbohydrates: 0,
+        sugars: 0,
+        fat: 0,
+        saturatedFat: 0,
+        fiber: 0,
+        sodium: 0,
+      };
 
-        days.set(entry.date, {
-          date: entry.date,
-          calories: existing.calories + (entry.calories || 0),
-          protein: existing.protein + (entry.protein || 0),
-          carbohydrates: existing.carbohydrates + (entry.carbohydrates || 0),
-          sugars: existing.sugars + (entry.sugars || 0),
-          fat: existing.fat + (entry.fat || 0),
-          saturatedFat: existing.saturatedFat + (entry.saturatedFat || 0),
-          fiber: existing.fiber + (entry.fiber || 0),
-          sodium: existing.sodium + (entry.sodium || 0),
-        });
-      }
+      days.set(entry.date, {
+        date: entry.date,
+        calories: existing.calories + (entry.calories || 0),
+        protein: existing.protein + (entry.protein || 0),
+        carbohydrates: existing.carbohydrates + (entry.carbohydrates || 0),
+        sugars: existing.sugars + (entry.sugars || 0),
+        fat: existing.fat + (entry.fat || 0),
+        saturatedFat: existing.saturatedFat + (entry.saturatedFat || 0),
+        fiber: existing.fiber + (entry.fiber || 0),
+        sodium: existing.sodium + (entry.sodium || 0),
+      });
     });
 
     return Array.from(days.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [entries, dateRange]);
+  }, [filteredEntries]);
 
   // Calculate averages and stats
   const stats = useMemo(() => {
@@ -223,7 +151,8 @@ export function DashboardPage() {
     const calorieGoal = settings.caloriesRest; // Use rest day as default
     const dailyDeficit = calorieGoal - averages.calories;
     const weeklyDeficit = dailyDeficit * 7;
-    const projectedWeightChange = parseFloat((weeklyDeficit / 7700).toFixed(2));
+    // Negative sign: deficit (eating less) = weight loss (negative weight change)
+    const projectedWeightChange = parseFloat((-weeklyDeficit / 7700).toFixed(2));
 
     return {
       averages,
@@ -349,55 +278,14 @@ export function DashboardPage() {
         <p className="text-gray-600 mt-2">Overzicht van je voedingsinname</p>
       </div>
 
-      {/* Time Range Selector */}
-      <div className="bg-white rounded-lg shadow mb-6 p-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Tijdsvak
-        </label>
-        <select
-          value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-          className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="7">Laatste 7 dagen</option>
-          <option value="14">Laatste 14 dagen</option>
-          <option value="30">Laatste 30 dagen</option>
-          <option value="90">Laatste 90 dagen</option>
-          <option value="this-week">Deze week</option>
-          <option value="last-week">Vorige week</option>
-          <option value="this-month">Deze maand</option>
-          <option value="last-month">Vorige maand</option>
-          <option value="all">Alles</option>
-          <option value="custom">Aangepast</option>
-        </select>
-
-        {/* Custom Date Range */}
-        {timeRange === 'custom' && (
-          <div className="mt-4 flex flex-col md:flex-row gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Van
-              </label>
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tot
-              </label>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        )}
+      {/* Dashboard Period Selector */}
+      <div className="mb-6">
+        <PeriodSelector
+          entries={entries}
+          showExportButtons={false}
+          defaultTimeRange="30"
+          onPeriodChange={(_, filtered) => setFilteredEntries(filtered)}
+        />
       </div>
 
       {dailyData.length === 0 ? (
@@ -454,7 +342,7 @@ export function DashboardPage() {
           </div>
 
           {/* Projected Weight Change Card */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-gray-700 text-base font-semibold">Gewichtsprojectie per week</h3>
               <span className="text-2xl">{stats.projectedWeightChange < 0 ? '📉' : '📈'}</span>
@@ -468,6 +356,19 @@ export function DashboardPage() {
             <p className="text-xs text-gray-500 mt-1">
               Gebaseerd op 7700 kcal = 1 kg lichaamsgewicht
             </p>
+          </div>
+
+          {/* Export Section */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Exporteren</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Selecteer een periode en exporteer je data als PDF, CSV of TXT bestand.
+            </p>
+            <PeriodSelector
+              entries={entries}
+              showExportButtons={true}
+              defaultTimeRange="14"
+            />
           </div>
         </>
       )}
