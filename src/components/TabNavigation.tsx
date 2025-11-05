@@ -12,10 +12,10 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: 'journaal', label: 'Journaal', icon: '📔' },
-  { id: 'tracking', label: 'Tracking', icon: '⚖️' },
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
   { id: 'analyse', label: 'Analyse', icon: '📈' },
   { id: 'data', label: 'Data', icon: '💾' },
+  { id: 'tracking', label: 'Tracking', icon: '⚖️' },
   { id: 'instellingen', label: 'Instellingen', icon: '⚙️' },
 ];
 
