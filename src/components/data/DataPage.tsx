@@ -5,7 +5,6 @@ import { productsService } from '@/services/products.service';
 import { weightsService } from '@/services/weights.service';
 import { settingsService } from '@/services/settings.service';
 import { downloadTextFile } from '@/utils/download.utils';
-import { generateTxtReport, generatePdfReport, type ReportOptions } from '@/utils/report.utils';
 import type { Entry, Product, Weight, UserSettings } from '@/types';
 
 interface BackupData {
@@ -26,56 +25,6 @@ export function DataPage() {
   const [importing, setImporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string>('');
   const [importStatus, setImportStatus] = useState<string>('');
-
-  type TimeRange = '7' | '14' | '30' | '90' | 'this-week' | 'last-week' | 'this-month' | 'last-month' | 'all' | 'custom';
-  const [timeRange, setTimeRange] = useState<TimeRange>('14');
-  const [customStartDate, setCustomStartDate] = useState('');
-  const [customEndDate, setCustomEndDate] = useState('');
-
-  // Calculate date range for reports
-  const getDateRangeForReport = (): ReportOptions => {
-    const today = new Date();
-
-    switch (timeRange) {
-      case '7':
-        return { days: 7 };
-      case '14':
-        return { days: 14 };
-      case '30':
-        return { days: 30 };
-      case '90':
-        return { days: 90 };
-      case 'this-week': {
-        const dayOfWeek = today.getDay();
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-        return { startDate: monday.toISOString().split('T')[0], endDate: today.toISOString().split('T')[0] };
-      }
-      case 'last-week': {
-        const dayOfWeek = today.getDay();
-        const lastMonday = new Date(today);
-        lastMonday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) - 7);
-        const lastSunday = new Date(lastMonday);
-        lastSunday.setDate(lastMonday.getDate() + 6);
-        return { startDate: lastMonday.toISOString().split('T')[0], endDate: lastSunday.toISOString().split('T')[0] };
-      }
-      case 'this-month': {
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        return { startDate: firstDay.toISOString().split('T')[0], endDate: today.toISOString().split('T')[0] };
-      }
-      case 'last-month': {
-        const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
-        return { startDate: firstDay.toISOString().split('T')[0], endDate: lastDay.toISOString().split('T')[0] };
-      }
-      case 'all':
-        return { days: 0 }; // 0 means all data
-      case 'custom':
-        return { startDate: customStartDate, endDate: customEndDate };
-      default:
-        return { days: 14 };
-    }
-  };
 
   // Export all data
   const handleExportAll = () => {
@@ -269,87 +218,6 @@ export function DataPage() {
           {exportStatus || importStatus}
         </div>
       )}
-
-      {/* Report Generation Section */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Rapportage</h2>
-          <p className="text-sm text-gray-600 mt-1">Genereer overzichtsrapporten van je journaal</p>
-        </div>
-
-        <div className="p-6 space-y-4">
-          {/* Time Range Selector */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tijdsvak
-            </label>
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="7">Laatste 7 dagen</option>
-              <option value="14">Laatste 14 dagen</option>
-              <option value="30">Laatste 30 dagen</option>
-              <option value="90">Laatste 90 dagen</option>
-              <option value="this-week">Deze week</option>
-              <option value="last-week">Vorige week</option>
-              <option value="this-month">Deze maand</option>
-              <option value="last-month">Vorige maand</option>
-              <option value="all">Alles</option>
-              <option value="custom">Aangepast</option>
-            </select>
-          </div>
-
-          {/* Custom Date Range */}
-          {timeRange === 'custom' && (
-            <div className="flex flex-col md:flex-row gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Van
-                </label>
-                <input
-                  type="date"
-                  value={customStartDate}
-                  onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tot
-                </label>
-                <input
-                  type="date"
-                  value={customEndDate}
-                  onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Download Buttons */}
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              onClick={() => generateTxtReport(entries, getDateRangeForReport())}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
-            >
-              💾 Download TXT
-            </button>
-            <button
-              onClick={() => generatePdfReport(entries, getDateRangeForReport())}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium"
-            >
-              📄 Download PDF
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-500">
-            Genereer een overzicht van je voedingsjournaal met dagelijkse entries en gemiddelden
-          </p>
-        </div>
-      </div>
 
       {/* Export Section */}
       <div className="bg-white rounded-lg shadow mb-6">
