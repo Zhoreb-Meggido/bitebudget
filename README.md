@@ -114,7 +114,7 @@ npm run build
 
 ---
 
-## 🔮 v1.2.0 - Soft Delete & Data Integrity (Current Development)
+## 🎨 v1.2.0 - Advanced PDF Reporting & Dashboard Improvements
 
 ### **New Features**
 
@@ -125,51 +125,67 @@ npm run build
 - ✅ **Data Integrity** - No more duplicate items after deletion
 - ✅ **Timestamp Tracking** - `deleted_at` field for deletion history
 
+#### **PDF Export Enhancements** 📄
+
+**Consolidated PDF Generator**
+- ✅ **Unified System** - Merged two separate generators into one
+- ✅ **No Duplication** - Eliminated code inconsistencies
+- ✅ **All 8 Metrics** - Complete nutrition tracking in all exports
+
+**Visual Improvements**
+- ✅ **6 Metric Cards** - Optimized single-row layout
+  - Calories, Protein, Sugars, Saturated Fat, Fiber, Sodium
+  - 28mm width, size 14 font for readability
+  - Perfect margin alignment
+- ✅ **2x2 Graph Grid** - Replaced single graph with 4 paired graphs
+  - Koolhydraten & Suikers (g)
+  - Vet & Verzadigd vet (g)
+  - Vezels & Eiwit (g)
+  - Calorieën & Natrium (kcal/mg)
+  - Absolute Y-axis values (auto-scaled)
+  - 85mm width per graph, perfectly aligned
+- ✅ **Week Overview Table** - Daily totals for all metrics
+- ✅ **Meals Appendix** - Separate page with complete meal details (10 columns)
+- ✅ **Proper Spacing** - 10mm gap between elements
+
+**Monthly Reports**
+- ✅ **Month Selector** - Last 18 months with checkboxes
+- ✅ **Multi-Month PDFs** - Generate reports spanning multiple months
+- ✅ **Automatic Format** - Detects standard vs monthly report format
+- ✅ **28 Days Default** - Changed from 30 to 28 days (4 complete weeks)
+
+#### **CSV Export** 📊
+- ✅ **Excel-Compatible** - UTF-8 BOM, CRLF line endings
+- ✅ **Flat Structure** - One row per meal
+- ✅ **All 8 Metrics** - Complete nutrition data in columns
+- ✅ **Header Row** - Date, Weekday, Time, Meal Name, + all metrics
+
+#### **Period Selector Component** 🎯
+- ✅ **Dual Mode** - Dashboard mode (viewing) vs Export mode
+- ✅ **Dashboard Options** - 7/14/28/90 days, All, Custom date range
+- ✅ **Export Options** - 7/14/28 days, Custom months with checkbox selection
+- ✅ **Reusable** - Shared component across Dashboard, Analyse, and Data pages
+
+#### **Dashboard Improvements** 📈
+- ✅ **Dual Period Selectors**
+  - Viewing selector (controls charts/cards)
+  - Export selector (independent for exports)
+- ✅ **Export Section** - Dedicated card at bottom with PDF/CSV/TXT buttons
+- ✅ **Fixed Weight Projection** - Corrected sign (deficit = loss, surplus = gain)
+- ✅ **Flexible Workflow** - View 90 days, export 14 days
+
+#### **Bug Fixes** 🐛
+- ✅ **Backward Compatibility** - Added `|| 0` fallbacks for undefined metrics
+- ✅ **NaN Errors Fixed** - Coordinate validation before jsPDF calls
+- ✅ **Single-Day Graphs** - Handles single-day data without crashing
+- ✅ **CSV/TXT Export** - Fixed undefined property errors
+
 #### **Technical Improvements**
-- ✅ **Extended Database Schema** - Added `deleted` and `deleted_at` fields to Entries, Products, Weights
-- ✅ **Smart Merge Enhancement** - Sync logic now handles deletion conflicts
-- ✅ **UI Filtering** - Deleted items automatically hidden from all views
-- ✅ **Conflict Resolution** - Newest timestamp wins for delete vs update conflicts
-- ✅ **Automatic Cleanup** - Old deleted items (>14 days) are permanently removed during sync
-
-### **Export Improvements** (Planned - Ready for Implementation)
-
-**Design Completed - Ready to Code**
-
-#### **Phase 1: Fix Missing Metrics** (Priority: HIGH, ~10-15K tokens)
-- [ ] **PDF Export Enhancement**
-  - Update meal entries to 2-line layout (8 metrics)
-  - Line 1: Cal, Prot, Carb, Sugr
-  - Line 2: Fat, SFat, Fiber, Na
-  - Day totals in same format
-  - Font: 8pt, Margins: 15mm L/R
-
-- [ ] **TXT → CSV Migration**
-  - Replace TXT export with CSV format
-  - Flat structure (1 row per meal)
-  - All 8 metrics in columns
-  - Excel-compatible (UTF-8 BOM, CRLF)
-  - Header: Date,Weekday,Time,Meal Name,Calories,Protein,Carbohydrates,Sugars,Fat,Saturated Fat,Fiber,Sodium
-
-#### **Phase 2: Weekly Summaries** (Priority: MEDIUM, ~15-20K tokens)
-- [ ] Add weekly summary tables for periods 8-30 days
-- [ ] Table format with all 8 metrics per day
-- [ ] Week average calculation row
-- [ ] Auto-collapse to day totals only for periods >30 days
-
-#### **Phase 3: Charts Appendix** (Priority: LOW, ~20-25K tokens)
-- [ ] Canvas-to-image chart rendering (html2canvas)
-- [ ] Chart 1: Calories + Protein (dual Y-axis)
-- [ ] Chart 2: Carbs + Sugars + Fat + SatFat
-- [ ] Chart 3: Fiber + Sodium
-- [ ] Place all charts as appendix after detail pages
-
-**Total Estimate**: 45-60K tokens (fits comfortably in weekly budget)
-
-**Layout Decisions Made**:
-- Hybrid approach (Optie C): Weekly tables inline, charts as appendix
-- 2-line meal layout (Optie B): Best balance of completeness and readability
-- CSV over TXT: Better for Excel analysis and dietist use case
+- ✅ **Extended Database Schema** - Added `deleted` and `deleted_at` fields
+- ✅ **Smart Merge Enhancement** - Sync handles deletion conflicts
+- ✅ **UI Filtering** - Deleted items automatically hidden
+- ✅ **Conflict Resolution** - Newest timestamp wins
+- ✅ **Automatic Cleanup** - Old deleted items (>14 days) permanently removed
 
 ### **Future Considerations**
 - [ ] Photo attachments voor meals
@@ -195,7 +211,7 @@ src/
 │   ├── tracking/
 │   │   └── TrackingPage.tsx          ✅ Weight tracking + charts
 │   ├── dashboard/
-│   │   └── DashboardPage.tsx         ✅ 8 metrics + projections
+│   │   └── DashboardPage.tsx         ✅ 8 metrics + dual selectors
 │   ├── analyse/
 │   │   └── AnalysePage.tsx           ✅ Week comparison + heatmap
 │   ├── data/
@@ -203,6 +219,8 @@ src/
 │   ├── settings/
 │   │   ├── SettingsPage.tsx          ✅ User preferences
 │   │   └── CloudSyncSettings.tsx     ✅ Google Drive sync
+│   ├── shared/
+│   │   └── PeriodSelector.tsx        ✅ Dual-mode period selector
 │   └── TabNavigation.tsx             ✅ Responsive nav (6 tabs)
 ├── services/
 │   ├── database.service.ts           ✅ Dexie DB initialization
@@ -224,7 +242,8 @@ src/
 │   ├── date.utils.ts                 ✅ Date helpers (UTC-safe)
 │   ├── download.utils.ts             ✅ File download
 │   ├── calculations.ts               ✅ Nutrition calculations
-│   └── export.utils.ts               ✅ TXT/PDF generation
+│   ├── export.utils.ts               ✅ CSV/TXT generation
+│   └── report.utils.ts               ✅ PDF generation (unified)
 ├── types/
 │   └── database.types.ts             ✅ TypeScript interfaces
 └── main.tsx                          ✅ App entry point
@@ -470,14 +489,29 @@ npm run build
 
 ## 📝 Version History
 
-### v1.1.0 (November 2024) - Current
+### v1.2.0 (November 2024) - Current
+**Advanced PDF Reporting & Dashboard Improvements**
+- ✅ Soft delete with deletion propagation across devices
+- ✅ Consolidated PDF generator (merged 2 into 1)
+- ✅ 2x2 graph grid with absolute Y-axis values
+- ✅ 6 metric cards in optimized single-row layout
+- ✅ Week overview table in PDF reports
+- ✅ Monthly reports with multi-month selection
+- ✅ CSV export with all 8 metrics
+- ✅ Dual period selectors (viewing vs exporting)
+- ✅ Dashboard export section
+- ✅ Fixed weight projection sign
+- ✅ Backward compatibility for undefined metrics
+- ✅ NaN errors fixed in graph rendering
+
+### v1.1.0 (November 2024)
 **Cloud Sync + Enhancements**
 - ✅ End-to-end encrypted Google Drive sync
 - ✅ Automatic bidirectional merge
 - ✅ Persistent auto-sync state
 - ✅ Safe merge for all sync operations (no data loss)
 - ✅ Token expiry warning with one-click re-login
-- ✅ Runtime token expiry detection (niet alleen bij opstarten)
+- ✅ Runtime token expiry detection
 - ✅ Manual refresh button voor quick sync
 - ✅ Weights & settings in sync data
 - ✅ 8 metrics dashboard with projections
@@ -522,6 +556,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** November 3, 2024
-**Status:** v1.2.0 - Soft Delete + Cloud Sync Active
-**Next:** Export improvements (PDF/TXT enhancements)
+**Last Updated:** November 5, 2024
+**Status:** v1.2.0 - Advanced PDF Reporting Active
+**Next:** Photo attachments & Recipe builder
