@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { settingsService } from '@/services/settings.service';
+import { syncService } from '@/services/sync.service';
 import type { UserSettings } from '@/types';
 import { DEFAULT_SETTINGS } from '@/types';
 
@@ -47,6 +48,9 @@ export function useSettings() {
       const updatedSettings = { ...settings, ...newSettings };
       await settingsService.saveSettings(updatedSettings);
       setSettings(updatedSettings);
+
+      // Trigger auto-sync if enabled
+      syncService.triggerAutoSync();
     } catch (err) {
       console.error('❌ Failed to update settings:', err);
       setError(err as Error);
@@ -59,6 +63,9 @@ export function useSettings() {
     try {
       await settingsService.saveSettings(newSettings);
       setSettings(newSettings);
+
+      // Trigger auto-sync if enabled
+      syncService.triggerAutoSync();
     } catch (err) {
       console.error('❌ Failed to save settings:', err);
       setError(err as Error);
@@ -71,6 +78,9 @@ export function useSettings() {
     try {
       await settingsService.resetSettings();
       setSettings(DEFAULT_SETTINGS);
+
+      // Trigger auto-sync if enabled
+      syncService.triggerAutoSync();
     } catch (err) {
       console.error('❌ Failed to reset settings:', err);
       setError(err as Error);

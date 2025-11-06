@@ -269,19 +269,18 @@ class SyncService {
       }
     }
 
-    // Merge products - add cloud products that don't exist locally or propagate deletions
+    // Merge products - add cloud products that don't exist locally or are newer
     for (const cloudProduct of cloudData.products) {
       const localProduct = localProductsMap.get(cloudProduct.name);
 
       if (!localProduct) {
         // New product from cloud
         await productsService.addProduct(cloudProduct);
-      } else if (cloudProduct.deleted && cloudProduct.updated_at && localProduct.updated_at &&
+      } else if (cloudProduct.updated_at && localProduct.updated_at &&
                  new Date(cloudProduct.updated_at) > new Date(localProduct.updated_at)) {
-        // Cloud product is deleted and newer - propagate deletion
+        // Cloud product is newer - propagate all changes including deletion
         await productsService.updateProduct(localProduct.id!, cloudProduct);
       }
-      // Note: We don't update non-deleted products to preserve local customizations
     }
 
     // Merge weights - add cloud weights that don't exist locally or are newer

@@ -17,9 +17,10 @@ interface Props {
   onDeleteProduct: (id: number | string) => Promise<void>;
   onToggleFavorite: (id: number | string) => Promise<void>;
   onImportJson: (json: string) => Promise<void>;
+  inline?: boolean; // Optional: render inline instead of as modal
 }
 
-export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdateProduct, onDeleteProduct, onToggleFavorite, onImportJson }: Props) {
+export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdateProduct, onDeleteProduct, onToggleFavorite, onImportJson, inline = false }: Props) {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState({ name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: '', favorite: false });
@@ -31,7 +32,7 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
   const [showOffSearch, setShowOffSearch] = useState(false);
   const [isLoadingFromOff, setIsLoadingFromOff] = useState(false);
 
-  if (!isOpen) return null;
+  if (!isOpen && !inline) return null;
 
   const resetForm = () => {
     setProductForm({ name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: '', favorite: false });
@@ -153,12 +154,12 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
       return 0;
     });
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+  const contentElement = (
+    <>
+      <div className={inline ? "bg-white rounded-xl shadow-lg w-full" : "bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto"}>
+        <div className={inline ? "bg-white border-b p-4" : "sticky top-0 bg-white border-b p-4 flex justify-between items-center"}>
           <h3 className="text-xl font-bold">Producten Database</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
+          {!inline && <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">✕</button>}
         </div>
 
         <div className="p-6">
@@ -223,8 +224,8 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
                     )}
                   </div>
                 </div>
-                <button onClick={() => { setEditingProduct(p); setProductForm(p as any); setShowAddProduct(true); }} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm flex-shrink-0">✏️</button>
-                <button onClick={() => { if (confirm('Verwijder?')) onDeleteProduct(p.id!); }} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm flex-shrink-0">🗑️</button>
+                <button onClick={() => { setEditingProduct(p); setProductForm(p as any); setShowAddProduct(true); }} className="px-2 py-1 text-xl hover:scale-110 transition flex-shrink-0" title="Bewerken">✏️</button>
+                <button onClick={() => { if (confirm('Verwijder?')) onDeleteProduct(p.id!); }} className="px-2 py-1 text-xl hover:scale-110 transition flex-shrink-0" title="Verwijderen">🗑️</button>
               </div>
             ))}
           </div>
@@ -237,13 +238,42 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
             <h3 className="text-xl font-bold mb-4">{editingProduct ? 'Bewerken' : 'Nieuw Product'}</h3>
             <div className="space-y-3">
-              <div><label className="block text-sm font-medium mb-1">Naam</label><input type="text" value={productForm.name} onChange={(e) => setProductForm({...productForm, name: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Naam</label>
+                <input
+                  type="text"
+                  value={productForm.name}
+                  onChange={(e) => setProductForm({...productForm, name: e.target.value})}
+                  placeholder="Productnaam"
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 {(['calories', 'protein', 'carbohydrates', 'sugars', 'fat', 'saturatedFat', 'fiber', 'sodium'] as const).map(field => (
-                  <div key={field}><label className="block text-xs font-medium mb-1">{field === 'calories' ? 'Cal' : field === 'protein' ? 'Eiw' : field === 'carbohydrates' ? 'Koolh' : field === 'sugars' ? 'Suik' : field === 'fat' ? 'Vet' : field === 'saturatedFat' ? 'V.vet' : field === 'fiber' ? 'Vez' : 'Natr'} (per 100g)</label><input type="number" step={field === 'calories' || field === 'sodium' ? '1' : '0.1'} value={productForm[field]} onChange={(e) => setProductForm({...productForm, [field]: e.target.value})} className="w-full px-2 py-2 border rounded-lg text-sm" /></div>
+                  <div key={field}>
+                    <label className="block text-xs font-medium mb-1">
+                      {field === 'calories' ? 'Cal' : field === 'protein' ? 'Eiw' : field === 'carbohydrates' ? 'Koolh' : field === 'sugars' ? 'Suik' : field === 'fat' ? 'Vet' : field === 'saturatedFat' ? 'V.vet' : field === 'fiber' ? 'Vez' : 'Natr'} (per 100g)
+                    </label>
+                    <input
+                      type="number"
+                      step={field === 'calories' || field === 'sodium' ? '1' : '0.1'}
+                      value={productForm[field]}
+                      onChange={(e) => setProductForm({...productForm, [field]: e.target.value})}
+                      onFocus={(e) => e.target.select()}
+                      placeholder="0"
+                      className="w-full px-2 py-2 border rounded-lg text-sm"
+                    />
+                  </div>
                 ))}
               </div>
-              <div className="flex items-center gap-2"><input type="checkbox" checked={productForm.favorite} onChange={(e) => setProductForm({...productForm, favorite: e.target.checked})} /><label className="text-sm">Favoriet ⭐</label></div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={productForm.favorite}
+                  onChange={(e) => setProductForm({...productForm, favorite: e.target.checked})}
+                />
+                <label className="text-sm">Favoriet ⭐</label>
+              </div>
               <div className="flex gap-2">
                 <button onClick={handleSubmit} className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">{editingProduct ? 'Bijwerken' : 'Toevoegen'}</button>
                 <button onClick={resetForm} className="flex-1 px-4 py-2 bg-gray-200 rounded-lg font-semibold hover:bg-gray-300">Annuleer</button>
@@ -281,6 +311,17 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
           </div>
         </div>
       )}
+    </>
+  );
+
+  // Return inline or as modal
+  if (inline) {
+    return contentElement;
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      {contentElement}
     </div>
   );
 }
