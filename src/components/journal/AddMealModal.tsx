@@ -392,30 +392,34 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                                 min="1"
                               />
                               <span className="text-xs text-gray-500">g</span>
-                              {!hasPortions && (
+
+                              {/* + Portie en Delete knop samen op 1 regel */}
+                              <div className="flex items-center gap-2">
+                                {!hasPortions && (
+                                  <button
+                                    onClick={() => {
+                                      setAddPortionForProduct(name);
+                                      setShowAddPortionModal(true);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-800 text-xs underline whitespace-nowrap"
+                                  >
+                                    + Portie
+                                  </button>
+                                )}
+
+                                {/* Verwijder knop */}
                                 <button
                                   onClick={() => {
-                                    setAddPortionForProduct(name);
-                                    setShowAddPortionModal(true);
+                                    setSelectedProducts(selectedProducts.filter(p => p !== name));
+                                    const newGrams = {...productGrams};
+                                    delete newGrams[name];
+                                    setProductGrams(newGrams);
                                   }}
-                                  className="text-blue-600 hover:text-blue-800 text-xs underline whitespace-nowrap"
-                                >
-                                  + Portie
-                                </button>
-                              )}
+                                  className="text-red-500 hover:text-red-700 font-bold text-lg flex-shrink-0"
+                                  aria-label="Verwijder product"
+                                >✕</button>
+                              </div>
                             </div>
-
-                            {/* Verwijder knop */}
-                            <button
-                              onClick={() => {
-                                setSelectedProducts(selectedProducts.filter(p => p !== name));
-                                const newGrams = {...productGrams};
-                                delete newGrams[name];
-                                setProductGrams(newGrams);
-                              }}
-                              className="text-red-500 hover:text-red-700 font-bold text-lg flex-shrink-0"
-                              aria-label="Verwijder product"
-                            >✕</button>
                           </div>
                         </div>
                       );

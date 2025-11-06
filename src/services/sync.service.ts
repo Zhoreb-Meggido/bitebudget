@@ -280,6 +280,15 @@ class SyncService {
    * Merge cloud data with local data (smart merge - keeps newest of each item)
    */
   async mergeData(cloudData: SyncData): Promise<void> {
+    console.log('📥 Merging cloud data version:', cloudData.version);
+    console.log('📊 Cloud data contains:', {
+      entries: cloudData.entries?.length || 0,
+      products: cloudData.products?.length || 0,
+      weights: cloudData.weights?.length || 0,
+      productPortions: cloudData.productPortions?.length || 0,
+      mealTemplates: cloudData.mealTemplates?.length || 0,
+    });
+
     // Get existing local data
     const localEntries = await entriesService.getAllEntries();
     const localProducts = await productsService.getAllProducts();
@@ -354,9 +363,13 @@ class SyncService {
     }
 
     // Merge product portions - add cloud portions that don't exist locally or are newer
-    if (cloudData.productPortions) {
+    if (cloudData.productPortions && cloudData.productPortions.length > 0) {
+      console.log(`📦 Merging ${cloudData.productPortions.length} portions from cloud...`);
       const localPortions = await portionsService.getAllPortions();
       const localPortionsMap = new Map(localPortions.map(p => [`${p.productName}-${p.portionName}`, p]));
+
+      let addedCount = 0;
+      let updatedCount = 0;
 
       for (const cloudPortion of cloudData.productPortions) {
         const key = `${cloudPortion.productName}-${cloudPortion.portionName}`;
@@ -365,18 +378,27 @@ class SyncService {
         if (!localPortion) {
           // New portion from cloud
           await portionsService.addPortion(cloudPortion);
+          addedCount++;
         } else if (cloudPortion.updated_at && localPortion.updated_at &&
                    new Date(cloudPortion.updated_at) > new Date(localPortion.updated_at)) {
           // Cloud portion is newer - propagate all changes including deletion
           await portionsService.updatePortion(localPortion.id!, cloudPortion);
+          updatedCount++;
         }
       }
+      console.log(`✅ Portions: ${addedCount} added, ${updatedCount} updated`);
+    } else {
+      console.log('ℹ️ No portions in cloud backup (might be older version)');
     }
 
     // Merge meal templates - add cloud templates that don't exist locally or are newer
-    if (cloudData.mealTemplates) {
+    if (cloudData.mealTemplates && cloudData.mealTemplates.length > 0) {
+      console.log(`⭐ Merging ${cloudData.mealTemplates.length} templates from cloud...`);
       const localTemplates = await templatesService.getAllTemplates();
       const localTemplatesMap = new Map(localTemplates.map(t => [t.name, t]));
+
+      let addedCount = 0;
+      let updatedCount = 0;
 
       for (const cloudTemplate of cloudData.mealTemplates) {
         const localTemplate = localTemplatesMap.get(cloudTemplate.name);
@@ -384,12 +406,17 @@ class SyncService {
         if (!localTemplate) {
           // New template from cloud
           await templatesService.addTemplate(cloudTemplate);
+          addedCount++;
         } else if (cloudTemplate.updated_at && localTemplate.updated_at &&
                    new Date(cloudTemplate.updated_at) > new Date(localTemplate.updated_at)) {
           // Cloud template is newer - propagate all changes including deletion
           await templatesService.updateTemplate(localTemplate.id!, cloudTemplate);
+          updatedCount++;
         }
       }
+      console.log(`✅ Templates: ${addedCount} added, ${updatedCount} updated`);
+    } else {
+      console.log('ℹ️ No templates in cloud backup (might be older version)');
     }
   }
 
