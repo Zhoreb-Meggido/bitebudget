@@ -327,17 +327,17 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
         {/* Products Tab - Fixed sections at top */}
         {tab === 'products' && (
-          <>
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
             {/* Time input - Fixed */}
             <div className="flex-shrink-0 px-6 pt-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Tijd (optioneel)</label>
               <input type="time" value={mealTime} onChange={(e) => setMealTime(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
             </div>
 
-            {/* Selected products - Fixed with max height */}
+            {/* Selected products - Fixed with max height, more space on desktop */}
             {selectedProducts.length > 0 && (
               <div className="flex-shrink-0 px-6 pt-3">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-h-[200px] overflow-y-auto">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-h-[200px] sm:max-h-[300px] overflow-y-auto">
                   <h4 className="text-xs font-semibold text-gray-600 mb-2 sticky top-0 bg-blue-50">Geselecteerd ({selectedProducts.length}):</h4>
                   <div className="space-y-2">
                     {selectedProducts.map(name => {
@@ -347,9 +347,63 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
                       return (
                         <div key={name} className="bg-white rounded-lg px-3 py-2 border border-blue-300">
-                          {/* Product naam en verwijder knop */}
-                          <div className="flex items-center gap-2 mb-2">
+                          {/* Desktop: alles op 1 regel, Mobile: gestapeld */}
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            {/* Product naam */}
                             <span className="flex-1 text-sm font-medium truncate">{product?.favorite && '⭐ '}{name}</span>
+
+                            {/* Portie selector en gram input */}
+                            <div className="flex items-center gap-2">
+                              {hasPortions && (
+                                <select
+                                  onChange={(e) => {
+                                    const portionId = e.target.value;
+                                    if (portionId === 'custom') return; // Keep manual input
+                                    if (portionId === 'new') {
+                                      setAddPortionForProduct(name);
+                                      setShowAddPortionModal(true);
+                                      return;
+                                    }
+                                    const portion = portions.find(p => p.id?.toString() === portionId);
+                                    if (portion) {
+                                      setProductGrams({...productGrams, [name]: portion.grams});
+                                    }
+                                  }}
+                                  className="w-32 sm:w-40 px-2 py-1 border rounded text-xs"
+                                >
+                                  <option value="custom">Handmatig</option>
+                                  {portions.map(p => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.portionName} ({p.grams}g)
+                                    </option>
+                                  ))}
+                                  <option value="new">+ Nieuwe portie</option>
+                                </select>
+                              )}
+                              <input
+                                type="number"
+                                value={productGrams[name] ?? ''}
+                                onChange={(e) => setProductGrams({...productGrams, [name]: parseInt(e.target.value) || 0})}
+                                onFocus={(e) => e.target.select()}
+                                placeholder="100"
+                                className="w-16 sm:w-20 px-2 py-1 border rounded text-center text-sm"
+                                min="1"
+                              />
+                              <span className="text-xs text-gray-500">g</span>
+                              {!hasPortions && (
+                                <button
+                                  onClick={() => {
+                                    setAddPortionForProduct(name);
+                                    setShowAddPortionModal(true);
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 text-xs underline whitespace-nowrap"
+                                >
+                                  + Portie
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Verwijder knop */}
                             <button
                               onClick={() => {
                                 setSelectedProducts(selectedProducts.filter(p => p !== name));
@@ -357,60 +411,9 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                                 delete newGrams[name];
                                 setProductGrams(newGrams);
                               }}
-                              className="text-red-500 hover:text-red-700 font-bold text-lg"
+                              className="text-red-500 hover:text-red-700 font-bold text-lg flex-shrink-0"
                               aria-label="Verwijder product"
                             >✕</button>
-                          </div>
-
-                          {/* Portie selector en gram input */}
-                          <div className="flex items-center gap-2">
-                            {hasPortions && (
-                              <select
-                                onChange={(e) => {
-                                  const portionId = e.target.value;
-                                  if (portionId === 'custom') return; // Keep manual input
-                                  if (portionId === 'new') {
-                                    setAddPortionForProduct(name);
-                                    setShowAddPortionModal(true);
-                                    return;
-                                  }
-                                  const portion = portions.find(p => p.id?.toString() === portionId);
-                                  if (portion) {
-                                    setProductGrams({...productGrams, [name]: portion.grams});
-                                  }
-                                }}
-                                className="flex-1 px-2 py-1 border rounded text-xs"
-                              >
-                                <option value="custom">Handmatig</option>
-                                {portions.map(p => (
-                                  <option key={p.id} value={p.id}>
-                                    {p.portionName} ({p.grams}g)
-                                  </option>
-                                ))}
-                                <option value="new">+ Nieuwe portie</option>
-                              </select>
-                            )}
-                            <input
-                              type="number"
-                              value={productGrams[name] ?? ''}
-                              onChange={(e) => setProductGrams({...productGrams, [name]: parseInt(e.target.value) || 0})}
-                              onFocus={(e) => e.target.select()}
-                              placeholder="100"
-                              className="w-20 px-2 py-1 border rounded text-center text-sm"
-                              min="1"
-                            />
-                            <span className="text-xs text-gray-500">g</span>
-                            {!hasPortions && (
-                              <button
-                                onClick={() => {
-                                  setAddPortionForProduct(name);
-                                  setShowAddPortionModal(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-800 text-xs underline"
-                              >
-                                + Portie
-                              </button>
-                            )}
                           </div>
                         </div>
                       );
@@ -463,7 +466,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {/* Manual Tab */}
@@ -700,7 +703,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
               >
                 {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'} {selectedProducts.length > 0 && `(${selectedProducts.length} ${selectedProducts.length === 1 ? 'product' : 'producten'})`}
               </button>
-              {selectedProducts.length > 0 && !isEditMode && (
+              {selectedProducts.length > 0 && (
                 <button
                   onClick={() => setShowSaveTemplateModal(true)}
                   className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition"
