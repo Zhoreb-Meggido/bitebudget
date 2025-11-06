@@ -3,10 +3,10 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useEntries, useProducts, useSettings } from '@/hooks';
-import { getTodayDate, calculateTotals } from '@/utils';
+import { useEntries, useProducts, useSettings, useTemplates } from '@/hooks';
+import { getTodayDate, calculateTotals, calculateProductNutrition } from '@/utils';
 import { productsService } from '@/services';
-import type { DayType } from '@/types';
+import type { DayType, MealTemplate } from '@/types';
 import { AddMealModal } from './AddMealModal';
 import { ProductsModal } from './ProductsModal';
 
@@ -16,12 +16,14 @@ export function JournalPage() {
   const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
   const { products, addProduct, updateProduct, deleteProduct, toggleFavorite, reloadProducts } = useProducts();
   const { settings } = useSettings();
+  const { recentTemplates, trackUsage } = useTemplates();
 
   const [activeTab, setActiveTab] = useState<PageTab>('today');
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [dayType, setDayType] = useState<DayType>('rust');
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
+  const [quickAddTemplate, setQuickAddTemplate] = useState<MealTemplate | null>(null);
 
   // Collapsible sections state - load from localStorage
   const [showHistoricalData, setShowHistoricalData] = useState(() => {
@@ -118,6 +120,28 @@ export function JournalPage() {
     saturatedFat: settings.saturatedFatMax,
     fiber: settings.fiberMin,
     sodium: settings.sodiumMax,
+  };
+
+  // Calculate nutritional totals for template preview
+  const calculateTemplateTotals = (template: MealTemplate) => {
+    let totals = { calories: 0, protein: 0 };
+
+    template.products.forEach(({ name, grams }) => {
+      const product = products.find(p => p.name === name);
+      if (!product) return;
+      const nutrition = calculateProductNutrition(product, grams);
+      totals.calories += nutrition.calories;
+      totals.protein += nutrition.protein;
+    });
+
+    return totals;
+  };
+
+  // Handle quick add template
+  const handleQuickAdd = async (template: MealTemplate) => {
+    await trackUsage(template.id!);
+    setQuickAddTemplate(template);
+    setShowAddMeal(true);
   };
 
   return (
@@ -308,6 +332,31 @@ export function JournalPage() {
             </div>
           </div>
 
+          {/* Quick Add Templates */}
+          {recentTemplates.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">⚡ Snel toevoegen</h3>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {recentTemplates.map(template => {
+                  const totals = calculateTemplateTotals(template);
+                  return (
+                    <button
+                      key={template.id}
+                      onClick={() => handleQuickAdd(template)}
+                      className="flex-shrink-0 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-3 transition min-w-[160px]"
+                    >
+                      <div className="font-medium text-sm text-gray-800 mb-1">{template.name}</div>
+                      <div className="text-xs text-gray-600">{template.category}</div>
+                      <div className="text-xs text-blue-600 mt-1">
+                        {totals.calories} kcal • {totals.protein.toFixed(0)}g eiw
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <button onClick={() => setShowAddMeal(true)} className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 w-full">
@@ -469,12 +518,14 @@ export function JournalPage() {
           onClose={() => {
             setShowAddMeal(false);
             setEditingEntry(undefined);
+            setQuickAddTemplate(null);
           }}
           onAddMeal={addEntry}
           onUpdateMeal={updateEntry}
           editEntry={editingEntry}
           products={products}
           selectedDate={selectedDate}
+          quickAddTemplate={quickAddTemplate}
         />
       </div>
     </div>

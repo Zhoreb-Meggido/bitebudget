@@ -15,11 +15,12 @@ interface Props {
   selectedDate: string;
   editEntry?: Entry; // Optional: when editing an existing entry
   onUpdateMeal?: (id: number | string, meal: Omit<Entry, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  quickAddTemplate?: MealTemplate | null; // Optional: prefill from quick add
 }
 
 type Tab = 'products' | 'manual' | 'json' | 'templates';
 
-export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDate, editEntry, onUpdateMeal }: Props) {
+export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDate, editEntry, onUpdateMeal, quickAddTemplate }: Props) {
   const [tab, setTab] = useState<Tab>('products');
   const [mealTime, setMealTime] = useState('');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
@@ -55,6 +56,23 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     };
     loadPortionsForProducts();
   }, [selectedProducts, allPortions]);
+
+  // Load quick add template when provided
+  useEffect(() => {
+    if (quickAddTemplate && isOpen && !editEntry) {
+      // Load template products into products tab
+      const prodNames = quickAddTemplate.products.map(p => p.name);
+      const grams: Record<string, number> = {};
+      quickAddTemplate.products.forEach(p => {
+        grams[p.name] = p.grams;
+      });
+
+      setSelectedProducts(prodNames);
+      setProductGrams(grams);
+      setMealTime(getCurrentTime());
+      setTab('products'); // Open on products tab for adjustments
+    }
+  }, [quickAddTemplate, isOpen, editEntry]);
 
   // Load entry data when editing
   useEffect(() => {
