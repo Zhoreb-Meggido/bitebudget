@@ -300,7 +300,7 @@ export function CloudSyncSettings() {
                 </>
               ) : (
                 <>
-                  ☁️ Sync (Merge)
+                  📤 Push naar Drive
                 </>
               )}
             </button>
@@ -314,7 +314,7 @@ export function CloudSyncSettings() {
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
-              📥 Pull (Merge)
+              📥 Pull vanaf Drive
             </button>
           </div>
 
