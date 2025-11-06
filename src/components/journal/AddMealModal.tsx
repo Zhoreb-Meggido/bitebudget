@@ -356,6 +356,8 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                             <div className="flex items-center gap-2">
                               {hasPortions && (
                                 <select
+                                  key={`${name}-${portions.length}`}
+                                  value="custom"
                                   onChange={(e) => {
                                     const portionId = e.target.value;
                                     if (portionId === 'custom') return; // Keep manual input
@@ -435,8 +437,8 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
             </div>
 
             {/* Products list - Scrollable */}
-            <div className="flex-1 min-h-0 overflow-hidden px-6 pb-4">
-              <div className="h-full border border-gray-200 rounded-lg bg-gray-50 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-hidden px-6 pb-4 flex flex-col">
+              <div className="flex-1 border border-gray-200 rounded-lg bg-gray-50 overflow-y-auto">
                 <div className="p-2 space-y-1">
                   {filteredProducts.length === 0 ? (
                     <p className="text-center text-gray-500 py-4 text-sm">Geen producten gevonden</p>
