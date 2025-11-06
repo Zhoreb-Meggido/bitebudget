@@ -10,16 +10,18 @@ import type { DayType } from '@/types';
 import { AddMealModal } from './AddMealModal';
 import { ProductsModal } from './ProductsModal';
 
+type PageTab = 'today' | 'products';
+
 export function JournalPage() {
   const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
   const { products, addProduct, updateProduct, deleteProduct, toggleFavorite, reloadProducts } = useProducts();
   const { settings } = useSettings();
 
+  const [activeTab, setActiveTab] = useState<PageTab>('today');
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [dayType, setDayType] = useState<DayType>('rust');
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
-  const [showProducts, setShowProducts] = useState(false);
 
   const todayEntries = getEntriesByDate(selectedDate);
   const totals = calculateTotals(todayEntries);
@@ -109,8 +111,37 @@ export function JournalPage() {
   return (
     <div className="bg-gradient-to-br from-green-50 to-blue-50 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Dashboard Card */}
-        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+        {/* Tab Navigation */}
+        <div className="bg-white rounded-xl shadow-lg p-2 mb-4">
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('today')}
+              className={`flex-1 px-4 py-3 rounded-lg font-semibold transition ${
+                activeTab === 'today'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              📅 Vandaag
+            </button>
+            <button
+              onClick={() => setActiveTab('products')}
+              className={`flex-1 px-4 py-3 rounded-lg font-semibold transition ${
+                activeTab === 'products'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              📦 Producten
+            </button>
+          </div>
+        </div>
+
+        {/* Today Tab Content */}
+        {activeTab === 'today' && (
+          <>
+            {/* Dashboard Card */}
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
           {/* Date & Day Type */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <div className="w-full sm:w-auto">
@@ -245,11 +276,8 @@ export function JournalPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <button onClick={() => setShowAddMeal(true)} className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 w-full sm:w-auto">
+            <button onClick={() => setShowAddMeal(true)} className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 w-full">
               ➕ Maaltijd toevoegen
-            </button>
-            <button onClick={() => setShowProducts(true)} className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 w-full sm:w-auto">
-              📦 Producten beheren
             </button>
           </div>
         </div>
@@ -364,6 +392,29 @@ export function JournalPage() {
             </div>
           )}
         </div>
+          </>
+        )}
+
+        {/* Products Tab Content */}
+        {activeTab === 'products' && (
+          <ProductsModal
+            isOpen={true}
+            onClose={() => {}} // No-op since we don't close inline view
+            products={products}
+            onAddProduct={addProduct}
+            onUpdateProduct={updateProduct}
+            onDeleteProduct={deleteProduct}
+            onToggleFavorite={toggleFavorite}
+            onImportJson={async (json) => {
+              const data = JSON.parse(json);
+              const productsToMerge = Array.isArray(data) ? data : [data];
+              const result = await productsService.mergeProducts(productsToMerge);
+              alert(`${result.added} toegevoegd, ${result.updated} bijgewerkt!`);
+              await reloadProducts();
+            }}
+            inline={true}
+          />
+        )}
 
         {/* Modals */}
         <AddMealModal
@@ -377,23 +428,6 @@ export function JournalPage() {
           editEntry={editingEntry}
           products={products}
           selectedDate={selectedDate}
-        />
-
-        <ProductsModal
-          isOpen={showProducts}
-          onClose={() => setShowProducts(false)}
-          products={products}
-          onAddProduct={addProduct}
-          onUpdateProduct={updateProduct}
-          onDeleteProduct={deleteProduct}
-          onToggleFavorite={toggleFavorite}
-          onImportJson={async (json) => {
-            const data = JSON.parse(json);
-            const productsToMerge = Array.isArray(data) ? data : [data];
-            const result = await productsService.mergeProducts(productsToMerge);
-            alert(`${result.added} toegevoegd, ${result.updated} bijgewerkt!`);
-            await reloadProducts();
-          }}
         />
       </div>
     </div>

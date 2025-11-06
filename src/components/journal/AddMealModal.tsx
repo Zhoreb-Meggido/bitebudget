@@ -182,13 +182,15 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
+        {/* Header - Sticky */}
+        <div className="bg-white border-b p-4 flex justify-between items-center rounded-t-xl flex-shrink-0">
           <h3 className="text-xl font-bold text-gray-800">{isEditMode ? 'Maaltijd bewerken' : 'Maaltijd toevoegen'}</h3>
           <button onClick={resetForm} className="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
         </div>
 
-        <div className="p-6">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6">
           {/* Tabs */}
           <div className="flex gap-2 mb-4">
             {(['products', 'manual', 'json'] as Tab[]).map(t => (
@@ -204,68 +206,179 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
           {/* Products Tab */}
           {tab === 'products' && (
-            <div>
+            <div className="flex flex-col h-full">
+              {/* Time input */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tijd (optioneel)</label>
                 <input type="time" value={mealTime} onChange={(e) => setMealTime(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
               </div>
-              <div className="mb-4">
-                <input type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Zoek product..." className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-2" />
-                <div className="space-y-1 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
-                  {filteredProducts.map(product => (
-                    <label key={product.id} className="flex items-center gap-2 p-2 hover:bg-white rounded cursor-pointer">
-                      <input type="checkbox" checked={selectedProducts.includes(product.name)} onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedProducts([...selectedProducts, product.name]);
-                          setProductGrams({...productGrams, [product.name]: 100});
-                        } else {
-                          setSelectedProducts(selectedProducts.filter(p => p !== product.name));
-                        }
-                      }} className="w-4 h-4" />
-                      <span className="flex-1">{product.favorite && '⭐ '}{product.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+
+              {/* Selected products - Compact inline badges */}
               {selectedProducts.length > 0 && (
-                <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <h4 className="text-sm font-semibold mb-2">Geselecteerd ({selectedProducts.length}):</h4>
-                  {selectedProducts.map(name => (
-                    <div key={name} className="flex items-center gap-2 bg-white rounded p-2 mb-2">
-                      <span className="flex-1 font-medium">{name}</span>
-                      <input type="number" value={productGrams[name] || 100} onChange={(e) => setProductGrams({...productGrams, [name]: parseInt(e.target.value) || 100})} className="w-20 px-2 py-1 border rounded text-center" min="1" />
-                      <span>g</span>
-                      <button onClick={() => setSelectedProducts(selectedProducts.filter(p => p !== name))} className="text-red-600 hover:text-red-800 font-bold">✕</button>
-                    </div>
-                  ))}
+                <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <h4 className="text-xs font-semibold text-gray-600 mb-2">Geselecteerd ({selectedProducts.length}):</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedProducts.map(name => {
+                      const product = products.find(p => p.name === name);
+                      return (
+                        <div key={name} className="inline-flex items-center gap-1 bg-white rounded-full px-3 py-1 text-sm border border-blue-300">
+                          <span className="font-medium">{product?.favorite && '⭐ '}{name.length > 20 ? name.substring(0, 20) + '...' : name}</span>
+                          <input
+                            type="number"
+                            value={productGrams[name] ?? ''}
+                            onChange={(e) => setProductGrams({...productGrams, [name]: parseInt(e.target.value) || 0})}
+                            onFocus={(e) => e.target.select()}
+                            placeholder="100"
+                            className="w-12 px-1 py-0 border rounded text-center text-sm"
+                            min="1"
+                          />
+                          <span className="text-xs text-gray-500">g</span>
+                          <button
+                            onClick={() => {
+                              setSelectedProducts(selectedProducts.filter(p => p !== name));
+                              const newGrams = {...productGrams};
+                              delete newGrams[name];
+                              setProductGrams(newGrams);
+                            }}
+                            className="text-red-500 hover:text-red-700 font-bold ml-1"
+                          >✕</button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
-              <button onClick={handleAddFromProducts} disabled={selectedProducts.length === 0} className={`w-full px-4 py-2 rounded-lg font-semibold ${selectedProducts.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}>
-                {isEditMode ? 'Opslaan' : 'Toevoegen'} {selectedProducts.length > 0 && `(${selectedProducts.length})`}
-              </button>
+
+              {/* Search bar */}
+              <div className="mb-3">
+                <input
+                  type="text"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="Zoek product..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+
+              {/* Products list - No height restriction */}
+              <div className="flex-1 min-h-0 border border-gray-200 rounded-lg bg-gray-50">
+                <div className="h-full overflow-y-auto p-2 space-y-1">
+                  {filteredProducts.length === 0 ? (
+                    <p className="text-center text-gray-500 py-4 text-sm">Geen producten gevonden</p>
+                  ) : (
+                    filteredProducts.map(product => (
+                      <label key={product.id} className="flex items-center gap-2 p-2 hover:bg-white rounded cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.includes(product.name)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedProducts([...selectedProducts, product.name]);
+                              if (!productGrams[product.name]) {
+                                setProductGrams({...productGrams, [product.name]: 100});
+                              }
+                            } else {
+                              setSelectedProducts(selectedProducts.filter(p => p !== product.name));
+                            }
+                          }}
+                          className="w-4 h-4"
+                        />
+                        <span className="flex-1 text-sm">{product.favorite && '⭐ '}{product.name}</span>
+                        <span className="text-xs text-gray-500">{product.calories} kcal</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
           {/* Manual Tab */}
           {tab === 'manual' && (
             <div className="space-y-3">
-              <div><label className="block text-sm font-medium mb-1">Tijd</label><input type="time" value={manualMeal.time} onChange={(e) => setManualMeal({...manualMeal, time: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
-              <div><label className="block text-sm font-medium mb-1">Naam</label><input type="text" value={manualMeal.name} onChange={(e) => setManualMeal({...manualMeal, name: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Tijd</label>
+                <input
+                  type="time"
+                  value={manualMeal.time}
+                  onChange={(e) => setManualMeal({...manualMeal, time: e.target.value})}
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Naam</label>
+                <input
+                  type="text"
+                  value={manualMeal.name}
+                  onChange={(e) => setManualMeal({...manualMeal, name: e.target.value})}
+                  placeholder="Bijv. Lunch"
+                  className="w-full px-4 py-2 border rounded-lg"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 {(['calories', 'protein', 'carbohydrates', 'sugars', 'fat', 'saturatedFat', 'fiber', 'sodium'] as const).map(field => (
-                  <div key={field}><label className="block text-xs font-medium mb-1">{field === 'calories' ? 'Calorieën' : field === 'protein' ? 'Eiwit (g)' : field === 'carbohydrates' ? 'Koolh (g)' : field === 'sugars' ? 'Suikers (g)' : field === 'fat' ? 'Vet (g)' : field === 'saturatedFat' ? 'Verz. vet (g)' : field === 'fiber' ? 'Vezels (g)' : 'Natrium (mg)'}</label><input type="number" step={field === 'calories' || field === 'sodium' ? '1' : '0.1'} value={manualMeal[field]} onChange={(e) => setManualMeal({...manualMeal, [field]: e.target.value})} className="w-full px-4 py-2 border rounded-lg" /></div>
+                  <div key={field}>
+                    <label className="block text-xs font-medium mb-1">
+                      {field === 'calories' ? 'Calorieën' : field === 'protein' ? 'Eiwit (g)' : field === 'carbohydrates' ? 'Koolh (g)' : field === 'sugars' ? 'Suikers (g)' : field === 'fat' ? 'Vet (g)' : field === 'saturatedFat' ? 'Verz. vet (g)' : field === 'fiber' ? 'Vezels (g)' : 'Natrium (mg)'}
+                    </label>
+                    <input
+                      type="number"
+                      step={field === 'calories' || field === 'sodium' ? '1' : '0.1'}
+                      value={manualMeal[field]}
+                      onChange={(e) => setManualMeal({...manualMeal, [field]: e.target.value})}
+                      onFocus={(e) => e.target.select()}
+                      placeholder="0"
+                      className="w-full px-4 py-2 border rounded-lg"
+                    />
+                  </div>
                 ))}
               </div>
-              <button onClick={handleAddManually} className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">{isEditMode ? 'Opslaan' : 'Toevoegen'}</button>
             </div>
           )}
 
           {/* JSON Tab */}
           {tab === 'json' && (
             <div>
-              <textarea value={mealJson} onChange={(e) => setMealJson(e.target.value)} className="w-full px-4 py-2 border rounded-lg font-mono text-sm h-64 mb-4" placeholder='{"time": "12:00", "name": "Lunch", "calories": 500, ...}' />
-              <button onClick={handleImportJson} className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">Importeer JSON</button>
+              <textarea
+                value={mealJson}
+                onChange={(e) => setMealJson(e.target.value)}
+                className="w-full px-4 py-2 border rounded-lg font-mono text-sm h-64"
+                placeholder='{"time": "12:00", "name": "Lunch", "calories": 500, ...}'
+              />
             </div>
+          )}
+        </div>
+
+        {/* Footer - Sticky Action Buttons */}
+        <div className="border-t bg-white p-4 rounded-b-xl flex-shrink-0">
+          {tab === 'products' && (
+            <button
+              onClick={handleAddFromProducts}
+              disabled={selectedProducts.length === 0}
+              className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
+                selectedProducts.length === 0
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
+            >
+              {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'} {selectedProducts.length > 0 && `(${selectedProducts.length} ${selectedProducts.length === 1 ? 'product' : 'producten'})`}
+            </button>
+          )}
+          {tab === 'manual' && (
+            <button
+              onClick={handleAddManually}
+              className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
+            >
+              {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'}
+            </button>
+          )}
+          {tab === 'json' && (
+            <button
+              onClick={handleImportJson}
+              className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
+            >
+              📥 Importeer JSON
+            </button>
           )}
         </div>
       </div>
