@@ -24,20 +24,12 @@ export function JournalPage() {
   const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
 
   // Collapsible sections state - load from localStorage
-  const [showDetailedMetrics, setShowDetailedMetrics] = useState(() => {
-    const saved = localStorage.getItem('journal_show_detailed_metrics');
-    return saved !== null ? saved === 'true' : true;
-  });
   const [showHistoricalData, setShowHistoricalData] = useState(() => {
     const saved = localStorage.getItem('journal_show_historical_data');
     return saved !== null ? saved === 'true' : false;
   });
 
   // Save preferences to localStorage when they change
-  useEffect(() => {
-    localStorage.setItem('journal_show_detailed_metrics', String(showDetailedMetrics));
-  }, [showDetailedMetrics]);
-
   useEffect(() => {
     localStorage.setItem('journal_show_historical_data', String(showHistoricalData));
   }, [showHistoricalData]);
@@ -185,128 +177,135 @@ export function JournalPage() {
             </div>
           </div>
 
-          {/* Nutrition Overview - Hybrid Layout */}
-          {/* Top 3 Cards: Most Important Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Calorieën</div>
-              <div className={`text-2xl font-bold ${totals.calories > goals.calories ? 'text-red-600' : 'text-blue-600'}`}>
-                {totals.calories}
+          {/* Compact 2x4 Grid - All Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {/* Calorieën */}
+            <div>
+              <div className="text-xs font-medium text-gray-600 mb-1">Calorieën</div>
+              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-all ${totals.calories > goals.calories ? 'bg-red-500' : 'bg-blue-500'}`}
+                  style={{ width: `${Math.min((totals.calories / goals.calories) * 100, 100)}%` }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                    {totals.calories} / {goals.calories}
+                  </span>
+                </div>
               </div>
-              <div className="text-xs text-gray-500">Max: {goals.calories}</div>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Eiwit</div>
-              <div className={`text-2xl font-bold ${totals.protein < goals.protein ? 'text-orange-600' : 'text-green-600'}`}>
-                {totals.protein.toFixed(1)}g
+
+            {/* Eiwit */}
+            <div>
+              <div className="text-xs font-medium text-gray-600 mb-1">Eiwit</div>
+              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-all ${totals.protein < goals.protein ? 'bg-orange-500' : 'bg-green-500'}`}
+                  style={{ width: `${Math.min((totals.protein / goals.protein) * 100, 100)}%` }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                    {totals.protein.toFixed(1)}g / {goals.protein}g
+                  </span>
+                </div>
               </div>
-              <div className="text-xs text-gray-500">Doel: {goals.protein}g</div>
             </div>
-            <div className="bg-amber-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600">Koolhydraten</div>
-              <div className={`text-2xl font-bold ${totals.carbohydrates > limits.carbohydrates ? 'text-red-600' : 'text-amber-600'}`}>
-                {totals.carbohydrates.toFixed(1)}g
+
+            {/* Koolhydraten */}
+            <div>
+              <div className="text-xs font-medium text-gray-600 mb-1">Koolhydraten</div>
+              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-all ${totals.carbohydrates > limits.carbohydrates ? 'bg-red-500' : 'bg-amber-500'}`}
+                  style={{ width: `${Math.min((totals.carbohydrates / limits.carbohydrates) * 100, 100)}%` }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                    {totals.carbohydrates.toFixed(1)}g / {limits.carbohydrates}g
+                  </span>
+                </div>
               </div>
-              <div className="text-xs text-gray-500">Max: {limits.carbohydrates}g</div>
             </div>
-          </div>
 
-          {/* Progress Bars: Secondary Metrics - Collapsible */}
-          <div className="mb-6">
-            <button
-              onClick={() => setShowDetailedMetrics(!showDetailedMetrics)}
-              className="flex items-center justify-between w-full px-3 py-2 mb-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-              aria-label="Toggle gedetailleerde metrics"
-            >
-              <span className="text-sm font-medium text-gray-700">Gedetailleerde metrics</span>
-              <span className="text-gray-500 text-lg transition-transform" style={{ transform: showDetailedMetrics ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-                ▼
-              </span>
-            </button>
-
-            {showDetailedMetrics && (
-              <div className="space-y-3">
-                {/* Sugars */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Suikers</span>
-                    <span className={`font-medium ${totals.sugars > limits.sugars ? 'text-red-600' : 'text-gray-700'}`}>
-                      {totals.sugars.toFixed(1)}g / {limits.sugars}g
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all ${totals.sugars > limits.sugars ? 'bg-red-500' : 'bg-yellow-500'}`}
-                      style={{ width: `${Math.min((totals.sugars / limits.sugars) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Total Fat */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Totaal vet</span>
-                    <span className={`font-medium ${totals.fat > limits.fat ? 'text-red-600' : 'text-gray-700'}`}>
-                      {totals.fat.toFixed(1)}g / {limits.fat}g
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all ${totals.fat > limits.fat ? 'bg-red-500' : 'bg-gray-500'}`}
-                      style={{ width: `${Math.min((totals.fat / limits.fat) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Saturated Fat */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Verzadigd vet</span>
-                    <span className={`font-medium ${totals.saturatedFat > limits.saturatedFat ? 'text-red-600' : 'text-green-600'}`}>
-                      {totals.saturatedFat.toFixed(1)}g / {limits.saturatedFat}g
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all ${totals.saturatedFat > limits.saturatedFat ? 'bg-red-500' : 'bg-green-500'}`}
-                      style={{ width: `${Math.min((totals.saturatedFat / limits.saturatedFat) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Fiber */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Vezels</span>
-                    <span className={`font-medium ${totals.fiber < limits.fiber ? 'text-orange-600' : 'text-green-600'}`}>
-                      {totals.fiber.toFixed(1)}g / {limits.fiber}g
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all ${totals.fiber < limits.fiber ? 'bg-orange-500' : 'bg-green-500'}`}
-                      style={{ width: `${Math.min((totals.fiber / limits.fiber) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                {/* Sodium */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Natrium</span>
-                    <span className={`font-medium ${totals.sodium > limits.sodium ? 'text-red-600' : 'text-green-600'}`}>
-                      {totals.sodium}mg / {limits.sodium}mg
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full transition-all ${totals.sodium > limits.sodium ? 'bg-red-500' : 'bg-green-500'}`}
-                      style={{ width: `${Math.min((totals.sodium / limits.sodium) * 100, 100)}%` }}
-                    ></div>
-                  </div>
+            {/* Suikers */}
+            <div>
+              <div className="text-xs font-medium text-gray-600 mb-1">Suikers</div>
+              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-all ${totals.sugars > limits.sugars ? 'bg-red-500' : 'bg-yellow-500'}`}
+                  style={{ width: `${Math.min((totals.sugars / limits.sugars) * 100, 100)}%` }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                    {totals.sugars.toFixed(1)}g / {limits.sugars}g
+                  </span>
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* Totaal vet */}
+            <div>
+              <div className="text-xs font-medium text-gray-600 mb-1">Totaal vet</div>
+              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-all ${totals.fat > limits.fat ? 'bg-red-500' : 'bg-gray-500'}`}
+                  style={{ width: `${Math.min((totals.fat / limits.fat) * 100, 100)}%` }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                    {totals.fat.toFixed(1)}g / {limits.fat}g
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Verzadigd vet */}
+            <div>
+              <div className="text-xs font-medium text-gray-600 mb-1">Verzadigd vet</div>
+              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-all ${totals.saturatedFat > limits.saturatedFat ? 'bg-red-500' : 'bg-green-500'}`}
+                  style={{ width: `${Math.min((totals.saturatedFat / limits.saturatedFat) * 100, 100)}%` }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                    {totals.saturatedFat.toFixed(1)}g / {limits.saturatedFat}g
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Vezels */}
+            <div>
+              <div className="text-xs font-medium text-gray-600 mb-1">Vezels</div>
+              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-all ${totals.fiber < limits.fiber ? 'bg-orange-500' : 'bg-green-500'}`}
+                  style={{ width: `${Math.min((totals.fiber / limits.fiber) * 100, 100)}%` }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                    {totals.fiber.toFixed(1)}g / {limits.fiber}g
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Natrium */}
+            <div>
+              <div className="text-xs font-medium text-gray-600 mb-1">Natrium</div>
+              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+                <div
+                  className={`absolute inset-0 transition-all ${totals.sodium > limits.sodium ? 'bg-red-500' : 'bg-green-500'}`}
+                  style={{ width: `${Math.min((totals.sodium / limits.sodium) * 100, 100)}%` }}
+                ></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-sm font-semibold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                    {totals.sodium}mg / {limits.sodium}mg
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Action Buttons */}
