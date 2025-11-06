@@ -385,26 +385,28 @@ class SyncService {
         const localPortion = localPortionsMap.get(key);
         const existingById = localPortionsById.get(cloudPortion.id);
 
-        // Check if ID already exists with different data
-        if (existingById && existingById.productName !== cloudPortion.productName) {
-          // ID conflict - generate new ID for cloud portion
-          const newId = Date.now() + Math.random();
-          await db.productPortions.add({ ...cloudPortion, id: newId });
-          addedCount++;
-          continue;
-        }
-
-        if (!localPortion) {
-          // New portion from cloud - use bulkPut to handle ID conflicts gracefully
-          try {
-            await db.productPortions.put(cloudPortion);
-            addedCount++;
-          } catch (err) {
-            console.warn('Failed to add portion, trying with new ID:', err);
+        // Check if ID already exists with different data (ID conflict)
+        if (existingById) {
+          const existingKey = `${existingById.productName}-${existingById.portionName}`;
+          if (existingKey !== key) {
+            // ID conflict - same ID but different portion, generate new ID
             const newId = Date.now() + Math.random();
             await db.productPortions.add({ ...cloudPortion, id: newId });
             addedCount++;
+            continue;
           }
+          // Same ID, same portion - will be handled by update logic below
+        }
+
+        if (!localPortion) {
+          // New portion from cloud
+          if (!existingById) {
+            // No ID conflict - safe to add with cloud ID
+            await db.productPortions.add(cloudPortion);
+            addedCount++;
+          }
+          // If existingById exists but localPortion doesn't, it means the ID exists
+          // but points to a different portion - already handled above
         } else if (cloudPortion.updated_at && localPortion.updated_at &&
                    new Date(cloudPortion.updated_at) > new Date(localPortion.updated_at)) {
           // Cloud portion is newer - use cloud data but keep local ID to avoid duplicates
@@ -433,26 +435,27 @@ class SyncService {
         const localTemplate = localTemplatesMap.get(cloudTemplate.name);
         const existingById = localTemplatesById.get(cloudTemplate.id);
 
-        // Check if ID already exists with different data
-        if (existingById && existingById.name !== cloudTemplate.name) {
-          // ID conflict - generate new ID for cloud template
-          const newId = Date.now() + Math.random();
-          await db.mealTemplates.add({ ...cloudTemplate, id: newId });
-          addedCount++;
-          continue;
-        }
-
-        if (!localTemplate) {
-          // New template from cloud - use put to handle ID conflicts gracefully
-          try {
-            await db.mealTemplates.put(cloudTemplate);
-            addedCount++;
-          } catch (err) {
-            console.warn('Failed to add template, trying with new ID:', err);
+        // Check if ID already exists with different data (ID conflict)
+        if (existingById) {
+          if (existingById.name !== cloudTemplate.name) {
+            // ID conflict - same ID but different template, generate new ID
             const newId = Date.now() + Math.random();
             await db.mealTemplates.add({ ...cloudTemplate, id: newId });
             addedCount++;
+            continue;
           }
+          // Same ID, same template - will be handled by update logic below
+        }
+
+        if (!localTemplate) {
+          // New template from cloud
+          if (!existingById) {
+            // No ID conflict - safe to add with cloud ID
+            await db.mealTemplates.add(cloudTemplate);
+            addedCount++;
+          }
+          // If existingById exists but localTemplate doesn't, it means the ID exists
+          // but points to a different template - already handled above
         } else if (cloudTemplate.updated_at && localTemplate.updated_at &&
                    new Date(cloudTemplate.updated_at) > new Date(localTemplate.updated_at)) {
           // Cloud template is newer - use cloud data but keep local ID to avoid duplicates
