@@ -1,8 +1,10 @@
-# BiteBudget (Voedseljournaal) v1.2.0
+# BiteBudget (Voedseljournaal) v1.2.1
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
+
+**🎉 Nieuw in v1.2.1:** Complete cloud sync fixes + Mobile-first UX improvements
 
 ---
 
@@ -46,7 +48,48 @@ npm run build
 
 ---
 
-## ✨ v1.1.0 - Cloud Sync + Enhancements (Huidige Versie)
+## ✨ v1.2.1 - Cloud Sync Fixes + Mobile UX (Huidige Versie)
+
+### **Cloud Sync Fixes** ☁️🔧
+
+#### **Complete Auto-Sync Coverage**
+- ✅ **Products Auto-Sync** - Products now trigger auto-sync on add/update/delete/toggle favorite
+- ✅ **Settings Auto-Sync** - Settings now trigger auto-sync on update/save/reset
+- ✅ **Fixed Merge Strategy** - Products now sync all updates (not just deletions)
+- ✅ **Consistent Behavior** - All data types (entries, weights, products, settings) sync with 30s debounce
+
+**Impact:** Cloud sync nu 100% compleet - alle wijzigingen worden automatisch gesynchroniseerd tussen devices!
+
+### **Mobile UX Improvements** 📱✨
+
+#### **Tab Navigation on Journal Page**
+- ✅ **Dual Tabs** - "📅 Vandaag" and "📦 Producten"
+- ✅ **Inline Product Management** - No separate modal, direct access via tab
+- ✅ **Cleaner Navigation** - Removed redundant "Producten beheren" button
+
+#### **AddMealModal Enhancements**
+- ✅ **Sticky Action Button** - Always visible at bottom (no scrolling to submit!)
+- ✅ **Compact Product Badges** - Inline chips with gram inputs instead of large boxes
+- ✅ **More Space for Products List** - Removed max-height restriction for better scrolling
+- ✅ **Placeholders > Default Values** - Easier to input small values (no backspace issues)
+- ✅ **Auto-Select on Focus** - Text automatically selected for faster editing
+- ✅ **Optimized Input Width** - Gram inputs sized to fit 3 digits without overlap
+
+#### **ProductsModal Improvements**
+- ✅ **Inline Mode Support** - Can render as tab content or modal
+- ✅ **Placeholders in All Fields** - No more default value issues
+- ✅ **Icon-Only Buttons** - Cleaner edit/delete buttons without backgrounds
+- ✅ **Hover Animations** - Scale effect for better touch feedback
+
+**Impact:**
+- 🚀 Much less scrolling on mobile when adding meals with many products
+- 🚀 Faster product management (no modal switching)
+- 🚀 Easier to input values < 100 (no default value conflicts)
+- 🚀 Cleaner, more organized navigation
+
+---
+
+## ✨ v1.1.0 - Cloud Sync + Enhancements
 
 ### **Nieuwe Features**
 
@@ -203,9 +246,9 @@ npm run build
 src/
 ├── components/
 │   ├── journal/
-│   │   ├── JournalPage.tsx           ✅ Daily meal tracking
-│   │   ├── AddMealModal.tsx          ✅ Add meals (3 methods)
-│   │   ├── ProductsModal.tsx         ✅ Product CRUD
+│   │   ├── JournalPage.tsx           ✅ Daily meal tracking + tab navigation
+│   │   ├── AddMealModal.tsx          ✅ Add meals (sticky footer, compact badges)
+│   │   ├── ProductsModal.tsx         ✅ Product CRUD (modal + inline mode)
 │   │   ├── BarcodeScanner.tsx        ✅ Camera barcode scanning
 │   │   └── OpenFoodFactsSearch.tsx   ✅ Product search
 │   ├── tracking/
@@ -235,8 +278,8 @@ src/
 ├── hooks/
 │   ├── useDatabase.ts                ✅ DB connection hook
 │   ├── useEntries.ts                 ✅ Entries with auto-sync
-│   ├── useProducts.ts                ✅ Products state
-│   ├── useSettings.ts                ✅ Settings state
+│   ├── useProducts.ts                ✅ Products with auto-sync (v1.2.1+)
+│   ├── useSettings.ts                ✅ Settings with auto-sync (v1.2.1+)
 │   └── useWeights.ts                 ✅ Weights with auto-sync
 ├── utils/
 │   ├── date.utils.ts                 ✅ Date helpers (UTC-safe)
@@ -399,7 +442,7 @@ interface SyncData {
 ### Conflict Resolution
 
 **Entries:** Composite key (date + time + name), newest `updated_at` wins (including deletions - v1.2+)
-**Products:** Add new only, preserve local customizations (deletions propagate via `updated_at` - v1.2+)
+**Products:** By name, newest `updated_at` wins for all changes including updates and deletions (v1.2.1+)
 **Weights:** By date, newest `created_at` or `deleted_at` wins (including deletions - v1.2+)
 **Settings:** Cloud always wins (no timestamps yet)
 
@@ -467,6 +510,14 @@ npm run build
 - HMR Fast Refresh warnings in dev mode (doesn't affect functionality)
 - OAuth tokens expire after 1 hour (app toont automatisch popup met re-login optie)
 
+### Fixed in v1.2.1
+- ✅ Products not syncing automatically - now triggers auto-sync
+- ✅ Settings not syncing automatically - now triggers auto-sync
+- ✅ Products merge only syncing deletions - now syncs all updates
+- ✅ Mobile scrolling issues when adding meals with many products
+- ✅ Input fields too small for 3-digit values
+- ✅ Default values making it hard to input small numbers
+
 ### Fixed in v1.1.0
 - ✅ Auto-sync state persistence
 - ✅ ISO week numbers in heatmap
@@ -489,7 +540,22 @@ npm run build
 
 ## 📝 Version History
 
-### v1.2.0 (November 2024) - Current
+### v1.2.1 (January 2025) - Current
+**Cloud Sync Fixes & Mobile UX Improvements**
+- ✅ Products auto-sync on all operations (add/update/delete/favorite)
+- ✅ Settings auto-sync on all operations (update/save/reset)
+- ✅ Fixed products merge strategy (now syncs all updates, not just deletions)
+- ✅ Tab navigation on Journal Page (Vandaag / Producten)
+- ✅ Inline product management (no separate modal)
+- ✅ AddMealModal sticky action button (always visible)
+- ✅ Compact product badges with inline gram inputs
+- ✅ Removed height restriction on products list
+- ✅ Placeholders instead of default values (easier small value input)
+- ✅ Auto-select text on focus for faster editing
+- ✅ Optimized input width for 3-digit values
+- ✅ Icon-only edit/delete buttons with hover animations
+
+### v1.2.0 (November 2024)
 **Advanced PDF Reporting & Dashboard Improvements**
 - ✅ Soft delete with deletion propagation across devices
 - ✅ Consolidated PDF generator (merged 2 into 1)
@@ -556,6 +622,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** November 5, 2024
-**Status:** v1.2.0 - Advanced PDF Reporting Active
+**Last Updated:** January 6, 2025
+**Status:** v1.2.1 - Cloud Sync Complete + Mobile UX Optimized
 **Next:** Photo attachments & Recipe builder
