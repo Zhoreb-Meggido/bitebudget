@@ -3,8 +3,9 @@
  */
 
 import React from 'react';
+import packageJson from '../../package.json';
 
-const APP_VERSION = '1.2.1';
+const APP_VERSION = packageJson.version;
 const BUILD_DATE = new Date().toISOString().split('T')[0];
 
 export function AppFooter() {
