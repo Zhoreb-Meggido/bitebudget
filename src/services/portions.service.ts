@@ -19,9 +19,10 @@ class PortionsService {
     if (this.initialized) return;
 
     try {
+      // Check count right before adding to avoid race condition with sync
       const existingPortions = await db.productPortions.count();
 
-      // Only add defaults if database is empty
+      // Only add defaults if database is still empty
       if (existingPortions === 0) {
         const now = getTimestamp();
         const portionsWithTimestamps = ALL_DEFAULT_PORTIONS.map(portion => ({
@@ -31,8 +32,14 @@ class PortionsService {
           updated_at: now,
         }));
 
-        await db.productPortions.bulkAdd(portionsWithTimestamps);
-        console.log(`✅ Initialized ${portionsWithTimestamps.length} default portions`);
+        // Double-check right before bulkAdd (sync might have run in between)
+        const finalCount = await db.productPortions.count();
+        if (finalCount === 0) {
+          await db.productPortions.bulkAdd(portionsWithTimestamps);
+          console.log(`✅ Initialized ${portionsWithTimestamps.length} default portions`);
+        } else {
+          console.log(`ℹ️ Skipping default portions init - ${finalCount} portions already exist (likely from sync)`);
+        }
       }
 
       this.initialized = true;

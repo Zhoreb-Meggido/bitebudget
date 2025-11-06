@@ -507,19 +507,46 @@ class SyncService {
     }
 
     // Import new data
+    let productsAdded = 0;
+    let productsFailed = 0;
     for (const product of data.products) {
-      await productsService.addProduct(product);
+      try {
+        await productsService.addProduct(product);
+        productsAdded++;
+      } catch (err) {
+        console.warn('Failed to import product:', product.name, err);
+        productsFailed++;
+      }
     }
+    console.log(`✅ Imported ${productsAdded} products (${productsFailed} failed)`);
 
+    let entriesAdded = 0;
+    let entriesFailed = 0;
     for (const entry of data.entries) {
-      await entriesService.addEntry(entry);
+      try {
+        await entriesService.addEntry(entry);
+        entriesAdded++;
+      } catch (err) {
+        console.warn('Failed to import entry:', entry.date, err);
+        entriesFailed++;
+      }
     }
+    console.log(`✅ Imported ${entriesAdded} entries (${entriesFailed} failed)`);
 
     // Import weights if available (backwards compatibility)
     if (data.weights) {
+      let weightsAdded = 0;
+      let weightsFailed = 0;
       for (const weight of data.weights) {
-        await weightsService.addWeight(weight);
+        try {
+          await weightsService.addWeight(weight);
+          weightsAdded++;
+        } catch (err) {
+          console.warn('Failed to import weight:', weight.date, err);
+          weightsFailed++;
+        }
       }
+      console.log(`✅ Imported ${weightsAdded} weights (${weightsFailed} failed)`);
     }
 
     // Import settings if available (backwards compatibility)
@@ -531,18 +558,36 @@ class SyncService {
     if (data.productPortions) {
       // Clear existing portions
       await portionsService.clearAllPortions();
+      let portionsAdded = 0;
+      let portionsFailed = 0;
       for (const portion of data.productPortions) {
-        await portionsService.addPortion(portion);
+        try {
+          await portionsService.addPortion(portion);
+          portionsAdded++;
+        } catch (err) {
+          console.warn('Failed to import portion:', portion.productName, portion.portionName, err);
+          portionsFailed++;
+        }
       }
+      console.log(`✅ Imported ${portionsAdded} portions (${portionsFailed} failed)`);
     }
 
     // Import meal templates if available (v1.3+)
     if (data.mealTemplates) {
       // Clear existing templates
       await templatesService.clearAllTemplates();
+      let templatesAdded = 0;
+      let templatesFailed = 0;
       for (const template of data.mealTemplates) {
-        await templatesService.addTemplate(template);
+        try {
+          await templatesService.addTemplate(template);
+          templatesAdded++;
+        } catch (err) {
+          console.warn('Failed to import template:', template.name, err);
+          templatesFailed++;
+        }
       }
+      console.log(`✅ Imported ${templatesAdded} templates (${templatesFailed} failed)`);
     }
   }
 
