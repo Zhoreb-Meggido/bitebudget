@@ -1,10 +1,10 @@
-# BiteBudget (Voedseljournaal) v1.2.1
+# BiteBudget (Voedseljournaal) v1.3.0
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.2.1:** Complete cloud sync fixes + Mobile-first UX improvements
+**🎉 Nieuw in v1.3.0:** Porties & Templates - Snellere maaltijd tracking!
 
 ---
 
@@ -48,7 +48,66 @@ npm run build
 
 ---
 
-## ✨ v1.2.1 - Cloud Sync Fixes + Mobile UX (Huidige Versie)
+## ✨ v1.3.0 - Porties & Templates (Huidige Versie)
+
+### **Portie Templates** 🍽️
+
+#### **Voorgedefinieerde Porties**
+- ✅ **Default Portions Database** - 50+ voorgedefinieerde porties voor veelgebruikte producten
+- ✅ **Meerdere Eenheden** - Grammen, ml, stuks, eetlepels (el), theelepels (tl)
+- ✅ **Automatische Conversie** - 1 el = 15g, 1 tl = 5g, aanpasbaar per product
+- ✅ **Product-Specifiek** - Bijv. "1 snee brood = 35g", "1 kop melk = 250ml"
+- ✅ **User-Definable** - Voeg eigen porties toe, bewerk defaults
+
+#### **Portie Selector in AddMealModal**
+- ✅ **Dropdown per Product** - Kies portie of handmatige input
+- ✅ **Quick-Fill** - Selecteer portie → grammen auto-ingevuld
+- ✅ **Inline Add** - Nieuwe portie toevoegen zonder modal te sluiten
+- ✅ **Persistent** - Porties worden gesynchroniseerd via cloud sync
+
+**Voorbeelden:**
+- Brood: "1 snee (35g)", "2 sneetjes (70g)"
+- Melk: "1 kop (250ml)", "1 glas (200ml)"
+- Whey: "1 scoop (30g)", "2 scoops (60g)"
+- Eieren: "1 ei (60g)", "2 eieren (120g)"
+
+---
+
+### **Meal Templates** ⭐
+
+#### **Template Systeem**
+- ✅ **Opslaan als Template** - Sla veelgebruikte maaltijden op
+- ✅ **6 Categorieën** - Ontbijt, Lunch, Diner, Snack, Shake, Anders
+- ✅ **Nutritional Preview** - Totale calorieën en eiwit preview
+- ✅ **Favorites** - Pin templates voor quick access
+- ✅ **Recent Gebruikt** - Top 5 meest recente templates
+- ✅ **Usage Tracking** - Populariteit tracking per template
+
+#### **Templates Tab in AddMealModal**
+- ✅ **3 Secties** - Recent gebruikt, Favorieten, Alle templates
+- ✅ **Quick Load** - Klik template → producten auto-geladen
+- ✅ **Edit & Delete** - Beheer templates inline
+- ✅ **Search** - Zoek templates op naam
+- ✅ **Cloud Sync** - Templates gesynchroniseerd tussen devices
+
+**Use Cases:**
+- "Ontbijt standaard" → Brood (70g) + Pindakaas (15g) + Banaan (120g)
+- "Post-workout shake" → Whey (30g) + Melk (300ml) + Banaan (120g)
+- "Lunch salade" → Kipfilet (150g) + Sla (100g) + Dressing (20ml)
+
+---
+
+### **Technical Implementation** 🔧
+- ✅ **Database v7** - Nieuwe tables: productPortions, mealTemplates
+- ✅ **Services** - portions.service.ts, templates.service.ts
+- ✅ **Hooks** - usePortions, useTemplates met auto-sync
+- ✅ **Cloud Sync v1.3** - Portions & templates in backup data
+- ✅ **Soft Delete** - Deletion propagation via sync
+- ✅ **Smart Merge** - Timestamp-based conflict resolution
+
+---
+
+## ✨ v1.2.1 - Cloud Sync Fixes + Mobile UX
 
 ### **Cloud Sync Fixes** ☁️🔧
 
@@ -558,7 +617,20 @@ npm run build
 
 ## 📝 Version History
 
-### v1.2.1 (January 2025) - Current
+### v1.3.0 (January 2025) - Current
+**Porties & Templates - Snellere Maaltijd Tracking**
+- ✅ Portie templates with default portions database (50+ products)
+- ✅ Multiple unit support (g, ml, stuks, el, tl)
+- ✅ Portion selector dropdown in AddMealModal
+- ✅ Meal templates system with categories
+- ✅ Templates tab with recent/favorites/all sections
+- ✅ Quick load templates to products tab
+- ✅ Cloud sync v1.3 with portions and templates
+- ✅ Database v7 with productPortions and mealTemplates tables
+- ✅ Auto-sync for portions and templates
+- ✅ Soft delete propagation for portions and templates
+
+### v1.2.1 (January 2025)
 **Cloud Sync Fixes & Mobile UX Improvements**
 - ✅ Products auto-sync on all operations (add/update/delete/favorite)
 - ✅ Settings auto-sync on all operations (update/save/reset)

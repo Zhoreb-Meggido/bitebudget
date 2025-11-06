@@ -3,8 +3,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import type { Product, Entry } from '@/types';
+import type { Product, Entry, MealTemplate, MealCategory, ProductPortion } from '@/types';
 import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from '@/utils';
+import { useTemplates, usePortions } from '@/hooks';
 
 interface Props {
   isOpen: boolean;
@@ -16,7 +17,7 @@ interface Props {
   onUpdateMeal?: (id: number | string, meal: Omit<Entry, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
 }
 
-type Tab = 'products' | 'manual' | 'json';
+type Tab = 'products' | 'manual' | 'json' | 'templates';
 
 export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDate, editEntry, onUpdateMeal }: Props) {
   const [tab, setTab] = useState<Tab>('products');
@@ -28,6 +29,32 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     time: '', name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: ''
   });
   const [mealJson, setMealJson] = useState('');
+
+  // Templates state
+  const { templates, recentTemplates, favoriteTemplates, addTemplate, deleteTemplate, toggleFavorite, trackUsage } = useTemplates();
+  const [templateSearch, setTemplateSearch] = useState('');
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [newTemplateCategory, setNewTemplateCategory] = useState<MealCategory>('anders');
+
+  // Portions state
+  const { portions: allPortions, addPortion } = usePortions();
+  const [productPortions, setProductPortions] = useState<Record<string, ProductPortion[]>>({});
+  const [showAddPortionModal, setShowAddPortionModal] = useState(false);
+  const [addPortionForProduct, setAddPortionForProduct] = useState<string>('');
+
+  // Load portions for selected products
+  useEffect(() => {
+    const loadPortionsForProducts = async () => {
+      const portionsMap: Record<string, ProductPortion[]> = {};
+      for (const prodName of selectedProducts) {
+        const prodPortions = allPortions.filter(p => p.productName === prodName);
+        portionsMap[prodName] = prodPortions;
+      }
+      setProductPortions(portionsMap);
+    };
+    loadPortionsForProducts();
+  }, [selectedProducts, allPortions]);
 
   // Load entry data when editing
   useEffect(() => {
@@ -173,12 +200,88 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     }
   };
 
+  // Template handlers
+  const handleLoadTemplate = async (template: MealTemplate) => {
+    // Load template products into products tab
+    const prodNames = template.products.map(p => p.name);
+    const grams: Record<string, number> = {};
+    template.products.forEach(p => {
+      grams[p.name] = p.grams;
+    });
+
+    setSelectedProducts(prodNames);
+    setProductGrams(grams);
+    setMealTime(getCurrentTime());
+
+    // Track usage
+    await trackUsage(template.id!);
+
+    // Switch to products tab
+    setTab('products');
+  };
+
+  const handleSaveAsTemplate = async () => {
+    if (!newTemplateName.trim()) {
+      alert('Vul een naam in voor de template');
+      return;
+    }
+
+    if (selectedProducts.length === 0) {
+      alert('Selecteer minimaal 1 product');
+      return;
+    }
+
+    const productDetails: Array<{ name: string; grams: number }> = [];
+    selectedProducts.forEach(prodName => {
+      const grams = productGrams[prodName] || 100;
+      productDetails.push({ name: prodName, grams });
+    });
+
+    await addTemplate({
+      name: newTemplateName,
+      category: newTemplateCategory,
+      products: productDetails,
+      isFavorite: false,
+      useCount: 0,
+    });
+
+    alert('Template opgeslagen!');
+    setShowSaveTemplateModal(false);
+    setNewTemplateName('');
+    setNewTemplateCategory('anders');
+  };
+
+  const handleDeleteTemplate = async (id: number | string) => {
+    if (confirm('Weet je zeker dat je deze template wilt verwijderen?')) {
+      await deleteTemplate(id);
+    }
+  };
+
+  // Calculate nutritional totals for template
+  const calculateTemplateTotals = (template: MealTemplate) => {
+    let totals = { calories: 0, protein: 0 };
+
+    template.products.forEach(({ name, grams }) => {
+      const product = products.find(p => p.name === name);
+      if (!product) return;
+      const nutrition = calculateProductNutrition(product, grams);
+      totals.calories += nutrition.calories;
+      totals.protein += nutrition.protein;
+    });
+
+    return totals;
+  };
+
   const filteredProducts = products
     .filter(p => productSearch === '' || p.name.toLowerCase().includes(productSearch.toLowerCase()))
     .sort((a, b) => {
       if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
       return a.name.localeCompare(b.name);
     });
+
+  const filteredTemplates = templates
+    .filter(t => templateSearch === '' || t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -191,14 +294,14 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
         {/* Tabs - Fixed */}
         <div className="flex-shrink-0 px-6 pt-4">
-          <div className="flex gap-2">
-            {(['products', 'manual', 'json'] as Tab[]).map(t => (
+          <div className="grid grid-cols-4 gap-2">
+            {(['products', 'templates', 'manual', 'json'] as Tab[]).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium transition ${tab === t ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                className={`px-3 py-2 rounded-lg font-medium transition text-sm ${tab === t ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
               >
-                {t === 'products' ? 'Producten' : t === 'manual' ? 'Handmatig' : 'JSON'}
+                {t === 'products' ? '📦 Producten' : t === 'templates' ? '⭐ Templates' : t === 'manual' ? '✏️ Handmatig' : '📋 JSON'}
               </button>
             ))}
           </div>
@@ -221,29 +324,76 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                   <div className="space-y-2">
                     {selectedProducts.map(name => {
                       const product = products.find(p => p.name === name);
+                      const portions = productPortions[name] || [];
+                      const hasPortions = portions.length > 0;
+
                       return (
-                        <div key={name} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-blue-300">
-                          <span className="flex-1 text-sm font-medium truncate">{product?.favorite && '⭐ '}{name}</span>
-                          <input
-                            type="number"
-                            value={productGrams[name] ?? ''}
-                            onChange={(e) => setProductGrams({...productGrams, [name]: parseInt(e.target.value) || 0})}
-                            onFocus={(e) => e.target.select()}
-                            placeholder="100"
-                            className="w-20 px-2 py-1 border rounded text-center text-sm"
-                            min="1"
-                          />
-                          <span className="text-xs text-gray-500">g</span>
-                          <button
-                            onClick={() => {
-                              setSelectedProducts(selectedProducts.filter(p => p !== name));
-                              const newGrams = {...productGrams};
-                              delete newGrams[name];
-                              setProductGrams(newGrams);
-                            }}
-                            className="text-red-500 hover:text-red-700 font-bold text-lg"
-                            aria-label="Verwijder product"
-                          >✕</button>
+                        <div key={name} className="bg-white rounded-lg px-3 py-2 border border-blue-300">
+                          {/* Product naam en verwijder knop */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="flex-1 text-sm font-medium truncate">{product?.favorite && '⭐ '}{name}</span>
+                            <button
+                              onClick={() => {
+                                setSelectedProducts(selectedProducts.filter(p => p !== name));
+                                const newGrams = {...productGrams};
+                                delete newGrams[name];
+                                setProductGrams(newGrams);
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold text-lg"
+                              aria-label="Verwijder product"
+                            >✕</button>
+                          </div>
+
+                          {/* Portie selector en gram input */}
+                          <div className="flex items-center gap-2">
+                            {hasPortions && (
+                              <select
+                                onChange={(e) => {
+                                  const portionId = e.target.value;
+                                  if (portionId === 'custom') return; // Keep manual input
+                                  if (portionId === 'new') {
+                                    setAddPortionForProduct(name);
+                                    setShowAddPortionModal(true);
+                                    return;
+                                  }
+                                  const portion = portions.find(p => p.id?.toString() === portionId);
+                                  if (portion) {
+                                    setProductGrams({...productGrams, [name]: portion.grams});
+                                  }
+                                }}
+                                className="flex-1 px-2 py-1 border rounded text-xs"
+                              >
+                                <option value="custom">Handmatig</option>
+                                {portions.map(p => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.portionName} ({p.grams}g)
+                                  </option>
+                                ))}
+                                <option value="new">+ Nieuwe portie</option>
+                              </select>
+                            )}
+                            <input
+                              type="number"
+                              value={productGrams[name] ?? ''}
+                              onChange={(e) => setProductGrams({...productGrams, [name]: parseInt(e.target.value) || 0})}
+                              onFocus={(e) => e.target.select()}
+                              placeholder="100"
+                              className="w-20 px-2 py-1 border rounded text-center text-sm"
+                              min="1"
+                            />
+                            <span className="text-xs text-gray-500">g</span>
+                            {!hasPortions && (
+                              <button
+                                onClick={() => {
+                                  setAddPortionForProduct(name);
+                                  setShowAddPortionModal(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-xs underline"
+                              >
+                                + Portie
+                              </button>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -355,20 +505,192 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
           </div>
         )}
 
+        {/* Templates Tab */}
+        {tab === 'templates' && (
+          <>
+            {/* Search bar - Fixed */}
+            <div className="flex-shrink-0 px-6 pt-3 pb-2">
+              <input
+                type="text"
+                value={templateSearch}
+                onChange={(e) => setTemplateSearch(e.target.value)}
+                placeholder="Zoek template..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            {/* Templates list - Scrollable */}
+            <div className="flex-1 min-h-0 px-6 pb-4 overflow-y-auto">
+              {/* Recent gebruikt */}
+              {recentTemplates.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Recent gebruikt</h4>
+                  <div className="space-y-2">
+                    {recentTemplates.map(template => {
+                      const totals = calculateTemplateTotals(template);
+                      return (
+                        <div key={template.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:bg-blue-100 transition">
+                          <div className="flex items-start gap-3">
+                            <button
+                              onClick={() => handleLoadTemplate(template)}
+                              className="flex-1 text-left"
+                            >
+                              <div className="font-semibold text-gray-800">{template.name}</div>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {template.category} • {template.products.length} producten
+                              </div>
+                              <div className="text-xs text-blue-600 mt-1">
+                                {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                              </div>
+                            </button>
+                            <div className="flex gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => toggleFavorite(template.id!)}
+                                className="text-lg hover:scale-110 transition"
+                                aria-label="Toggle favorite"
+                              >
+                                {template.isFavorite ? '⭐' : '☆'}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTemplate(template.id!)}
+                                className="text-red-500 hover:text-red-700 text-lg"
+                                aria-label="Verwijder template"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Favorieten */}
+              {favoriteTemplates.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">⭐ Favorieten</h4>
+                  <div className="space-y-2">
+                    {favoriteTemplates.map(template => {
+                      const totals = calculateTemplateTotals(template);
+                      return (
+                        <div key={template.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:bg-yellow-100 transition">
+                          <div className="flex items-start gap-3">
+                            <button
+                              onClick={() => handleLoadTemplate(template)}
+                              className="flex-1 text-left"
+                            >
+                              <div className="font-semibold text-gray-800">{template.name}</div>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {template.category} • {template.products.length} producten
+                              </div>
+                              <div className="text-xs text-yellow-700 mt-1">
+                                {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                              </div>
+                            </button>
+                            <div className="flex gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => toggleFavorite(template.id!)}
+                                className="text-lg hover:scale-110 transition"
+                                aria-label="Toggle favorite"
+                              >
+                                ⭐
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTemplate(template.id!)}
+                                className="text-red-500 hover:text-red-700 text-lg"
+                                aria-label="Verwijder template"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Alle templates */}
+              <div>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Alle templates</h4>
+                {filteredTemplates.length === 0 ? (
+                  <div className="text-center text-gray-500 py-8">
+                    <p className="mb-2">Nog geen templates opgeslagen</p>
+                    <p className="text-sm">Ga naar de Producten tab en klik op "Opslaan als template"</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredTemplates.map(template => {
+                      const totals = calculateTemplateTotals(template);
+                      return (
+                        <div key={template.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition">
+                          <div className="flex items-start gap-3">
+                            <button
+                              onClick={() => handleLoadTemplate(template)}
+                              className="flex-1 text-left"
+                            >
+                              <div className="font-semibold text-gray-800">{template.name}</div>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {template.category} • {template.products.length} producten
+                              </div>
+                              <div className="text-xs text-gray-700 mt-1">
+                                {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                              </div>
+                            </button>
+                            <div className="flex gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => toggleFavorite(template.id!)}
+                                className="text-lg hover:scale-110 transition"
+                                aria-label="Toggle favorite"
+                              >
+                                {template.isFavorite ? '⭐' : '☆'}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTemplate(template.id!)}
+                                className="text-red-500 hover:text-red-700 text-lg"
+                                aria-label="Verwijder template"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Footer - Sticky Action Buttons */}
         <div className="border-t bg-white p-4 rounded-b-xl flex-shrink-0">
           {tab === 'products' && (
-            <button
-              onClick={handleAddFromProducts}
-              disabled={selectedProducts.length === 0}
-              className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
-                selectedProducts.length === 0
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
-            >
-              {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'} {selectedProducts.length > 0 && `(${selectedProducts.length} ${selectedProducts.length === 1 ? 'product' : 'producten'})`}
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={handleAddFromProducts}
+                disabled={selectedProducts.length === 0}
+                className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
+                  selectedProducts.length === 0
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'} {selectedProducts.length > 0 && `(${selectedProducts.length} ${selectedProducts.length === 1 ? 'product' : 'producten'})`}
+              </button>
+              {selectedProducts.length > 0 && !isEditMode && (
+                <button
+                  onClick={() => setShowSaveTemplateModal(true)}
+                  className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition"
+                >
+                  💾 Opslaan als template
+                </button>
+              )}
+            </div>
           )}
           {tab === 'manual' && (
             <button
@@ -387,6 +709,219 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
             </button>
           )}
         </div>
+      </div>
+
+      {/* Save Template Modal */}
+      {showSaveTemplateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Template opslaan</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Naam template</label>
+                <input
+                  type="text"
+                  value={newTemplateName}
+                  onChange={(e) => setNewTemplateName(e.target.value)}
+                  placeholder="Bijv. Ontbijt standaard"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Categorie</label>
+                <select
+                  value={newTemplateCategory}
+                  onChange={(e) => setNewTemplateCategory(e.target.value as MealCategory)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value="ontbijt">Ontbijt</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="diner">Diner</option>
+                  <option value="snack">Snack</option>
+                  <option value="shake">Shake</option>
+                  <option value="anders">Anders</option>
+                </select>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-sm text-gray-700 mb-1">Geselecteerde producten:</p>
+                <ul className="text-xs text-gray-600 space-y-1">
+                  {selectedProducts.map(name => (
+                    <li key={name}>• {name} ({productGrams[name] || 100}g)</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowSaveTemplateModal(false);
+                  setNewTemplateName('');
+                  setNewTemplateCategory('anders');
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={handleSaveAsTemplate}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+              >
+                Opslaan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Portion Modal */}
+      {showAddPortionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Nieuwe portie voor {addPortionForProduct}</h3>
+
+            <AddPortionForm
+              productName={addPortionForProduct}
+              onSave={async (portion) => {
+                await addPortion(portion);
+                setShowAddPortionModal(false);
+                setAddPortionForProduct('');
+              }}
+              onCancel={() => {
+                setShowAddPortionModal(false);
+                setAddPortionForProduct('');
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Helper component for adding portions
+function AddPortionForm({ productName, onSave, onCancel }: {
+  productName: string;
+  onSave: (portion: Omit<ProductPortion, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
+  onCancel: () => void;
+}) {
+  const [portionName, setPortionName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [unit, setUnit] = useState<'g' | 'ml' | 'stuks' | 'el' | 'tl'>('g');
+  const [gramsPerUnit, setGramsPerUnit] = useState('');
+
+  const calculateGrams = (): number => {
+    const amt = parseInt(amount) || 0;
+    if (unit === 'g') return amt;
+    if (unit === 'ml') return amt; // 1:1 for liquids
+    if (unit === 'el') return amt * 15;
+    if (unit === 'tl') return amt * 5;
+    if (unit === 'stuks') return amt * (parseInt(gramsPerUnit) || 0);
+    return amt;
+  };
+
+  const handleSave = async () => {
+    if (!portionName.trim() || !amount) {
+      alert('Vul alle velden in');
+      return;
+    }
+
+    if (unit === 'stuks' && !gramsPerUnit) {
+      alert('Vul het aantal grammen per stuk in');
+      return;
+    }
+
+    const grams = calculateGrams();
+    await onSave({
+      productName,
+      portionName,
+      amount: parseInt(amount),
+      unit,
+      gramsPerUnit: unit === 'stuks' ? parseInt(gramsPerUnit) : undefined,
+      grams,
+      isDefault: false,
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Naam portie</label>
+        <input
+          type="text"
+          value={portionName}
+          onChange={(e) => setPortionName(e.target.value)}
+          placeholder="Bijv. 1 snee, 1 kop"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+          autoFocus
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Hoeveelheid</label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="1"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            min="1"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Eenheid</label>
+          <select
+            value={unit}
+            onChange={(e) => setUnit(e.target.value as typeof unit)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+          >
+            <option value="g">gram (g)</option>
+            <option value="ml">milliliter (ml)</option>
+            <option value="stuks">stuks</option>
+            <option value="el">eetlepel (el)</option>
+            <option value="tl">theelepel (tl)</option>
+          </select>
+        </div>
+      </div>
+
+      {unit === 'stuks' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Grammen per stuk</label>
+          <input
+            type="number"
+            value={gramsPerUnit}
+            onChange={(e) => setGramsPerUnit(e.target.value)}
+            placeholder="Bijv. 35"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            min="1"
+          />
+        </div>
+      )}
+
+      <div className="bg-blue-50 rounded-lg p-3">
+        <p className="text-sm text-gray-700">
+          Totaal: <span className="font-semibold">{calculateGrams()}g</span>
+        </p>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          onClick={onCancel}
+          className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300"
+        >
+          Annuleren
+        </button>
+        <button
+          onClick={handleSave}
+          className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
+        >
+          Opslaan
+        </button>
       </div>
     </div>
   );

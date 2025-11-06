@@ -8,8 +8,10 @@ import { entriesService } from './entries.service';
 import { productsService } from './products.service';
 import { weightsService } from './weights.service';
 import { settingsService } from './settings.service';
+import { portionsService } from './portions.service';
+import { templatesService } from './templates.service';
 import { db } from './database.service';
-import type { Entry, Product, Weight, UserSettings } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate } from '@/types';
 
 export interface SyncData {
   version: string;
@@ -18,6 +20,8 @@ export interface SyncData {
   products: Product[];
   weights: Weight[];
   settings: UserSettings;
+  productPortions?: ProductPortion[];  // v1.3+
+  mealTemplates?: MealTemplate[];      // v1.3+
 }
 
 class SyncService {
@@ -216,6 +220,34 @@ class SyncService {
       if (oldDeletedWeights.length > 0) {
         console.log(`🗑️ Cleaned up ${oldDeletedWeights.length} old deleted weights`);
       }
+
+      // Cleanup product portions
+      const portions = await portionsService.getAllPortions();
+      const oldDeletedPortions = portions.filter(
+        p => p.deleted && p.deleted_at && p.deleted_at < cutoffDate
+      );
+      for (const portion of oldDeletedPortions) {
+        if (portion.id) {
+          await db.productPortions.delete(portion.id);
+        }
+      }
+      if (oldDeletedPortions.length > 0) {
+        console.log(`🗑️ Cleaned up ${oldDeletedPortions.length} old deleted portions`);
+      }
+
+      // Cleanup meal templates
+      const templates = await templatesService.getAllTemplates();
+      const oldDeletedTemplates = templates.filter(
+        t => t.deleted && t.deleted_at && t.deleted_at < cutoffDate
+      );
+      for (const template of oldDeletedTemplates) {
+        if (template.id) {
+          await db.mealTemplates.delete(template.id);
+        }
+      }
+      if (oldDeletedTemplates.length > 0) {
+        console.log(`🗑️ Cleaned up ${oldDeletedTemplates.length} old deleted templates`);
+      }
     } catch (error) {
       console.error('❌ Error during cleanup of old deleted items:', error);
     }
@@ -229,14 +261,18 @@ class SyncService {
     const products = await productsService.getAllProducts();
     const weights = await weightsService.getAllWeights();
     const settings = await settingsService.loadSettings();
+    const productPortions = await portionsService.getAllPortions();
+    const mealTemplates = await templatesService.getAllTemplates();
 
     return {
-      version: '1.2', // Updated version for soft delete support
+      version: '1.3', // Updated version for portions & templates support
       timestamp: new Date().toISOString(),
       entries,
       products,
       weights,
       settings,
+      productPortions,
+      mealTemplates,
     };
   }
 
@@ -316,6 +352,45 @@ class SyncService {
       // You could add a timestamp field to settings for proper conflict resolution
       await settingsService.saveSettings(cloudData.settings);
     }
+
+    // Merge product portions - add cloud portions that don't exist locally or are newer
+    if (cloudData.productPortions) {
+      const localPortions = await portionsService.getAllPortions();
+      const localPortionsMap = new Map(localPortions.map(p => [`${p.productName}-${p.portionName}`, p]));
+
+      for (const cloudPortion of cloudData.productPortions) {
+        const key = `${cloudPortion.productName}-${cloudPortion.portionName}`;
+        const localPortion = localPortionsMap.get(key);
+
+        if (!localPortion) {
+          // New portion from cloud
+          await portionsService.addPortion(cloudPortion);
+        } else if (cloudPortion.updated_at && localPortion.updated_at &&
+                   new Date(cloudPortion.updated_at) > new Date(localPortion.updated_at)) {
+          // Cloud portion is newer - propagate all changes including deletion
+          await portionsService.updatePortion(localPortion.id!, cloudPortion);
+        }
+      }
+    }
+
+    // Merge meal templates - add cloud templates that don't exist locally or are newer
+    if (cloudData.mealTemplates) {
+      const localTemplates = await templatesService.getAllTemplates();
+      const localTemplatesMap = new Map(localTemplates.map(t => [t.name, t]));
+
+      for (const cloudTemplate of cloudData.mealTemplates) {
+        const localTemplate = localTemplatesMap.get(cloudTemplate.name);
+
+        if (!localTemplate) {
+          // New template from cloud
+          await templatesService.addTemplate(cloudTemplate);
+        } else if (cloudTemplate.updated_at && localTemplate.updated_at &&
+                   new Date(cloudTemplate.updated_at) > new Date(localTemplate.updated_at)) {
+          // Cloud template is newer - propagate all changes including deletion
+          await templatesService.updateTemplate(localTemplate.id!, cloudTemplate);
+        }
+      }
+    }
   }
 
   /**
@@ -359,6 +434,24 @@ class SyncService {
     // Import settings if available (backwards compatibility)
     if (data.settings) {
       await settingsService.saveSettings(data.settings);
+    }
+
+    // Import product portions if available (v1.3+)
+    if (data.productPortions) {
+      // Clear existing portions
+      await portionsService.clearAllPortions();
+      for (const portion of data.productPortions) {
+        await portionsService.addPortion(portion);
+      }
+    }
+
+    // Import meal templates if available (v1.3+)
+    if (data.mealTemplates) {
+      // Clear existing templates
+      await templatesService.clearAllTemplates();
+      for (const template of data.mealTemplates) {
+        await templatesService.addTemplate(template);
+      }
     }
   }
 
