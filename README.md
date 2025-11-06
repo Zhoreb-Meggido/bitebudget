@@ -97,6 +97,56 @@ npm run build
 
 ---
 
+### **Quick Add** ⚡
+
+#### **Snelle Toegang tot Templates**
+- ✅ **Quick Add Sectie** - Horizontaal scrollbare lijst met 5 meest recente templates
+- ✅ **Directe Toegang** - Klik template → AddMealModal opent met vooringevulde producten
+- ✅ **Aanpasbaar** - Hoeveelheden blijven volledig aanpasbaar voor flexibiliteit
+- ✅ **Smart Positioning** - Tussen metrics en "Maaltijd toevoegen" knop op JournalPage
+
+**Workflow:**
+1. Klik template in Quick Add sectie
+2. AddMealModal opent met products automatisch geladen
+3. Pas hoeveelheden aan indien nodig
+4. Voeg toe met 2 clicks!
+
+---
+
+### **Portions Management in ProductsModal** 🔧
+
+#### **Beheer Porties per Product**
+- ✅ **Porties Sectie** - Zichtbaar bij product bewerken
+- ✅ **Lijst View** - Alle porties met naam, grammen, default badge
+- ✅ **Set Default** - ⭐ knop om default portie in te stellen
+- ✅ **Delete** - 🗑️ knop om portie te verwijderen
+- ✅ **Inline Add** - "+ Nieuwe portie" opent modal met full form
+- ✅ **Scroll Support** - Max-height met scroll voor veel porties
+
+**Locatie:** Producten tab → Bewerk product → Scroll naar "Porties (optioneel)"
+
+---
+
+### **UX Improvements** 🎨
+
+#### **Desktop Layout Optimizations**
+- ✅ **Compacte Product Entries** - Naam, portie selector en gram input op 1 regel (desktop)
+- ✅ **Meer Ruimte** - Selected products max-height 300px op desktop (was 200px)
+- ✅ **Button Grootte** - "Maaltijd toevoegen" knop smaller op desktop (w-full sm:w-auto)
+- ✅ **Brand Display** - Product brand in parentheses: "Rundertartaar (Albert Heijn)"
+
+#### **Navigation & Layout**
+- ✅ **Tab Naam** - "📅 Maaltijden" (was "Vandaag") - accurater bij andere datums
+- ✅ **Metrics Grid** - 2x4 grid ook op mobiel voor betere space utilization
+- ✅ **Scroll Fixes** - Productenlijst en alle secties correct scrollbaar
+- ✅ **Dropdown Reset** - Portie dropdown reset naar "Handmatig" na toevoegen
+
+#### **Template Features**
+- ✅ **Save When Editing** - "Opslaan als template" ook bij maaltijd bewerken (niet alleen nieuw)
+- ✅ **Controlled Dropdown** - Portion selector blijft niet hangen op "+Nieuwe portie"
+
+---
+
 ### **Technical Implementation** 🔧
 - ✅ **Database v7** - Nieuwe tables: productPortions, mealTemplates
 - ✅ **Services** - portions.service.ts, templates.service.ts
@@ -104,6 +154,8 @@ npm run build
 - ✅ **Cloud Sync v1.3** - Portions & templates in backup data
 - ✅ **Soft Delete** - Deletion propagation via sync
 - ✅ **Smart Merge** - Timestamp-based conflict resolution
+- ✅ **Default Portions** - 50+ voorgedefinieerde porties voor veelgebruikte producten
+- ✅ **Package Rename** - Package naam: bitebudget (was voedseljournaal-app)
 
 ---
 
