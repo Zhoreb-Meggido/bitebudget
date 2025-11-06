@@ -264,6 +264,14 @@ class SyncService {
     const productPortions = await portionsService.getAllPortions();
     const mealTemplates = await templatesService.getAllTemplates();
 
+    console.log('📤 Preparing export with:', {
+      entries: entries.length,
+      products: products.length,
+      weights: weights.length,
+      productPortions: productPortions.length,
+      mealTemplates: mealTemplates.length,
+    });
+
     return {
       version: '1.3', // Updated version for portions & templates support
       timestamp: new Date().toISOString(),
@@ -370,22 +378,29 @@ class SyncService {
 
       let addedCount = 0;
       let updatedCount = 0;
+      const portionsToSync: ProductPortion[] = [];
 
       for (const cloudPortion of cloudData.productPortions) {
         const key = `${cloudPortion.productName}-${cloudPortion.portionName}`;
         const localPortion = localPortionsMap.get(key);
 
         if (!localPortion) {
-          // New portion from cloud
-          await portionsService.addPortion(cloudPortion);
+          // New portion from cloud - keep cloud ID to avoid duplicates
+          portionsToSync.push(cloudPortion);
           addedCount++;
         } else if (cloudPortion.updated_at && localPortion.updated_at &&
                    new Date(cloudPortion.updated_at) > new Date(localPortion.updated_at)) {
-          // Cloud portion is newer - propagate all changes including deletion
-          await portionsService.updatePortion(localPortion.id!, cloudPortion);
+          // Cloud portion is newer - use cloud data but keep local ID to avoid duplicates
+          portionsToSync.push({ ...cloudPortion, id: localPortion.id });
           updatedCount++;
         }
       }
+
+      // Bulk insert/update all portions at once (preserves IDs)
+      if (portionsToSync.length > 0) {
+        await db.productPortions.bulkPut(portionsToSync);
+      }
+
       console.log(`✅ Portions: ${addedCount} added, ${updatedCount} updated`);
     } else {
       console.log('ℹ️ No portions in cloud backup (might be older version)');
@@ -399,21 +414,28 @@ class SyncService {
 
       let addedCount = 0;
       let updatedCount = 0;
+      const templatesToSync: MealTemplate[] = [];
 
       for (const cloudTemplate of cloudData.mealTemplates) {
         const localTemplate = localTemplatesMap.get(cloudTemplate.name);
 
         if (!localTemplate) {
-          // New template from cloud
-          await templatesService.addTemplate(cloudTemplate);
+          // New template from cloud - keep cloud ID to avoid duplicates
+          templatesToSync.push(cloudTemplate);
           addedCount++;
         } else if (cloudTemplate.updated_at && localTemplate.updated_at &&
                    new Date(cloudTemplate.updated_at) > new Date(localTemplate.updated_at)) {
-          // Cloud template is newer - propagate all changes including deletion
-          await templatesService.updateTemplate(localTemplate.id!, cloudTemplate);
+          // Cloud template is newer - use cloud data but keep local ID to avoid duplicates
+          templatesToSync.push({ ...cloudTemplate, id: localTemplate.id });
           updatedCount++;
         }
       }
+
+      // Bulk insert/update all templates at once (preserves IDs)
+      if (templatesToSync.length > 0) {
+        await db.mealTemplates.bulkPut(templatesToSync);
+      }
+
       console.log(`✅ Templates: ${addedCount} added, ${updatedCount} updated`);
     } else {
       console.log('ℹ️ No templates in cloud backup (might be older version)');
