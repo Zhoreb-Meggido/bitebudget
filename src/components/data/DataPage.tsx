@@ -172,12 +172,38 @@ export function DataPage() {
         imported.settings = true;
       }
 
+      // Import portions (v1.3+)
+      if (data.productPortions && data.productPortions.length > 0) {
+        for (const portion of data.productPortions) {
+          try {
+            await portionsService.addPortion(portion);
+          } catch (err) {
+            console.warn('Failed to import portion:', portion.productName, err);
+          }
+        }
+        console.log(`✅ Imported ${data.productPortions.length} portions`);
+      }
+
+      // Import templates (v1.3+)
+      if (data.mealTemplates && data.mealTemplates.length > 0) {
+        for (const template of data.mealTemplates) {
+          try {
+            await templatesService.addTemplate(template);
+          } catch (err) {
+            console.warn('Failed to import template:', template.name, err);
+          }
+        }
+        console.log(`✅ Imported ${data.mealTemplates.length} templates`);
+      }
+
       // Reload all data
       await Promise.all([
         reloadEntries(),
         reloadProducts(),
         reloadWeights(),
         reloadSettings(),
+        reloadPortions(),
+        reloadTemplates(),
       ]);
 
       const summary = [
