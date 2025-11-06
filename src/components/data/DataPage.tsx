@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useEntries, useProducts, useWeights, useSettings } from '@/hooks';
+import { useEntries, useProducts, useWeights, useSettings, usePortions, useTemplates } from '@/hooks';
 import { entriesService } from '@/services/entries.service';
 import { productsService } from '@/services/products.service';
 import { weightsService } from '@/services/weights.service';
@@ -7,7 +7,7 @@ import { settingsService } from '@/services/settings.service';
 import { portionsService } from '@/services/portions.service';
 import { templatesService } from '@/services/templates.service';
 import { downloadTextFile } from '@/utils/download.utils';
-import type { Entry, Product, Weight, UserSettings } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate } from '@/types';
 
 interface BackupData {
   version: string;
@@ -16,6 +16,8 @@ interface BackupData {
   products?: Product[];
   weights?: Weight[];
   settings?: UserSettings;
+  productPortions?: ProductPortion[];
+  mealTemplates?: MealTemplate[];
 }
 
 export function DataPage() {
@@ -23,6 +25,8 @@ export function DataPage() {
   const { products, reloadProducts } = useProducts();
   const { weights, reloadWeights } = useWeights();
   const { settings, reloadSettings } = useSettings();
+  const { portions, reloadPortions } = usePortions();
+  const { templates, reloadTemplates } = useTemplates();
 
   const [importing, setImporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string>('');
@@ -31,12 +35,14 @@ export function DataPage() {
   // Export all data
   const handleExportAll = () => {
     const backup: BackupData = {
-      version: '1.0',
+      version: '1.3',
       exportDate: new Date().toISOString(),
       entries,
       products,
       weights,
       settings,
+      productPortions: portions,
+      mealTemplates: templates,
     };
 
     const json = JSON.stringify(backup, null, 2);
@@ -88,6 +94,34 @@ export function DataPage() {
     const filename = `voedseljournaal-weights-${new Date().toISOString().split('T')[0]}.json`;
     downloadTextFile(json, filename);
     setExportStatus('✓ Gewichten geëxporteerd');
+    setTimeout(() => setExportStatus(''), 3000);
+  };
+
+  const handleExportPortions = () => {
+    const backup: BackupData = {
+      version: '1.3',
+      exportDate: new Date().toISOString(),
+      productPortions: portions,
+    };
+
+    const json = JSON.stringify(backup, null, 2);
+    const filename = `voedseljournaal-portions-${new Date().toISOString().split('T')[0]}.json`;
+    downloadTextFile(json, filename);
+    setExportStatus('✓ Porties geëxporteerd');
+    setTimeout(() => setExportStatus(''), 3000);
+  };
+
+  const handleExportTemplates = () => {
+    const backup: BackupData = {
+      version: '1.3',
+      exportDate: new Date().toISOString(),
+      mealTemplates: templates,
+    };
+
+    const json = JSON.stringify(backup, null, 2);
+    const filename = `voedseljournaal-templates-${new Date().toISOString().split('T')[0]}.json`;
+    downloadTextFile(json, filename);
+    setExportStatus('✓ Templates geëxporteerd');
     setTimeout(() => setExportStatus(''), 3000);
   };
 
@@ -279,6 +313,32 @@ export function DataPage() {
             </div>
             <button
               onClick={handleExportWeights}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
+            >
+              Exporteer
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div>
+              <h3 className="font-medium text-gray-900">Porties</h3>
+              <p className="text-sm text-gray-600">{portions.length} porties</p>
+            </div>
+            <button
+              onClick={handleExportPortions}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
+            >
+              Exporteer
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div>
+              <h3 className="font-medium text-gray-900">Templates</h3>
+              <p className="text-sm text-gray-600">{templates.length} templates</p>
+            </div>
+            <button
+              onClick={handleExportTemplates}
               className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
             >
               Exporteer
