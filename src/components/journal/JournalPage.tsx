@@ -134,7 +134,7 @@ export function JournalPage() {
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
-              📅 Vandaag
+              📅 Maaltijden
             </button>
             <button
               onClick={() => setActiveTab('products')}
@@ -177,8 +177,8 @@ export function JournalPage() {
             </div>
           </div>
 
-          {/* Compact 2x4 Grid - All Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+          {/* Compact 2x4 Grid - All Metrics (also on mobile) */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
             {/* Calorieën */}
             <div>
               <div className="text-xs font-medium text-gray-600 mb-1">Calorieën</div>
@@ -318,7 +318,7 @@ export function JournalPage() {
 
         {/* Today's Meals */}
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Maaltijden vandaag</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Maaltijden</h2>
           {todayEntries.length === 0 ? (
             <p className="text-gray-500 text-center py-4">Nog geen maaltijden toegevoegd</p>
           ) : (
