@@ -2,7 +2,7 @@
  * JournalPage - Main meal tracking component
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useEntries, useProducts, useSettings } from '@/hooks';
 import { getTodayDate, calculateTotals } from '@/utils';
 import { productsService } from '@/services';
@@ -22,6 +22,25 @@ export function JournalPage() {
   const [dayType, setDayType] = useState<DayType>('rust');
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
+
+  // Collapsible sections state - load from localStorage
+  const [showDetailedMetrics, setShowDetailedMetrics] = useState(() => {
+    const saved = localStorage.getItem('journal_show_detailed_metrics');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [showHistoricalData, setShowHistoricalData] = useState(() => {
+    const saved = localStorage.getItem('journal_show_historical_data');
+    return saved !== null ? saved === 'true' : false;
+  });
+
+  // Save preferences to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('journal_show_detailed_metrics', String(showDetailedMetrics));
+  }, [showDetailedMetrics]);
+
+  useEffect(() => {
+    localStorage.setItem('journal_show_historical_data', String(showHistoricalData));
+  }, [showHistoricalData]);
 
   const todayEntries = getEntriesByDate(selectedDate);
   const totals = calculateTotals(todayEntries);
@@ -192,87 +211,102 @@ export function JournalPage() {
             </div>
           </div>
 
-          {/* Progress Bars: Secondary Metrics */}
-          <div className="space-y-3 mb-6">
-            {/* Sugars */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Suikers</span>
-                <span className={`font-medium ${totals.sugars > limits.sugars ? 'text-red-600' : 'text-gray-700'}`}>
-                  {totals.sugars.toFixed(1)}g / {limits.sugars}g
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${totals.sugars > limits.sugars ? 'bg-red-500' : 'bg-yellow-500'}`}
-                  style={{ width: `${Math.min((totals.sugars / limits.sugars) * 100, 100)}%` }}
-                ></div>
-              </div>
-            </div>
+          {/* Progress Bars: Secondary Metrics - Collapsible */}
+          <div className="mb-6">
+            <button
+              onClick={() => setShowDetailedMetrics(!showDetailedMetrics)}
+              className="flex items-center justify-between w-full px-3 py-2 mb-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Toggle gedetailleerde metrics"
+            >
+              <span className="text-sm font-medium text-gray-700">Gedetailleerde metrics</span>
+              <span className="text-gray-500 text-lg transition-transform" style={{ transform: showDetailedMetrics ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                ▼
+              </span>
+            </button>
 
-            {/* Total Fat */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Totaal vet</span>
-                <span className={`font-medium ${totals.fat > limits.fat ? 'text-red-600' : 'text-gray-700'}`}>
-                  {totals.fat.toFixed(1)}g / {limits.fat}g
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${totals.fat > limits.fat ? 'bg-red-500' : 'bg-gray-500'}`}
-                  style={{ width: `${Math.min((totals.fat / limits.fat) * 100, 100)}%` }}
-                ></div>
-              </div>
-            </div>
+            {showDetailedMetrics && (
+              <div className="space-y-3">
+                {/* Sugars */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Suikers</span>
+                    <span className={`font-medium ${totals.sugars > limits.sugars ? 'text-red-600' : 'text-gray-700'}`}>
+                      {totals.sugars.toFixed(1)}g / {limits.sugars}g
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${totals.sugars > limits.sugars ? 'bg-red-500' : 'bg-yellow-500'}`}
+                      style={{ width: `${Math.min((totals.sugars / limits.sugars) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
 
-            {/* Saturated Fat */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Verzadigd vet</span>
-                <span className={`font-medium ${totals.saturatedFat > limits.saturatedFat ? 'text-red-600' : 'text-green-600'}`}>
-                  {totals.saturatedFat.toFixed(1)}g / {limits.saturatedFat}g
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${totals.saturatedFat > limits.saturatedFat ? 'bg-red-500' : 'bg-green-500'}`}
-                  style={{ width: `${Math.min((totals.saturatedFat / limits.saturatedFat) * 100, 100)}%` }}
-                ></div>
-              </div>
-            </div>
+                {/* Total Fat */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Totaal vet</span>
+                    <span className={`font-medium ${totals.fat > limits.fat ? 'text-red-600' : 'text-gray-700'}`}>
+                      {totals.fat.toFixed(1)}g / {limits.fat}g
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${totals.fat > limits.fat ? 'bg-red-500' : 'bg-gray-500'}`}
+                      style={{ width: `${Math.min((totals.fat / limits.fat) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
 
-            {/* Fiber */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Vezels</span>
-                <span className={`font-medium ${totals.fiber < limits.fiber ? 'text-orange-600' : 'text-green-600'}`}>
-                  {totals.fiber.toFixed(1)}g / {limits.fiber}g
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${totals.fiber < limits.fiber ? 'bg-orange-500' : 'bg-green-500'}`}
-                  style={{ width: `${Math.min((totals.fiber / limits.fiber) * 100, 100)}%` }}
-                ></div>
-              </div>
-            </div>
+                {/* Saturated Fat */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Verzadigd vet</span>
+                    <span className={`font-medium ${totals.saturatedFat > limits.saturatedFat ? 'text-red-600' : 'text-green-600'}`}>
+                      {totals.saturatedFat.toFixed(1)}g / {limits.saturatedFat}g
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${totals.saturatedFat > limits.saturatedFat ? 'bg-red-500' : 'bg-green-500'}`}
+                      style={{ width: `${Math.min((totals.saturatedFat / limits.saturatedFat) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
 
-            {/* Sodium */}
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Natrium</span>
-                <span className={`font-medium ${totals.sodium > limits.sodium ? 'text-red-600' : 'text-green-600'}`}>
-                  {totals.sodium}mg / {limits.sodium}mg
-                </span>
+                {/* Fiber */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Vezels</span>
+                    <span className={`font-medium ${totals.fiber < limits.fiber ? 'text-orange-600' : 'text-green-600'}`}>
+                      {totals.fiber.toFixed(1)}g / {limits.fiber}g
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${totals.fiber < limits.fiber ? 'bg-orange-500' : 'bg-green-500'}`}
+                      style={{ width: `${Math.min((totals.fiber / limits.fiber) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                {/* Sodium */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-600">Natrium</span>
+                    <span className={`font-medium ${totals.sodium > limits.sodium ? 'text-red-600' : 'text-green-600'}`}>
+                      {totals.sodium}mg / {limits.sodium}mg
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className={`h-2 rounded-full transition-all ${totals.sodium > limits.sodium ? 'bg-red-500' : 'bg-green-500'}`}
+                      style={{ width: `${Math.min((totals.sodium / limits.sodium) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className={`h-2 rounded-full transition-all ${totals.sodium > limits.sodium ? 'bg-red-500' : 'bg-green-500'}`}
-                  style={{ width: `${Math.min((totals.sodium / limits.sodium) * 100, 100)}%` }}
-                ></div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -328,66 +362,79 @@ export function JournalPage() {
             </div>
           )}
 
-          {/* Historical Data Section - Always visible when data exists */}
+          {/* Historical Data Section - Collapsible */}
           {(previousDayData.entries.length > 0 || weekAverage) && (
-            <div className="mt-6 space-y-4 border-t pt-4">
-              <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">Historische data</h3>
+            <div className="mt-6 border-t pt-4">
+              <button
+                onClick={() => setShowHistoricalData(!showHistoricalData)}
+                className="flex items-center justify-between w-full px-3 py-2 mb-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Toggle historische data"
+              >
+                <span className="text-sm font-medium text-gray-700">Historische data</span>
+                <span className="text-gray-500 text-lg transition-transform" style={{ transform: showHistoricalData ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                  ▼
+                </span>
+              </button>
 
-              {/* Previous Day */}
-              {previousDayData.entries.length > 0 && (
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-semibold text-gray-800">
-                      Gisteren ({new Date(previousDayData.date).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' })})
-                    </h4>
-                    <span className="text-sm text-gray-600">{previousDayData.entries.length} maaltijden</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                    <div>
-                      <span className="text-gray-600">Calorieën:</span>
-                      <span className="font-semibold ml-1">{previousDayData.totals.calories}</span>
+              {showHistoricalData && (
+                <div className="space-y-4">
+                  {/* Previous Day */}
+                  {previousDayData.entries.length > 0 && (
+                    <div className="bg-blue-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-semibold text-gray-800">
+                          Gisteren ({new Date(previousDayData.date).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' })})
+                        </h4>
+                        <span className="text-sm text-gray-600">{previousDayData.entries.length} maaltijden</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-600">Calorieën:</span>
+                          <span className="font-semibold ml-1">{previousDayData.totals.calories}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Eiwit:</span>
+                          <span className="font-semibold ml-1">{previousDayData.totals.protein.toFixed(1)}g</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Koolh.:</span>
+                          <span className="font-semibold ml-1">{previousDayData.totals.carbohydrates.toFixed(1)}g</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Vezels:</span>
+                          <span className="font-semibold ml-1">{previousDayData.totals.fiber.toFixed(1)}g</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-gray-600">Eiwit:</span>
-                      <span className="font-semibold ml-1">{previousDayData.totals.protein.toFixed(1)}g</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Koolh.:</span>
-                      <span className="font-semibold ml-1">{previousDayData.totals.carbohydrates.toFixed(1)}g</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Vezels:</span>
-                      <span className="font-semibold ml-1">{previousDayData.totals.fiber.toFixed(1)}g</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+                  )}
 
-              {/* Last Week Average */}
-              {weekAverage && (
-                <div className="bg-green-50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-semibold text-gray-800">Gemiddelde afgelopen week</h4>
-                    <span className="text-sm text-gray-600">{weekAverage.daysWithData} van 7 dagen</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                    <div>
-                      <span className="text-gray-600">Calorieën:</span>
-                      <span className="font-semibold ml-1">{weekAverage.calories}</span>
+                  {/* Last Week Average */}
+                  {weekAverage && (
+                    <div className="bg-green-50 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-semibold text-gray-800">Gemiddelde afgelopen week</h4>
+                        <span className="text-sm text-gray-600">{weekAverage.daysWithData} van 7 dagen</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-600">Calorieën:</span>
+                          <span className="font-semibold ml-1">{weekAverage.calories}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Eiwit:</span>
+                          <span className="font-semibold ml-1">{weekAverage.protein}g</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Koolh.:</span>
+                          <span className="font-semibold ml-1">{weekAverage.carbohydrates}g</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Vezels:</span>
+                          <span className="font-semibold ml-1">{weekAverage.fiber}g</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-gray-600">Eiwit:</span>
-                      <span className="font-semibold ml-1">{weekAverage.protein}g</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Koolh.:</span>
-                      <span className="font-semibold ml-1">{weekAverage.carbohydrates}g</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Vezels:</span>
-                      <span className="font-semibold ml-1">{weekAverage.fiber}g</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
