@@ -74,6 +74,33 @@ export function CloudSyncSettings() {
       setIsConnected(true);
       setSuccess('✅ Verbonden met Google Drive');
       await loadCloudInfo();
+
+      // Auto-sync na login als auto-sync is ingeschakeld
+      const isAutoSyncEnabled = syncService.isAutoSyncEnabled();
+      const storedPassword = syncService.getStoredPassword();
+
+      if (isAutoSyncEnabled && storedPassword) {
+        console.log('Auto-sync is enabled, performing automatic sync after login...');
+        setIsSyncing(true);
+
+        try {
+          // Pull nieuwere data uit de cloud als die beschikbaar is
+          const pulled = await syncService.pullIfNewer(storedPassword);
+
+          if (pulled) {
+            setSuccess('✅ Verbonden met Google Drive en data gesynchroniseerd');
+            setLastSync(new Date());
+          }
+
+          // Trigger een sync om lokale wijzigingen te uploaden
+          await syncService.syncToCloud(storedPassword, false);
+        } catch (syncErr: any) {
+          console.error('Auto-sync na login mislukt:', syncErr);
+          // Niet de hele login falen maken, alleen loggen
+        } finally {
+          setIsSyncing(false);
+        }
+      }
     } catch (err: any) {
       setError(`Verbinding mislukt: ${err.message}`);
     }
