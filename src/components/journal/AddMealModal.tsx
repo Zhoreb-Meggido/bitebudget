@@ -458,8 +458,12 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                           }}
                           className="w-4 h-4"
                         />
-                        <span className="flex-1 text-sm">{product.favorite && '⭐ '}{product.name}</span>
-                        <span className="text-xs text-gray-500">{product.calories} kcal</span>
+                        <span className="flex-1 text-sm">
+                          {product.favorite && '⭐ '}
+                          {product.name}
+                          {product.brand && <span className="text-gray-500"> ({product.brand})</span>}
+                        </span>
+                        <span className="text-xs text-gray-500 flex-shrink-0">{product.calories} kcal</span>
                       </label>
                     ))
                   )}
