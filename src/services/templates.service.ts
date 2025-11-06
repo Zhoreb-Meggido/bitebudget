@@ -15,17 +15,7 @@ class TemplatesService {
   async getAllTemplates(): Promise<MealTemplate[]> {
     try {
       const allTemplates = await db.mealTemplates.toArray();
-      console.log('🔍 getAllTemplates - Total in DB:', allTemplates.length);
-      console.log('🔍 getAllTemplates - Templates:', allTemplates.map(t => ({
-        name: t.name,
-        deleted: t.deleted,
-        id: t.id
-      })));
-
-      const filtered = allTemplates.filter(t => !t.deleted);
-      console.log('🔍 getAllTemplates - After filter:', filtered.length);
-
-      return filtered;
+      return allTemplates.filter(t => !t.deleted);
     } catch (error) {
       console.error('❌ Error loading templates:', error);
       return [];
