@@ -183,16 +183,15 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
-        {/* Header - Sticky */}
+        {/* Header - Fixed */}
         <div className="bg-white border-b p-4 flex justify-between items-center rounded-t-xl flex-shrink-0">
           <h3 className="text-xl font-bold text-gray-800">{isEditMode ? 'Maaltijd bewerken' : 'Maaltijd toevoegen'}</h3>
           <button onClick={resetForm} className="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
         </div>
 
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* Tabs */}
-          <div className="flex gap-2 mb-4">
+        {/* Tabs - Fixed */}
+        <div className="flex-shrink-0 px-6 pt-4">
+          <div className="flex gap-2">
             {(['products', 'manual', 'json'] as Tab[]).map(t => (
               <button
                 key={t}
@@ -203,33 +202,35 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
               </button>
             ))}
           </div>
+        </div>
 
-          {/* Products Tab */}
-          {tab === 'products' && (
-            <div className="flex flex-col h-full">
-              {/* Time input */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tijd (optioneel)</label>
-                <input type="time" value={mealTime} onChange={(e) => setMealTime(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
-              </div>
+        {/* Products Tab - Fixed sections at top */}
+        {tab === 'products' && (
+          <>
+            {/* Time input - Fixed */}
+            <div className="flex-shrink-0 px-6 pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tijd (optioneel)</label>
+              <input type="time" value={mealTime} onChange={(e) => setMealTime(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+            </div>
 
-              {/* Selected products - Compact inline badges */}
-              {selectedProducts.length > 0 && (
-                <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <h4 className="text-xs font-semibold text-gray-600 mb-2">Geselecteerd ({selectedProducts.length}):</h4>
-                  <div className="flex flex-wrap gap-2">
+            {/* Selected products - Fixed with max height */}
+            {selectedProducts.length > 0 && (
+              <div className="flex-shrink-0 px-6 pt-3">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-h-[200px] overflow-y-auto">
+                  <h4 className="text-xs font-semibold text-gray-600 mb-2 sticky top-0 bg-blue-50">Geselecteerd ({selectedProducts.length}):</h4>
+                  <div className="space-y-2">
                     {selectedProducts.map(name => {
                       const product = products.find(p => p.name === name);
                       return (
-                        <div key={name} className="inline-flex items-center gap-1 bg-white rounded-full px-3 py-1 text-sm border border-blue-300">
-                          <span className="font-medium">{product?.favorite && '⭐ '}{name.length > 20 ? name.substring(0, 20) + '...' : name}</span>
+                        <div key={name} className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-blue-300">
+                          <span className="flex-1 text-sm font-medium truncate">{product?.favorite && '⭐ '}{name}</span>
                           <input
                             type="number"
                             value={productGrams[name] ?? ''}
                             onChange={(e) => setProductGrams({...productGrams, [name]: parseInt(e.target.value) || 0})}
                             onFocus={(e) => e.target.select()}
                             placeholder="100"
-                            className="w-16 px-2 py-0 border rounded text-center text-sm"
+                            className="w-20 px-2 py-1 border rounded text-center text-sm"
                             min="1"
                           />
                           <span className="text-xs text-gray-500">g</span>
@@ -240,29 +241,32 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                               delete newGrams[name];
                               setProductGrams(newGrams);
                             }}
-                            className="text-red-500 hover:text-red-700 font-bold ml-1"
+                            className="text-red-500 hover:text-red-700 font-bold text-lg"
+                            aria-label="Verwijder product"
                           >✕</button>
                         </div>
                       );
                     })}
                   </div>
                 </div>
-              )}
-
-              {/* Search bar */}
-              <div className="mb-3">
-                <input
-                  type="text"
-                  value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
-                  placeholder="Zoek product..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                />
               </div>
+            )}
 
-              {/* Products list - No height restriction */}
-              <div className="flex-1 min-h-0 border border-gray-200 rounded-lg bg-gray-50">
-                <div className="h-full overflow-y-auto p-2 space-y-1">
+            {/* Search bar - Fixed */}
+            <div className="flex-shrink-0 px-6 pt-3 pb-2">
+              <input
+                type="text"
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                placeholder="Zoek product..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              />
+            </div>
+
+            {/* Products list - Scrollable */}
+            <div className="flex-1 min-h-0 px-6 pb-4">
+              <div className="h-full border border-gray-200 rounded-lg bg-gray-50 overflow-y-auto">
+                <div className="p-2 space-y-1">
                   {filteredProducts.length === 0 ? (
                     <p className="text-center text-gray-500 py-4 text-sm">Geen producten gevonden</p>
                   ) : (
@@ -291,10 +295,12 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 </div>
               </div>
             </div>
-          )}
+          </>
+        )}
 
-          {/* Manual Tab */}
-          {tab === 'manual' && (
+        {/* Manual Tab */}
+        {tab === 'manual' && (
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-4 pb-4">
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium mb-1">Tijd</label>
@@ -334,20 +340,20 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 ))}
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* JSON Tab */}
-          {tab === 'json' && (
-            <div>
-              <textarea
-                value={mealJson}
-                onChange={(e) => setMealJson(e.target.value)}
-                className="w-full px-4 py-2 border rounded-lg font-mono text-sm h-64"
-                placeholder='{"time": "12:00", "name": "Lunch", "calories": 500, ...}'
-              />
-            </div>
-          )}
-        </div>
+        {/* JSON Tab */}
+        {tab === 'json' && (
+          <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-4 pb-4">
+            <textarea
+              value={mealJson}
+              onChange={(e) => setMealJson(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg font-mono text-sm h-64"
+              placeholder='{"time": "12:00", "name": "Lunch", "calories": 500, ...}'
+            />
+          </div>
+        )}
 
         {/* Footer - Sticky Action Buttons */}
         <div className="border-t bg-white p-4 rounded-b-xl flex-shrink-0">
