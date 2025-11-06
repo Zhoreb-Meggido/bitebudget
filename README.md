@@ -58,7 +58,14 @@ npm run build
 - ✅ **Fixed Merge Strategy** - Products now sync all updates (not just deletions)
 - ✅ **Consistent Behavior** - All data types (entries, weights, products, settings) sync with 30s debounce
 
-**Impact:** Cloud sync nu 100% compleet - alle wijzigingen worden automatisch gesynchroniseerd tussen devices!
+#### **Automatic Sync on Login & Reconnect** 🔄
+- ✅ **Sync After Login** - Automatically pulls and syncs data after Google Drive login (when auto-sync enabled)
+- ✅ **Sync on Reconnect** - Automatically syncs local changes when cloud becomes available again
+- ✅ **Prevents Data Loss** - Local items added while offline are now automatically uploaded when connection restores
+- ✅ **Smart Detection** - Only triggers when auto-sync is enabled and password is stored
+- ✅ **Bidirectional Merge** - Pulls cloud changes first, then uploads local changes
+
+**Impact:** Cloud sync nu 100% compleet - alle wijzigingen worden automatisch gesynchroniseerd tussen devices, zelfs na offline periodes!
 
 ### **Mobile UX Improvements** 📱✨
 
@@ -428,6 +435,15 @@ interface SyncData {
 4. Upload merged data
 5. Periodic pull every 5 minutes (when online)
 
+**Login/Reconnect Sync (v1.2.1+):**
+1. User logs in to Google Drive
+2. If auto-sync is enabled and password is stored:
+   - Pull newer data from cloud (pullIfNewer)
+   - Merge cloud changes with local data
+   - Upload local changes to cloud (syncToCloud)
+3. Same logic triggers when cloud becomes available after offline period
+4. Prevents data loss from offline changes
+
 **Manual Sync (Safe Merge):**
 - Pull cloud changes first
 - Merge with local (timestamp-based conflict resolution)
@@ -514,6 +530,8 @@ npm run build
 - ✅ Products not syncing automatically - now triggers auto-sync
 - ✅ Settings not syncing automatically - now triggers auto-sync
 - ✅ Products merge only syncing deletions - now syncs all updates
+- ✅ Desync after offline periods - automatic sync on login and reconnect
+- ✅ Local changes lost when cloud unavailable - now syncs when connection restores
 - ✅ Mobile scrolling issues when adding meals with many products
 - ✅ Input fields too small for 3-digit values
 - ✅ Default values making it hard to input small numbers
@@ -545,6 +563,10 @@ npm run build
 - ✅ Products auto-sync on all operations (add/update/delete/favorite)
 - ✅ Settings auto-sync on all operations (update/save/reset)
 - ✅ Fixed products merge strategy (now syncs all updates, not just deletions)
+- ✅ Automatic sync after Google Drive login (when auto-sync enabled)
+- ✅ Automatic sync on cloud reconnect in loadCloudInfo
+- ✅ Local changes made while offline now sync when connection restores
+- ✅ Bidirectional merge on login/reconnect (pull then push)
 - ✅ Tab navigation on Journal Page (Vandaag / Producten)
 - ✅ Inline product management (no separate modal)
 - ✅ AddMealModal sticky action button (always visible)

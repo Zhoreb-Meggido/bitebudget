@@ -56,10 +56,32 @@ export function CloudSyncSettings() {
     };
   }, []);
 
-  const loadCloudInfo = async () => {
+  const loadCloudInfo = async (shouldAutoSync: boolean = true) => {
     try {
       const info = await googleDriveService.getLastSyncInfo();
       setCloudInfo(info);
+
+      // Auto-sync als ingeschakeld (bijv. bij app start of reconnect)
+      if (shouldAutoSync && !isSyncing) {
+        const isAutoSyncEnabled = syncService.isAutoSyncEnabled();
+        const storedPassword = syncService.getStoredPassword();
+
+        if (isAutoSyncEnabled && storedPassword) {
+          console.log('Auto-sync is enabled, syncing local changes to cloud...');
+          setIsSyncing(true);
+
+          try {
+            // Pull nieuwere data uit de cloud en upload lokale wijzigingen
+            await syncService.pullIfNewer(storedPassword);
+            await syncService.syncToCloud(storedPassword, false);
+            setLastSync(new Date());
+          } catch (syncErr: any) {
+            console.error('Auto-sync in loadCloudInfo mislukt:', syncErr);
+          } finally {
+            setIsSyncing(false);
+          }
+        }
+      }
     } catch (err) {
       console.error('Failed to load cloud info:', err);
     }
@@ -73,6 +95,8 @@ export function CloudSyncSettings() {
       await googleDriveService.signIn();
       setIsConnected(true);
       setSuccess('✅ Verbonden met Google Drive');
+
+      // loadCloudInfo zal automatisch syncen als auto-sync is ingeschakeld
       await loadCloudInfo();
     } catch (err: any) {
       setError(`Verbinding mislukt: ${err.message}`);
@@ -116,7 +140,7 @@ export function CloudSyncSettings() {
       const now = new Date();
       setLastSync(now);
       setSuccess(`✅ Gesynchroniseerd naar Google Drive (${now.toLocaleTimeString('nl-NL')})`);
-      await loadCloudInfo();
+      await loadCloudInfo(false); // Geen auto-sync, we hebben net handmatig gesynced
     } catch (err: any) {
       setError(`Sync mislukt: ${err.message}`);
     } finally {
