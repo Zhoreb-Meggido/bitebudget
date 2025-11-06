@@ -28,6 +28,7 @@ class SyncService {
   private autoSyncEnabled: boolean = false;
   private autoSyncInterval: number | null = null;
   private syncDebounceTimeout: number | null = null;
+  private isSyncing: boolean = false; // Lock to prevent concurrent syncs
 
   constructor() {
     // Restore auto-sync state on startup
@@ -551,28 +552,37 @@ class SyncService {
    * Manual sync with force: Just upload without pulling first
    */
   async syncToCloud(password: string, forceUpload: boolean = false): Promise<void> {
-    if (!googleDriveService.isSignedIn()) {
-      throw new Error('Not signed in to Google Drive');
+    // Prevent concurrent syncs
+    if (this.isSyncing) {
+      console.log('⏭️ Sync already in progress, skipping...');
+      return;
     }
 
-    if (!password) {
-      throw new Error('Encryptie wachtwoord is vereist');
-    }
+    this.isSyncing = true;
 
-    // For auto-sync: first merge any cloud changes before uploading
-    if (!forceUpload) {
-      try {
-        // Try to pull and merge cloud data first
-        const cloudData = await this.downloadCloudData(password);
-        if (cloudData) {
-          await this.mergeData(cloudData);
-          console.log('Auto-sync: Merged cloud changes before uploading');
-        }
-      } catch (err) {
-        // If download/merge fails, just continue with upload
-        console.warn('Auto-sync: Could not pull cloud data, continuing with upload', err);
+    try {
+      if (!googleDriveService.isSignedIn()) {
+        throw new Error('Not signed in to Google Drive');
       }
-    }
+
+      if (!password) {
+        throw new Error('Encryptie wachtwoord is vereist');
+      }
+
+      // For auto-sync: first merge any cloud changes before uploading
+      if (!forceUpload) {
+        try {
+          // Try to pull and merge cloud data first
+          const cloudData = await this.downloadCloudData(password);
+          if (cloudData) {
+            await this.mergeData(cloudData);
+            console.log('Auto-sync: Merged cloud changes before uploading');
+          }
+        } catch (err) {
+          // If download/merge fails, just continue with upload
+          console.warn('Auto-sync: Could not pull cloud data, continuing with upload', err);
+        }
+      }
 
     // Cleanup old deleted items before syncing (>14 days)
     await this.cleanupOldDeletedItems();
@@ -580,15 +590,27 @@ class SyncService {
     // Export current (possibly merged) data
     const data = await this.exportAllData();
     const json = JSON.stringify(data);
+    console.log('📤 About to upload data:', {
+      entries: data.entries.length,
+      products: data.products.length,
+      weights: data.weights.length,
+      productPortions: data.productPortions?.length || 0,
+      mealTemplates: data.mealTemplates?.length || 0,
+    });
 
-    // Encrypt
-    const encrypted = await encryptionService.encrypt(json, password);
+      // Encrypt
+      const encrypted = await encryptionService.encrypt(json, password);
+      console.log('🔒 Data encrypted, size:', encrypted.length, 'bytes');
 
-    // Upload
-    await googleDriveService.uploadData(encrypted);
+      // Upload
+      await googleDriveService.uploadData(encrypted);
+      console.log('✅ Upload completed successfully');
 
-    // Store last sync time
-    localStorage.setItem('last_sync_time', new Date().toISOString());
+      // Store last sync time
+      localStorage.setItem('last_sync_time', new Date().toISOString());
+    } finally {
+      this.isSyncing = false;
+    }
   }
 
   /**
