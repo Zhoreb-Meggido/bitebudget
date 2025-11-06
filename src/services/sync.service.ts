@@ -408,7 +408,8 @@ class SyncService {
         } else if (cloudPortion.updated_at && localPortion.updated_at &&
                    new Date(cloudPortion.updated_at) > new Date(localPortion.updated_at)) {
           // Cloud portion is newer - use cloud data but keep local ID to avoid duplicates
-          await db.productPortions.update(localPortion.id!, cloudPortion);
+          const { id, ...cloudData } = cloudPortion;
+          await db.productPortions.update(localPortion.id!, cloudData);
           updatedCount++;
         }
       }
@@ -455,7 +456,8 @@ class SyncService {
         } else if (cloudTemplate.updated_at && localTemplate.updated_at &&
                    new Date(cloudTemplate.updated_at) > new Date(localTemplate.updated_at)) {
           // Cloud template is newer - use cloud data but keep local ID to avoid duplicates
-          await db.mealTemplates.update(localTemplate.id!, cloudTemplate);
+          const { id, ...cloudData } = cloudTemplate;
+          await db.mealTemplates.update(localTemplate.id!, cloudData);
           updatedCount++;
         }
       }
