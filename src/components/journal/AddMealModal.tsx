@@ -435,7 +435,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
             </div>
 
             {/* Products list - Scrollable */}
-            <div className="flex-1 min-h-0 px-6 pb-4">
+            <div className="flex-1 min-h-0 overflow-hidden px-6 pb-4">
               <div className="h-full border border-gray-200 rounded-lg bg-gray-50 overflow-y-auto">
                 <div className="p-2 space-y-1">
                   {filteredProducts.length === 0 ? (
