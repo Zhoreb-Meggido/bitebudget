@@ -269,7 +269,7 @@ export function DataPage() {
             <div>
               <h3 className="font-medium text-gray-900">Volledige Backup</h3>
               <p className="text-sm text-gray-600">
-                Alle data: {entries.length} maaltijden, {products.length} producten, {weights.length} gewichten, instellingen
+                Alle data: {entries.length} maaltijden, {products.length} producten, {weights.length} gewichten, {portions.length} porties, {templates.length} templates, instellingen
               </p>
             </div>
             <button
