@@ -33,6 +33,47 @@ export interface ProductInEntry {
 }
 
 // ============================================
+// PRODUCT PORTIONS (Portie templates)
+// ============================================
+
+export type PortionUnit = 'g' | 'ml' | 'stuks' | 'el' | 'tl';
+
+export interface ProductPortion {
+  id?: string | number;
+  productName: string;        // Referentie naar Product.name
+  portionName: string;        // "1 snee", "1 kop", "1 eetlepel"
+  amount: number;             // Hoeveelheid in de gekozen unit
+  unit: PortionUnit;          // Eenheid (g, ml, stuks, el, tl)
+  gramsPerUnit?: number;      // Voor conversie (bijv. 1 el = 15g)
+  grams: number;              // Uiteindelijk aantal grammen
+  isDefault: boolean;         // Standaard portie voor dit product
+  created_at: string;         // ISO timestamp
+  updated_at: string;         // ISO timestamp
+  deleted?: boolean;          // Soft delete flag
+  deleted_at?: string;        // ISO timestamp when deleted
+}
+
+// ============================================
+// MEAL TEMPLATES (Maaltijd templates)
+// ============================================
+
+export type MealCategory = 'ontbijt' | 'lunch' | 'diner' | 'snack' | 'shake' | 'anders';
+
+export interface MealTemplate {
+  id?: string | number;
+  name: string;               // "Ontbijt standaard", "Post-workout shake"
+  category: MealCategory;     // Type maaltijd
+  products: ProductInEntry[]; // {name, grams}[] - hergebruikt bestaand type
+  isFavorite: boolean;        // Pinned bovenaan
+  lastUsed?: string;          // ISO timestamp voor recent gebruikt
+  useCount: number;           // Populariteit tracking
+  created_at: string;         // ISO timestamp
+  updated_at: string;         // ISO timestamp
+  deleted?: boolean;          // Soft delete flag
+  deleted_at?: string;        // ISO timestamp when deleted
+}
+
+// ============================================
 // PRODUCTS (Product Database)
 // ============================================
 
@@ -186,6 +227,8 @@ export interface BackupData {
   products: Product[];
   weights: Weight[];
   settings: UserSettings;
+  productPortions?: ProductPortion[];  // v1.3+
+  mealTemplates?: MealTemplate[];      // v1.3+
 }
 
 // ============================================

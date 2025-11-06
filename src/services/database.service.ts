@@ -9,7 +9,7 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import type { Entry, Product, Weight, SettingsRecord } from '@/types';
+import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate } from '@/types';
 
 export class VoedseljournaalDB extends Dexie {
   // Tables
@@ -17,6 +17,8 @@ export class VoedseljournaalDB extends Dexie {
   products!: Table<Product, number>;
   weights!: Table<Weight, string>;
   settings!: Table<SettingsRecord, string>;
+  productPortions!: Table<ProductPortion, number>;
+  mealTemplates!: Table<MealTemplate, number>;
 
   constructor() {
     super('VoedseljournaalDB');
@@ -95,6 +97,16 @@ export class VoedseljournaalDB extends Dexie {
         }
       });
       console.log('✅ Migrated entries to v6 (added carbohydrates and sugars)');
+    });
+
+    // Version 7 - Add product portions and meal templates
+    this.version(7).stores({
+      entries: 'id, date, created_at, updated_at',
+      products: 'id, name, ean, source, created_at, updated_at',
+      weights: 'id, date, created_at',
+      settings: 'key',
+      productPortions: 'id, productName, created_at, updated_at',
+      mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at'
     });
   }
 }

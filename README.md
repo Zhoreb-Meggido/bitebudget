@@ -1,10 +1,10 @@
-# BiteBudget (Voedseljournaal) v1.2.1
+# BiteBudget (Voedseljournaal) v1.3.0
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.2.1:** Complete cloud sync fixes + Mobile-first UX improvements
+**🎉 Nieuw in v1.3.0:** Porties & Templates - Snellere maaltijd tracking!
 
 ---
 
@@ -48,7 +48,118 @@ npm run build
 
 ---
 
-## ✨ v1.2.1 - Cloud Sync Fixes + Mobile UX (Huidige Versie)
+## ✨ v1.3.0 - Porties & Templates (Huidige Versie)
+
+### **Portie Templates** 🍽️
+
+#### **Voorgedefinieerde Porties**
+- ✅ **Default Portions Database** - 50+ voorgedefinieerde porties voor veelgebruikte producten
+- ✅ **Meerdere Eenheden** - Grammen, ml, stuks, eetlepels (el), theelepels (tl)
+- ✅ **Automatische Conversie** - 1 el = 15g, 1 tl = 5g, aanpasbaar per product
+- ✅ **Product-Specifiek** - Bijv. "1 snee brood = 35g", "1 kop melk = 250ml"
+- ✅ **User-Definable** - Voeg eigen porties toe, bewerk defaults
+
+#### **Portie Selector in AddMealModal**
+- ✅ **Dropdown per Product** - Kies portie of handmatige input
+- ✅ **Quick-Fill** - Selecteer portie → grammen auto-ingevuld
+- ✅ **Inline Add** - Nieuwe portie toevoegen zonder modal te sluiten
+- ✅ **Persistent** - Porties worden gesynchroniseerd via cloud sync
+
+**Voorbeelden:**
+- Brood: "1 snee (35g)", "2 sneetjes (70g)"
+- Melk: "1 kop (250ml)", "1 glas (200ml)"
+- Whey: "1 scoop (30g)", "2 scoops (60g)"
+- Eieren: "1 ei (60g)", "2 eieren (120g)"
+
+---
+
+### **Meal Templates** ⭐
+
+#### **Template Systeem**
+- ✅ **Opslaan als Template** - Sla veelgebruikte maaltijden op
+- ✅ **6 Categorieën** - Ontbijt, Lunch, Diner, Snack, Shake, Anders
+- ✅ **Nutritional Preview** - Totale calorieën en eiwit preview
+- ✅ **Favorites** - Pin templates voor quick access
+- ✅ **Recent Gebruikt** - Top 5 meest recente templates
+- ✅ **Usage Tracking** - Populariteit tracking per template
+
+#### **Templates Tab in AddMealModal**
+- ✅ **3 Secties** - Recent gebruikt, Favorieten, Alle templates
+- ✅ **Quick Load** - Klik template → producten auto-geladen
+- ✅ **Edit & Delete** - Beheer templates inline
+- ✅ **Search** - Zoek templates op naam
+- ✅ **Cloud Sync** - Templates gesynchroniseerd tussen devices
+
+**Use Cases:**
+- "Ontbijt standaard" → Brood (70g) + Pindakaas (15g) + Banaan (120g)
+- "Post-workout shake" → Whey (30g) + Melk (300ml) + Banaan (120g)
+- "Lunch salade" → Kipfilet (150g) + Sla (100g) + Dressing (20ml)
+
+---
+
+### **Quick Add** ⚡
+
+#### **Snelle Toegang tot Templates**
+- ✅ **Quick Add Sectie** - Horizontaal scrollbare lijst met 5 meest recente templates
+- ✅ **Directe Toegang** - Klik template → AddMealModal opent met vooringevulde producten
+- ✅ **Aanpasbaar** - Hoeveelheden blijven volledig aanpasbaar voor flexibiliteit
+- ✅ **Smart Positioning** - Tussen metrics en "Maaltijd toevoegen" knop op JournalPage
+
+**Workflow:**
+1. Klik template in Quick Add sectie
+2. AddMealModal opent met products automatisch geladen
+3. Pas hoeveelheden aan indien nodig
+4. Voeg toe met 2 clicks!
+
+---
+
+### **Portions Management in ProductsModal** 🔧
+
+#### **Beheer Porties per Product**
+- ✅ **Porties Sectie** - Zichtbaar bij product bewerken
+- ✅ **Lijst View** - Alle porties met naam, grammen, default badge
+- ✅ **Set Default** - ⭐ knop om default portie in te stellen
+- ✅ **Delete** - 🗑️ knop om portie te verwijderen
+- ✅ **Inline Add** - "+ Nieuwe portie" opent modal met full form
+- ✅ **Scroll Support** - Max-height met scroll voor veel porties
+
+**Locatie:** Producten tab → Bewerk product → Scroll naar "Porties (optioneel)"
+
+---
+
+### **UX Improvements** 🎨
+
+#### **Desktop Layout Optimizations**
+- ✅ **Compacte Product Entries** - Naam, portie selector en gram input op 1 regel (desktop)
+- ✅ **Meer Ruimte** - Selected products max-height 300px op desktop (was 200px)
+- ✅ **Button Grootte** - "Maaltijd toevoegen" knop smaller op desktop (w-full sm:w-auto)
+- ✅ **Brand Display** - Product brand in parentheses: "Rundertartaar (Albert Heijn)"
+
+#### **Navigation & Layout**
+- ✅ **Tab Naam** - "📅 Maaltijden" (was "Vandaag") - accurater bij andere datums
+- ✅ **Metrics Grid** - 2x4 grid ook op mobiel voor betere space utilization
+- ✅ **Scroll Fixes** - Productenlijst en alle secties correct scrollbaar
+- ✅ **Dropdown Reset** - Portie dropdown reset naar "Handmatig" na toevoegen
+
+#### **Template Features**
+- ✅ **Save When Editing** - "Opslaan als template" ook bij maaltijd bewerken (niet alleen nieuw)
+- ✅ **Controlled Dropdown** - Portion selector blijft niet hangen op "+Nieuwe portie"
+
+---
+
+### **Technical Implementation** 🔧
+- ✅ **Database v7** - Nieuwe tables: productPortions, mealTemplates
+- ✅ **Services** - portions.service.ts, templates.service.ts
+- ✅ **Hooks** - usePortions, useTemplates met auto-sync
+- ✅ **Cloud Sync v1.3** - Portions & templates in backup data
+- ✅ **Soft Delete** - Deletion propagation via sync
+- ✅ **Smart Merge** - Timestamp-based conflict resolution
+- ✅ **Default Portions** - 50+ voorgedefinieerde porties voor veelgebruikte producten
+- ✅ **Package Rename** - Package naam: bitebudget (was voedseljournaal-app)
+
+---
+
+## ✨ v1.2.1 - Cloud Sync Fixes + Mobile UX
 
 ### **Cloud Sync Fixes** ☁️🔧
 
@@ -558,7 +669,20 @@ npm run build
 
 ## 📝 Version History
 
-### v1.2.1 (January 2025) - Current
+### v1.3.0 (January 2025) - Current
+**Porties & Templates - Snellere Maaltijd Tracking**
+- ✅ Portie templates with default portions database (50+ products)
+- ✅ Multiple unit support (g, ml, stuks, el, tl)
+- ✅ Portion selector dropdown in AddMealModal
+- ✅ Meal templates system with categories
+- ✅ Templates tab with recent/favorites/all sections
+- ✅ Quick load templates to products tab
+- ✅ Cloud sync v1.3 with portions and templates
+- ✅ Database v7 with productPortions and mealTemplates tables
+- ✅ Auto-sync for portions and templates
+- ✅ Soft delete propagation for portions and templates
+
+### v1.2.1 (January 2025)
 **Cloud Sync Fixes & Mobile UX Improvements**
 - ✅ Products auto-sync on all operations (add/update/delete/favorite)
 - ✅ Settings auto-sync on all operations (update/save/reset)
