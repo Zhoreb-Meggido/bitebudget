@@ -381,38 +381,44 @@ class SyncService {
       let updatedCount = 0;
 
       for (const cloudPortion of cloudData.productPortions) {
-        const key = `${cloudPortion.productName}-${cloudPortion.portionName}`;
-        const localPortion = localPortionsMap.get(key);
-        const existingById = localPortionsById.get(cloudPortion.id);
+        try {
+          const key = `${cloudPortion.productName}-${cloudPortion.portionName}`;
+          const localPortion = localPortionsMap.get(key);
+          const existingById = localPortionsById.get(cloudPortion.id);
 
-        // Check if ID already exists with different data (ID conflict)
-        if (existingById) {
-          const existingKey = `${existingById.productName}-${existingById.portionName}`;
-          if (existingKey !== key) {
-            // ID conflict - same ID but different portion, generate new ID
-            const newId = Date.now() + Math.random();
-            await db.productPortions.add({ ...cloudPortion, id: newId });
-            addedCount++;
-            continue;
+          // Check if ID already exists with different data (ID conflict)
+          if (existingById) {
+            const existingKey = `${existingById.productName}-${existingById.portionName}`;
+            if (existingKey !== key) {
+              // ID conflict - same ID but different portion, generate new ID
+              console.log(`⚠️ ID conflict for portion ${cloudPortion.id}: "${existingKey}" vs "${key}"`);
+              const newId = Date.now() + Math.random();
+              await db.productPortions.add({ ...cloudPortion, id: newId });
+              addedCount++;
+              continue;
+            }
+            // Same ID, same portion - will be handled by update logic below
           }
-          // Same ID, same portion - will be handled by update logic below
-        }
 
-        if (!localPortion) {
-          // New portion from cloud
-          if (!existingById) {
-            // No ID conflict - safe to add with cloud ID
-            await db.productPortions.add(cloudPortion);
-            addedCount++;
+          if (!localPortion) {
+            // New portion from cloud
+            if (!existingById) {
+              // No ID conflict - safe to add with cloud ID
+              await db.productPortions.add(cloudPortion);
+              addedCount++;
+            }
+            // If existingById exists but localPortion doesn't, it means the ID exists
+            // but points to a different portion - already handled above
+          } else if (cloudPortion.updated_at && localPortion.updated_at &&
+                     new Date(cloudPortion.updated_at) > new Date(localPortion.updated_at)) {
+            // Cloud portion is newer - use cloud data but keep local ID to avoid duplicates
+            const { id, ...cloudData } = cloudPortion;
+            await db.productPortions.update(localPortion.id!, cloudData);
+            updatedCount++;
           }
-          // If existingById exists but localPortion doesn't, it means the ID exists
-          // but points to a different portion - already handled above
-        } else if (cloudPortion.updated_at && localPortion.updated_at &&
-                   new Date(cloudPortion.updated_at) > new Date(localPortion.updated_at)) {
-          // Cloud portion is newer - use cloud data but keep local ID to avoid duplicates
-          const { id, ...cloudData } = cloudPortion;
-          await db.productPortions.update(localPortion.id!, cloudData);
-          updatedCount++;
+        } catch (err) {
+          console.error(`❌ Error processing portion ${cloudPortion.productName} - ${cloudPortion.portionName}:`, err);
+          throw err;
         }
       }
 
@@ -432,36 +438,42 @@ class SyncService {
       let updatedCount = 0;
 
       for (const cloudTemplate of cloudData.mealTemplates) {
-        const localTemplate = localTemplatesMap.get(cloudTemplate.name);
-        const existingById = localTemplatesById.get(cloudTemplate.id);
+        try {
+          const localTemplate = localTemplatesMap.get(cloudTemplate.name);
+          const existingById = localTemplatesById.get(cloudTemplate.id);
 
-        // Check if ID already exists with different data (ID conflict)
-        if (existingById) {
-          if (existingById.name !== cloudTemplate.name) {
-            // ID conflict - same ID but different template, generate new ID
-            const newId = Date.now() + Math.random();
-            await db.mealTemplates.add({ ...cloudTemplate, id: newId });
-            addedCount++;
-            continue;
+          // Check if ID already exists with different data (ID conflict)
+          if (existingById) {
+            if (existingById.name !== cloudTemplate.name) {
+              // ID conflict - same ID but different template, generate new ID
+              console.log(`⚠️ ID conflict for template ${cloudTemplate.id}: "${existingById.name}" vs "${cloudTemplate.name}"`);
+              const newId = Date.now() + Math.random();
+              await db.mealTemplates.add({ ...cloudTemplate, id: newId });
+              addedCount++;
+              continue;
+            }
+            // Same ID, same template - will be handled by update logic below
           }
-          // Same ID, same template - will be handled by update logic below
-        }
 
-        if (!localTemplate) {
-          // New template from cloud
-          if (!existingById) {
-            // No ID conflict - safe to add with cloud ID
-            await db.mealTemplates.add(cloudTemplate);
-            addedCount++;
+          if (!localTemplate) {
+            // New template from cloud
+            if (!existingById) {
+              // No ID conflict - safe to add with cloud ID
+              await db.mealTemplates.add(cloudTemplate);
+              addedCount++;
+            }
+            // If existingById exists but localTemplate doesn't, it means the ID exists
+            // but points to a different template - already handled above
+          } else if (cloudTemplate.updated_at && localTemplate.updated_at &&
+                     new Date(cloudTemplate.updated_at) > new Date(localTemplate.updated_at)) {
+            // Cloud template is newer - use cloud data but keep local ID to avoid duplicates
+            const { id, ...cloudData } = cloudTemplate;
+            await db.mealTemplates.update(localTemplate.id!, cloudData);
+            updatedCount++;
           }
-          // If existingById exists but localTemplate doesn't, it means the ID exists
-          // but points to a different template - already handled above
-        } else if (cloudTemplate.updated_at && localTemplate.updated_at &&
-                   new Date(cloudTemplate.updated_at) > new Date(localTemplate.updated_at)) {
-          // Cloud template is newer - use cloud data but keep local ID to avoid duplicates
-          const { id, ...cloudData } = cloudTemplate;
-          await db.mealTemplates.update(localTemplate.id!, cloudData);
-          updatedCount++;
+        } catch (err) {
+          console.error(`❌ Error processing template ${cloudTemplate.name}:`, err);
+          throw err;
         }
       }
 

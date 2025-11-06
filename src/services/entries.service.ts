@@ -141,10 +141,12 @@ class EntriesService {
   /**
    * Clear alle entries (voorzichtig!)
    */
-  async clearAllEntries(): Promise<void> {
+  async clearAllEntries(): Promise<number> {
     try {
+      const count = await db.entries.count();
       await db.entries.clear();
-      console.log('✅ All entries cleared');
+      console.log(`✅ ${count} entries cleared`);
+      return count;
     } catch (error) {
       console.error('❌ Error clearing entries:', error);
       throw error;

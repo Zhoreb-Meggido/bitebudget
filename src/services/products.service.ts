@@ -210,10 +210,12 @@ class ProductsService {
   /**
    * Clear alle producten (voorzichtig!)
    */
-  async clearAllProducts(): Promise<void> {
+  async clearAllProducts(): Promise<number> {
     try {
+      const count = await db.products.count();
       await db.products.clear();
-      console.log('✅ All products cleared');
+      console.log(`✅ ${count} products cleared`);
+      return count;
     } catch (error) {
       console.error('❌ Error clearing products:', error);
       throw error;

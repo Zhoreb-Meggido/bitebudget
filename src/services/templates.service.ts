@@ -205,10 +205,12 @@ class TemplatesService {
   /**
    * Clear alle templates (voorzichtig!)
    */
-  async clearAllTemplates(): Promise<void> {
+  async clearAllTemplates(): Promise<number> {
     try {
+      const count = await db.mealTemplates.count();
       await db.mealTemplates.clear();
-      console.log('✅ All templates cleared');
+      console.log(`✅ ${count} templates cleared`);
+      return count;
     } catch (error) {
       console.error('❌ Error clearing templates:', error);
       throw error;

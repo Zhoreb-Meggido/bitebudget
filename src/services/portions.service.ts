@@ -196,10 +196,12 @@ class PortionsService {
   /**
    * Clear alle portions (voorzichtig!)
    */
-  async clearAllPortions(): Promise<void> {
+  async clearAllPortions(): Promise<number> {
     try {
+      const count = await db.productPortions.count();
       await db.productPortions.clear();
-      console.log('✅ All portions cleared');
+      console.log(`✅ ${count} portions cleared`);
+      return count;
     } catch (error) {
       console.error('❌ Error clearing portions:', error);
       throw error;

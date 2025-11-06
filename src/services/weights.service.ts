@@ -76,8 +76,11 @@ class WeightsService {
   /**
    * Verwijder alle gewichten (voor testing/reset)
    */
-  async deleteAllWeights(): Promise<void> {
+  async deleteAllWeights(): Promise<number> {
+    const count = await db.weights.count();
     await db.weights.clear();
+    console.log(`✅ ${count} weights cleared`);
+    return count;
   }
 
   /**

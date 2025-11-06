@@ -4,6 +4,8 @@ import { entriesService } from '@/services/entries.service';
 import { productsService } from '@/services/products.service';
 import { weightsService } from '@/services/weights.service';
 import { settingsService } from '@/services/settings.service';
+import { portionsService } from '@/services/portions.service';
+import { templatesService } from '@/services/templates.service';
 import { downloadTextFile } from '@/utils/download.utils';
 import type { Entry, Product, Weight, UserSettings } from '@/types';
 
@@ -182,10 +184,12 @@ export function DataPage() {
     if (!doubleCheck) return;
 
     try {
-      await Promise.all([
+      const [entriesCount, productsCount, weightsCount, portionsCount, templatesCount] = await Promise.all([
         entriesService.clearAllEntries(),
         productsService.clearAllProducts(),
         weightsService.deleteAllWeights(),
+        portionsService.clearAllPortions(),
+        templatesService.clearAllTemplates(),
       ]);
 
       await Promise.all([
@@ -194,7 +198,7 @@ export function DataPage() {
         reloadWeights(),
       ]);
 
-      alert('Alle data is verwijderd');
+      alert(`Alle data is verwijderd:\n- ${entriesCount} entries\n- ${productsCount} producten\n- ${weightsCount} gewichten\n- ${portionsCount} porties\n- ${templatesCount} templates`);
     } catch (error) {
       console.error('Delete failed:', error);
       alert('Fout bij verwijderen van data');
