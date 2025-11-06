@@ -101,11 +101,12 @@ export function JournalPage() {
     : { calories: settings.caloriesRest, protein: settings.proteinRest };
 
   const limits = {
+    carbohydrates: settings.carbohydratesMax,
+    sugars: settings.sugarsMax,
+    fat: settings.fatMax,
     saturatedFat: settings.saturatedFatMax,
     fiber: settings.fiberMin,
     sodium: settings.sodiumMax,
-    sugars: 50, // WHO recommendation: max 50g per day
-    fat: 70, // General guideline: ~70g per day for 2000 kcal diet
   };
 
   return (
@@ -184,10 +185,10 @@ export function JournalPage() {
             </div>
             <div className="bg-amber-50 p-4 rounded-lg">
               <div className="text-sm text-gray-600">Koolhydraten</div>
-              <div className="text-2xl font-bold text-amber-600">
+              <div className={`text-2xl font-bold ${totals.carbohydrates > limits.carbohydrates ? 'text-red-600' : 'text-amber-600'}`}>
                 {totals.carbohydrates.toFixed(1)}g
               </div>
-              <div className="text-xs text-gray-500">Totaal</div>
+              <div className="text-xs text-gray-500">Max: {limits.carbohydrates}g</div>
             </div>
           </div>
 
