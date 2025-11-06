@@ -229,7 +229,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                             onChange={(e) => setProductGrams({...productGrams, [name]: parseInt(e.target.value) || 0})}
                             onFocus={(e) => e.target.select()}
                             placeholder="100"
-                            className="w-12 px-1 py-0 border rounded text-center text-sm"
+                            className="w-16 px-2 py-0 border rounded text-center text-sm"
                             min="1"
                           />
                           <span className="text-xs text-gray-500">g</span>

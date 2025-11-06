@@ -224,8 +224,8 @@ export function ProductsModal({ isOpen, onClose, products, onAddProduct, onUpdat
                     )}
                   </div>
                 </div>
-                <button onClick={() => { setEditingProduct(p); setProductForm(p as any); setShowAddProduct(true); }} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm flex-shrink-0">✏️</button>
-                <button onClick={() => { if (confirm('Verwijder?')) onDeleteProduct(p.id!); }} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm flex-shrink-0">🗑️</button>
+                <button onClick={() => { setEditingProduct(p); setProductForm(p as any); setShowAddProduct(true); }} className="px-2 py-1 text-xl hover:scale-110 transition flex-shrink-0" title="Bewerken">✏️</button>
+                <button onClick={() => { if (confirm('Verwijder?')) onDeleteProduct(p.id!); }} className="px-2 py-1 text-xl hover:scale-110 transition flex-shrink-0" title="Verwijderen">🗑️</button>
               </div>
             ))}
           </div>
