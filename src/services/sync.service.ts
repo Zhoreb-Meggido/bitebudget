@@ -375,30 +375,42 @@ class SyncService {
       console.log(`📦 Merging ${cloudData.productPortions.length} portions from cloud...`);
       const localPortions = await portionsService.getAllPortions();
       const localPortionsMap = new Map(localPortions.map(p => [`${p.productName}-${p.portionName}`, p]));
+      const localPortionsById = new Map(localPortions.map(p => [p.id, p]));
 
       let addedCount = 0;
       let updatedCount = 0;
-      const portionsToSync: ProductPortion[] = [];
 
       for (const cloudPortion of cloudData.productPortions) {
         const key = `${cloudPortion.productName}-${cloudPortion.portionName}`;
         const localPortion = localPortionsMap.get(key);
+        const existingById = localPortionsById.get(cloudPortion.id);
+
+        // Check if ID already exists with different data
+        if (existingById && existingById.productName !== cloudPortion.productName) {
+          // ID conflict - generate new ID for cloud portion
+          const newId = Date.now() + Math.random();
+          await db.productPortions.add({ ...cloudPortion, id: newId });
+          addedCount++;
+          continue;
+        }
 
         if (!localPortion) {
-          // New portion from cloud - keep cloud ID to avoid duplicates
-          portionsToSync.push(cloudPortion);
-          addedCount++;
+          // New portion from cloud - use bulkPut to handle ID conflicts gracefully
+          try {
+            await db.productPortions.put(cloudPortion);
+            addedCount++;
+          } catch (err) {
+            console.warn('Failed to add portion, trying with new ID:', err);
+            const newId = Date.now() + Math.random();
+            await db.productPortions.add({ ...cloudPortion, id: newId });
+            addedCount++;
+          }
         } else if (cloudPortion.updated_at && localPortion.updated_at &&
                    new Date(cloudPortion.updated_at) > new Date(localPortion.updated_at)) {
           // Cloud portion is newer - use cloud data but keep local ID to avoid duplicates
-          portionsToSync.push({ ...cloudPortion, id: localPortion.id });
+          await db.productPortions.update(localPortion.id!, cloudPortion);
           updatedCount++;
         }
-      }
-
-      // Bulk insert/update all portions at once (preserves IDs)
-      if (portionsToSync.length > 0) {
-        await db.productPortions.bulkPut(portionsToSync);
       }
 
       console.log(`✅ Portions: ${addedCount} added, ${updatedCount} updated`);
@@ -411,29 +423,41 @@ class SyncService {
       console.log(`⭐ Merging ${cloudData.mealTemplates.length} templates from cloud...`);
       const localTemplates = await templatesService.getAllTemplates();
       const localTemplatesMap = new Map(localTemplates.map(t => [t.name, t]));
+      const localTemplatesById = new Map(localTemplates.map(t => [t.id, t]));
 
       let addedCount = 0;
       let updatedCount = 0;
-      const templatesToSync: MealTemplate[] = [];
 
       for (const cloudTemplate of cloudData.mealTemplates) {
         const localTemplate = localTemplatesMap.get(cloudTemplate.name);
+        const existingById = localTemplatesById.get(cloudTemplate.id);
+
+        // Check if ID already exists with different data
+        if (existingById && existingById.name !== cloudTemplate.name) {
+          // ID conflict - generate new ID for cloud template
+          const newId = Date.now() + Math.random();
+          await db.mealTemplates.add({ ...cloudTemplate, id: newId });
+          addedCount++;
+          continue;
+        }
 
         if (!localTemplate) {
-          // New template from cloud - keep cloud ID to avoid duplicates
-          templatesToSync.push(cloudTemplate);
-          addedCount++;
+          // New template from cloud - use put to handle ID conflicts gracefully
+          try {
+            await db.mealTemplates.put(cloudTemplate);
+            addedCount++;
+          } catch (err) {
+            console.warn('Failed to add template, trying with new ID:', err);
+            const newId = Date.now() + Math.random();
+            await db.mealTemplates.add({ ...cloudTemplate, id: newId });
+            addedCount++;
+          }
         } else if (cloudTemplate.updated_at && localTemplate.updated_at &&
                    new Date(cloudTemplate.updated_at) > new Date(localTemplate.updated_at)) {
           // Cloud template is newer - use cloud data but keep local ID to avoid duplicates
-          templatesToSync.push({ ...cloudTemplate, id: localTemplate.id });
+          await db.mealTemplates.update(localTemplate.id!, cloudTemplate);
           updatedCount++;
         }
-      }
-
-      // Bulk insert/update all templates at once (preserves IDs)
-      if (templatesToSync.length > 0) {
-        await db.mealTemplates.bulkPut(templatesToSync);
       }
 
       console.log(`✅ Templates: ${addedCount} added, ${updatedCount} updated`);
