@@ -201,13 +201,8 @@ export function SettingsPage() {
           </div>
         </div>
 
-        {/* Cloud Sync */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-white">
-          <CloudSyncSettings />
-        </div>
-
         {/* Action Buttons */}
-        <div className="p-4 sm:p-6 bg-gray-50 rounded-b-lg">
+        <div className="p-4 sm:p-6 bg-gray-50 border-b border-gray-200">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex gap-3 flex-wrap">
               <button
@@ -253,6 +248,11 @@ export function SettingsPage() {
               Reset naar Standaard
             </button>
           </div>
+        </div>
+
+        {/* Cloud Sync */}
+        <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-white rounded-b-lg">
+          <CloudSyncSettings />
         </div>
       </div>
     </div>
