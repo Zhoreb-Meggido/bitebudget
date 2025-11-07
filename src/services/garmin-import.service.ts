@@ -23,6 +23,7 @@ export interface ParsedGarminData {
     resting: number;
     max: number;
   };
+  sleepSeconds?: number;
 }
 
 export interface ImportResult {
@@ -82,6 +83,8 @@ class GarminImportService {
       return this.parseDistanceCSV(lines);
     } else if (headers.includes('heart rate') || headers.includes('resting hr')) {
       return this.parseHeartRateCSV(lines);
+    } else if (headers.includes('sleep') || headers.includes('avg duration')) {
+      return this.parseSleepCSV(lines);
     }
 
     // Try generic parsing as fallback
@@ -254,6 +257,104 @@ class GarminImportService {
   }
 
   /**
+   * Parse Sleep CSV (weekly summary)
+   * Format: Date,Avg Score,Avg Quality,Avg Duration,Avg Sleep Need,Avg Bedtime,Avg Wake Time
+   *         Nov 1-7,65,Fair,6h 11min,8h 24min,3:14 AM,9:35 AM
+   */
+  private parseSleepCSV(lines: string[]): ParsedGarminData[] {
+    const result: ParsedGarminData[] = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length < 4) continue;
+
+      // Parse week range (e.g., "Nov 1-7" or "Oct 25-31")
+      const date = this.parseWeekRangeStart(parts[0]);
+      if (!date) continue;
+
+      // Parse duration (e.g., "6h 11min")
+      const sleepSeconds = this.parseDuration(parts[3]);
+
+      if (sleepSeconds > 0) {
+        result.push({
+          date,
+          sleepSeconds,
+        });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Parse duration string like "6h 11min" to seconds
+   */
+  private parseDuration(duration: string): number {
+    if (!duration) return 0;
+
+    let totalSeconds = 0;
+
+    // Match hours (e.g., "6h")
+    const hoursMatch = duration.match(/(\d+)h/);
+    if (hoursMatch) {
+      totalSeconds += parseInt(hoursMatch[1]) * 3600;
+    }
+
+    // Match minutes (e.g., "11min")
+    const minutesMatch = duration.match(/(\d+)min/);
+    if (minutesMatch) {
+      totalSeconds += parseInt(minutesMatch[1]) * 60;
+    }
+
+    return totalSeconds;
+  }
+
+  /**
+   * Parse week range and return start date
+   * Examples: "Nov 1-7", "Oct 25-31"
+   */
+  private parseWeekRangeStart(weekRange: string): string | null {
+    if (!weekRange) return null;
+
+    try {
+      // Extract month and start day (e.g., "Nov 1-7" -> "Nov 1")
+      const match = weekRange.match(/([A-Za-z]+)\s+(\d+)-/);
+      if (!match) return null;
+
+      const monthName = match[1];
+      const startDay = match[2];
+
+      // Determine year (assume current year, or previous year if month is December and we're in January)
+      const currentDate = new Date();
+      let year = currentDate.getFullYear();
+
+      // If we're in January and the month is December, use previous year
+      const currentMonth = currentDate.getMonth();
+      const monthIndex = this.getMonthIndex(monthName);
+      if (currentMonth === 0 && monthIndex === 11) {
+        year--;
+      }
+
+      // Construct date
+      const dateStr = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${startDay.padStart(2, '0')}`;
+      return dateStr;
+    } catch (error) {
+      console.error('Error parsing week range:', weekRange, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get month index from month name (0-11)
+   */
+  private getMonthIndex(monthName: string): number {
+    const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const normalized = monthName.toLowerCase().substring(0, 3);
+    const index = months.indexOf(normalized);
+    return index >= 0 ? index : 0;
+  }
+
+  /**
    * Generic CSV parser (fallback)
    */
   private parseGenericCSV(lines: string[]): ParsedGarminData[] {
@@ -321,7 +422,8 @@ class GarminImportService {
           dayData.intensityMinutes ||
           dayData.stress ||
           dayData.distance ||
-          dayData.heartRate;
+          dayData.heartRate ||
+          dayData.sleepSeconds;
 
         if (!hasData) {
           continue; // Skip empty days
@@ -338,6 +440,7 @@ class GarminImportService {
           stressLevel: dayData.stress,
           heartRateResting: dayData.heartRate?.resting,
           heartRateMax: dayData.heartRate?.max,
+          sleepSeconds: dayData.sleepSeconds,
         };
 
         await activitiesService.addOrUpdateActivity(activity);
