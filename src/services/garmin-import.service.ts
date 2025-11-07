@@ -211,10 +211,16 @@ class GarminImportService {
   }
 
   /**
-   * Parse Steps CSV (similar format to stress)
+   * Parse Steps CSV
+   * Format: ,Actual,Goal
+   *         10/11/2025,2727,4440
    */
   private parseStepsCSV(lines: string[]): ParsedGarminData[] {
     const result: ParsedGarminData[] = [];
+
+    // Check headers to determine column index
+    const headers = lines[0].toLowerCase();
+    const hasActualColumn = headers.includes('actual');
 
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(',');
@@ -223,9 +229,12 @@ class GarminImportService {
       const date = this.parseDate(parts[0]);
       if (!date) continue;
 
+      // If has 'Actual' header, use column 1, otherwise assume column 1 is steps
+      const stepsValue = hasActualColumn ? parts[1] : parts[1];
+
       result.push({
         date,
-        steps: parseInt(parts[1]) || 0,
+        steps: parseInt(stepsValue) || 0,
       });
     }
 
