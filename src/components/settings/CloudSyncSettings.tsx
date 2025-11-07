@@ -35,9 +35,9 @@ export function CloudSyncSettings() {
     // Check if auto-sync is enabled
     setAutoSyncEnabled(syncService.isAutoSyncEnabled());
 
-    // Load cloud info if connected
+    // Load cloud info if connected (don't auto-sync on page load)
     if (googleDriveService.isSignedIn()) {
-      loadCloudInfo();
+      loadCloudInfo(false);
     }
   };
 

@@ -23,6 +23,18 @@ class TemplatesService {
   }
 
   /**
+   * Laad alle templates inclusief soft-deleted (voor sync)
+   */
+  async getAllTemplatesIncludingDeleted(): Promise<MealTemplate[]> {
+    try {
+      return await db.mealTemplates.toArray();
+    } catch (error) {
+      console.error('❌ Error loading templates (including deleted):', error);
+      return [];
+    }
+  }
+
+  /**
    * Laad templates gesorteerd op recent gebruik
    */
   async getRecentTemplates(limit: number = 5): Promise<MealTemplate[]> {

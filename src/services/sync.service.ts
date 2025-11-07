@@ -380,7 +380,7 @@ class SyncService {
     // Merge product portions - add cloud portions that don't exist locally or are newer
     if (cloudData.productPortions && cloudData.productPortions.length > 0) {
       console.log(`📦 Merging ${cloudData.productPortions.length} portions from cloud...`);
-      const localPortions = await portionsService.getAllPortions();
+      const localPortions = await portionsService.getAllPortionsIncludingDeleted();
       const localPortionsMap = new Map(localPortions.map(p => [`${p.productName}-${p.portionName}`, p]));
       const localPortionsById = new Map(localPortions.map(p => [p.id, p]));
 
@@ -437,7 +437,7 @@ class SyncService {
     // Merge meal templates - add cloud templates that don't exist locally or are newer
     if (cloudData.mealTemplates && cloudData.mealTemplates.length > 0) {
       console.log(`⭐ Merging ${cloudData.mealTemplates.length} templates from cloud...`);
-      const localTemplates = await templatesService.getAllTemplates();
+      const localTemplates = await templatesService.getAllTemplatesIncludingDeleted();
       const localTemplatesMap = new Map(localTemplates.map(t => [t.name, t]));
       const localTemplatesById = new Map(localTemplates.map(t => [t.id, t]));
 

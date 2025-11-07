@@ -63,6 +63,18 @@ class PortionsService {
   }
 
   /**
+   * Laad alle portions inclusief soft-deleted (voor sync)
+   */
+  async getAllPortionsIncludingDeleted(): Promise<ProductPortion[]> {
+    try {
+      return await db.productPortions.toArray();
+    } catch (error) {
+      console.error('❌ Error loading portions (including deleted):', error);
+      return [];
+    }
+  }
+
+  /**
    * Laad portions voor specifiek product
    */
   async getPortionsByProduct(productName: string): Promise<ProductPortion[]> {
