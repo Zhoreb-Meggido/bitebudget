@@ -56,6 +56,11 @@ class ActivitiesService {
    */
   async addOrUpdateActivity(activity: Omit<DailyActivity, 'id' | 'created_at' | 'updated_at'>): Promise<DailyActivity> {
     try {
+      // Validate date format
+      if (!activity.date || !/^\d{4}-\d{2}-\d{2}$/.test(activity.date)) {
+        throw new Error(`Invalid date format: ${activity.date}`);
+      }
+
       // Check if activity for this date already exists
       const existing = await this.getActivityByDate(activity.date);
 
@@ -72,18 +77,25 @@ class ActivitiesService {
       } else {
         // Add new
         const now = getTimestamp();
+        const id = generateId();
         const newActivity: DailyActivity = {
           ...activity,
-          id: generateId(),
+          id,
           created_at: now,
           updated_at: now,
         };
+
+        console.log('Adding new activity:', { date: activity.date, id });
         await db.dailyActivities.add(newActivity);
         console.log('✅ Activity added for date:', activity.date);
         return newActivity;
       }
-    } catch (error) {
-      console.error('❌ Error adding/updating activity:', error);
+    } catch (error: any) {
+      console.error('❌ Error adding/updating activity:', {
+        date: activity.date,
+        error: error?.message || error,
+        name: error?.name,
+      });
       throw error;
     }
   }

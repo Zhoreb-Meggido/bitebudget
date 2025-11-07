@@ -128,10 +128,27 @@ export function GarminImportSection() {
           </div>
         )}
 
-        {importResult && importResult.success && (
-          <div className="p-4 rounded-lg bg-green-50 text-green-800">
-            ✓ {importResult.daysImported} dagen succesvol geïmporteerd!
-          </div>
+        {importResult && (
+          <>
+            {importResult.daysImported > 0 && (
+              <div className="p-4 rounded-lg bg-green-50 text-green-800">
+                ✓ {importResult.daysImported} dagen succesvol geïmporteerd!
+              </div>
+            )}
+
+            {importResult.errors.length > 0 && (
+              <div className="p-4 rounded-lg bg-yellow-50 border border-yellow-200">
+                <h4 className="font-medium text-yellow-900 mb-2">
+                  ⚠️ {importResult.errors.length} dagen konden niet worden geïmporteerd
+                </h4>
+                <ul className="text-sm text-yellow-800 space-y-1 max-h-32 overflow-y-auto">
+                  {importResult.errors.map((error, index) => (
+                    <li key={index} className="font-mono text-xs">• {error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
         )}
 
         {/* File Upload Area */}

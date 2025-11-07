@@ -526,8 +526,10 @@ class GarminImportService {
 
         await activitiesService.addOrUpdateActivity(activity);
         imported++;
-      } catch (error) {
-        errors.push(`Failed to import ${dayData.date}: ${error}`);
+      } catch (error: any) {
+        const errorMsg = error?.message || error?.toString() || 'Unknown error';
+        console.error(`❌ Error importing ${dayData.date}:`, error);
+        errors.push(`${dayData.date}: ${errorMsg}`);
       }
     }
 
