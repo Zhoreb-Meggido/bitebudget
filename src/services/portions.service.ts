@@ -148,21 +148,40 @@ class PortionsService {
   }
 
   /**
-   * Set default portion voor een product (unset andere defaults)
+   * Toggle default portion voor een product (unset andere defaults of verwijder default)
    */
-  async setDefaultPortion(productName: string, portionId: number | string): Promise<void> {
+  async setDefaultPortion(portionId: number | string): Promise<void> {
     try {
       const now = getTimestamp();
 
-      // Unset all defaults for this product
+      // Get the portion to find its product
+      const portion = await db.productPortions.get(portionId);
+      if (!portion) {
+        throw new Error('Portion not found');
+      }
+
+      const productName = portion.productName;
+      const isCurrentlyDefault = portion.isDefault;
+
+      // If already default, just unset it
+      if (isCurrentlyDefault) {
+        await db.productPortions.update(portionId, {
+          isDefault: false,
+          updated_at: now,
+        });
+        console.log('✅ Default portion removed for:', productName);
+        return;
+      }
+
+      // Otherwise, unset all defaults for this product and set new one
       const portions = await db.productPortions
         .where('productName')
         .equals(productName)
         .toArray();
 
-      for (const portion of portions) {
-        if (portion.id !== portionId && portion.isDefault) {
-          await db.productPortions.update(portion.id!, {
+      for (const p of portions) {
+        if (p.id !== portionId && p.isDefault) {
+          await db.productPortions.update(p.id!, {
             isDefault: false,
             updated_at: now,
           });

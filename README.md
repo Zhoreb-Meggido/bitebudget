@@ -1,10 +1,10 @@
-# BiteBudget (Voedseljournaal) v1.3.0
+# BiteBudget (Voedseljournaal) v1.4.0
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.3.0:** Porties & Templates - Snellere maaltijd tracking!
+**🎉 Nieuw in v1.4.0:** Data Management Page - Complete controle over je data!
 
 ---
 
@@ -48,7 +48,67 @@ npm run build
 
 ---
 
-## ✨ v1.3.0 - Porties & Templates (Huidige Versie)
+## ✨ v1.4.0 - Data Management Page (Huidige Versie)
+
+### **Nieuwe Data Page met 3 Tabs** 📊
+
+#### **Geïntegreerd Data Beheer**
+- ✅ **Producten & Porties Tab** - Complete CRUD interface voor producten en porties
+- ✅ **Templates Tab** - Meal templates beheren met volledige edit functionaliteit
+- ✅ **Import/Export Tab** - Data transport en cloud sync (bestaande functionaliteit)
+- ✅ **Uniforme UI** - Emoji buttons (✏️ bewerken, 🗑️ verwijderen, ⭐ favoriet) overal
+- ✅ **Zoek & Filter** - Per tab eigen search en filter opties
+
+#### **Producten & Porties Beheer** 🍽️
+- ✅ **Product Modal** - Volledig formulier met alle voedingswaarden
+  - Naam, merk, calorieën, eiwit, vet, koolhydraten, suikers, vezels, natrium
+  - Favoriet checkbox
+- ✅ **Portie Modal** - Eenvoudig porties toevoegen/bewerken
+  - Portienaam, gram, default checkbox
+  - Automatische koppeling aan product
+- ✅ **Inline Weergave** - Porties direct zichtbaar onder product
+- ✅ **Default Portie** - ⭐ knop om standaard portie in te stellen
+- ✅ **Search** - Zoek producten op naam
+- ✅ **Filter** - "Alleen met porties" checkbox
+- ✅ **Delete Confirmatie** - Bevestiging bij verwijderen
+
+#### **Templates Beheer** ⭐
+- ✅ **Template Edit Modal** - Volledig functionele template editor
+  - Naam, categorie, favoriet checkbox
+  - Dynamische items lijst
+  - Product dropdown met ⭐ voor favorieten
+  - Portie selectie (indien beschikbaar) met auto-fill
+  - Handmatige gram input
+  - Items toevoegen/verwijderen met 🗑️ knop
+- ✅ **Auto-Selectie** - Default portie automatisch geselecteerd bij product keuze
+- ✅ **Validatie** - Minimaal 1 item, alle velden verplicht
+- ✅ **Template Cards** - Overzichtelijke weergave per categorie
+  - Items lijst met gram en optionele portienaam
+  - Usage statistieken (gebruikt X keer, laatst op datum)
+- ✅ **Search & Filter** - Zoek op naam/categorie, filter op favorieten
+- ✅ **Groepering** - Automatisch gegroepeerd per categorie
+
+#### **UX Verbeteringen** 🎨
+- ✅ **Consistente Buttons** - Uniforme emoji button stijl overal
+  - ⭐ voor favoriet/default (hover effect)
+  - ✏️ voor bewerken (hover scale-110 transition)
+  - 🗑️ voor verwijderen (hover scale-110 transition)
+- ✅ **Tooltips** - Alle buttons hebben title attributes
+- ✅ **Responsive** - Optimaal op desktop en mobile
+- ✅ **Tab Navigatie** - Makkelijk schakelen tussen Producten/Templates/Import-Export
+- ✅ **Action Buttons** - "Nieuw product", "Nieuwe template", etc. prominent aanwezig
+
+#### **Technical Implementation** 🔧
+- ✅ **3 Modal Components** - ProductEditModal, PortionEditModal, TemplateEditModal
+- ✅ **Reusable Components** - ProductsPortionsTab, TemplatesTab, ImportExportTab
+- ✅ **Full CRUD** - Alle create/read/update/delete operaties geïmplementeerd
+- ✅ **Hook Integration** - Gebruikt bestaande useProducts, usePortions, useTemplates hooks
+- ✅ **Type Safety** - Volledig TypeScript typed
+- ✅ **Cloud Sync Compatible** - Alle wijzigingen worden gesynchroniseerd
+
+---
+
+## ✨ v1.3.0 - Porties & Templates
 
 ### **Portie Templates** 🍽️
 
@@ -376,7 +436,13 @@ src/
 │   ├── analyse/
 │   │   └── AnalysePage.tsx           ✅ Week comparison + heatmap
 │   ├── data/
-│   │   └── DataPage.tsx              ✅ Import/Export + Reports
+│   │   ├── DataPage.tsx              ✅ Tab container (3 tabs)
+│   │   ├── ProductsPortionsTab.tsx   ✅ Products & portions CRUD
+│   │   ├── TemplatesTab.tsx          ✅ Templates CRUD
+│   │   ├── ImportExportTab.tsx       ✅ Import/Export + Reports
+│   │   ├── ProductEditModal.tsx      ✅ Product add/edit modal
+│   │   ├── PortionEditModal.tsx      ✅ Portion add/edit modal
+│   │   └── TemplateEditModal.tsx     ✅ Template add/edit modal
 │   ├── settings/
 │   │   ├── SettingsPage.tsx          ✅ User preferences
 │   │   └── CloudSyncSettings.tsx     ✅ Google Drive sync
@@ -397,6 +463,8 @@ src/
 │   ├── useDatabase.ts                ✅ DB connection hook
 │   ├── useEntries.ts                 ✅ Entries with auto-sync
 │   ├── useProducts.ts                ✅ Products with auto-sync (v1.2.1+)
+│   ├── usePortions.ts                ✅ Portions with auto-sync (v1.3+)
+│   ├── useTemplates.ts               ✅ Templates with auto-sync (v1.3+)
 │   ├── useSettings.ts                ✅ Settings with auto-sync (v1.2.1+)
 │   └── useWeights.ts                 ✅ Weights with auto-sync
 ├── utils/
@@ -669,7 +737,21 @@ npm run build
 
 ## 📝 Version History
 
-### v1.3.0 (January 2025) - Current
+### v1.4.0 (January 2025) - Current
+**Data Management Page - Complete Controle over je Data**
+- ✅ Nieuwe Data page met 3 tabs (Producten & Porties, Templates, Import/Export)
+- ✅ ProductEditModal - Volledig formulier voor product CRUD
+- ✅ PortionEditModal - Eenvoudig porties toevoegen/bewerken
+- ✅ TemplateEditModal - Dynamische template editor met product/portie selectie
+- ✅ Inline portie weergave per product
+- ✅ Template edit met auto-selectie van default porties
+- ✅ Uniforme emoji button stijl (⭐✏️🗑️) overal
+- ✅ Search & filter per tab
+- ✅ Delete confirmaties
+- ✅ Tooltips op alle buttons
+- ✅ Settings page gefocust op Cloud Sync en App configuratie
+
+### v1.3.0 (January 2025)
 **Porties & Templates - Snellere Maaltijd Tracking**
 - ✅ Portie templates with default portions database (50+ products)
 - ✅ Multiple unit support (g, ml, stuks, el, tl)
@@ -768,6 +850,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** January 6, 2025
-**Status:** v1.2.1 - Cloud Sync Complete + Mobile UX Optimized
+**Last Updated:** January 7, 2025
+**Status:** v1.4.0 - Data Management Complete
 **Next:** Photo attachments & Recipe builder

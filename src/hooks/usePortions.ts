@@ -74,8 +74,8 @@ export function usePortions(productName?: string) {
 
   }, [productName]);
 
-  const setDefaultPortion = useCallback(async (productName: string, portionId: number | string) => {
-    await portionsService.setDefaultPortion(productName, portionId);
+  const setDefaultPortion = useCallback(async (portionId: number | string) => {
+    await portionsService.setDefaultPortion(portionId);
     await loadPortions(); // Reload to get updated defaults
 
   }, [loadPortions]);

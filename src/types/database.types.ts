@@ -30,6 +30,7 @@ export interface Entry {
 export interface ProductInEntry {
   name: string;
   grams: number;
+  portionName?: string;  // Optional portion name (v1.4+)
 }
 
 // ============================================
@@ -62,11 +63,11 @@ export type MealCategory = 'ontbijt' | 'lunch' | 'diner' | 'snack' | 'shake' | '
 export interface MealTemplate {
   id?: string | number;
   name: string;               // "Ontbijt standaard", "Post-workout shake"
-  category: MealCategory;     // Type maaltijd
-  products: ProductInEntry[]; // {name, grams}[] - hergebruikt bestaand type
-  isFavorite: boolean;        // Pinned bovenaan
+  category?: MealCategory;    // Type maaltijd
+  products: ProductInEntry[]; // {name, grams, portionName?}[]
+  isFavorite?: boolean;       // Pinned bovenaan
   lastUsed?: string;          // ISO timestamp voor recent gebruikt
-  useCount: number;           // Populariteit tracking
+  useCount?: number;          // Populariteit tracking
   created_at: string;         // ISO timestamp
   updated_at: string;         // ISO timestamp
   deleted?: boolean;          // Soft delete flag
