@@ -164,7 +164,7 @@ export interface Weight {
 }
 
 // ============================================
-// DAILY ACTIVITY (Garmin Integration)
+// DAILY ACTIVITY (Google Fit / Fitness Integration)
 // ============================================
 
 export interface DailyActivity {
@@ -180,15 +180,15 @@ export interface DailyActivity {
   heartRateResting?: number;       // Rusthartslag (bpm)
   heartRateMax?: number;           // Max hartslag (bpm)
   stressLevel?: number;            // Stress (0-100)
-  bodyBattery?: number;            // Body Battery (0-100)
+  bodyBattery?: number;            // Body Battery (0-100, Garmin-specific)
   sleepSeconds?: number;           // Slaapduur in seconden
-  activities?: GarminActivity[];   // Specifieke workouts/activiteiten
+  activities?: FitnessActivity[];  // Specifieke workouts/activiteiten
   created_at: string;              // ISO timestamp
   updated_at: string;              // ISO timestamp
 }
 
-export interface GarminActivity {
-  activityId: string;              // Garmin activity ID
+export interface FitnessActivity {
+  activityId: string;              // Activity ID
   activityName: string;            // "Running", "Cycling", etc.
   startTime: string;               // ISO timestamp
   duration: number;                // Duur in seconden
@@ -198,12 +198,8 @@ export interface GarminActivity {
   maxHeartRate?: number;           // Max hartslag (bpm)
 }
 
-// OAuth tokens (opgeslagen in localStorage, niet in database)
-export interface GarminOAuthTokens {
-  accessToken: string;
-  accessTokenSecret: string;
-  expiresAt?: string;              // ISO timestamp
-}
+// Legacy export for backward compatibility
+export type GarminActivity = FitnessActivity;
 
 // ============================================
 // SETTINGS
@@ -272,7 +268,7 @@ export interface BackupData {
   settings: UserSettings;
   productPortions?: ProductPortion[];  // v1.3+
   mealTemplates?: MealTemplate[];      // v1.3+
-  dailyActivities?: DailyActivity[];   // v1.5+ (Garmin integration)
+  dailyActivities?: DailyActivity[];   // v1.5+ (Google Fit integration)
 }
 
 // ============================================

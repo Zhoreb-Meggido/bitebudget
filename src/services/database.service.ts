@@ -110,7 +110,7 @@ export class VoedseljournaalDB extends Dexie {
       mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at'
     });
 
-    // Version 8 - Add daily activities (Garmin integration)
+    // Version 8 - Add daily activities (Google Fit integration)
     this.version(8).stores({
       entries: 'id, date, created_at, updated_at',
       products: 'id, name, ean, source, created_at, updated_at',
