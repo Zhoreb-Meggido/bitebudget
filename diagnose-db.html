@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>DB Diagnostics</title>
+</head>
+<body>
+  <h1>IndexedDB Diagnostics</h1>
+  <button onclick="diagnose()">Analyze Database</button>
+  <pre id="output"></pre>
+
+  <script type="module">
+    import { db } from './src/services/database.service.ts';
+
+    window.diagnose = async function() {
+      const output = document.getElementById('output');
+      output.textContent = 'Analyzing...\n';
+
+      try {
+        // Count all items
+        const allEntries = await db.entries.toArray();
+        const allProducts = await db.products.toArray();
+
+        output.textContent += `\n=== Total counts ===\n`;
+        output.textContent += `All entries in DB: ${allEntries.length}\n`;
+        output.textContent += `All products in DB: ${allProducts.length}\n`;
+
+        // Check for deleted items
+        const deletedEntries = allEntries.filter(e => e.deleted);
+        const deletedProducts = allProducts.filter(p => p.deleted);
+
+        output.textContent += `\n=== Soft-deleted items ===\n`;
+        output.textContent += `Deleted entries: ${deletedEntries.length}\n`;
+        output.textContent += `Deleted products: ${deletedProducts.length}\n`;
+
+        // Active items
+        const activeEntries = allEntries.filter(e => !e.deleted);
+        const activeProducts = allProducts.filter(p => !p.deleted);
+
+        output.textContent += `\n=== Active (non-deleted) items ===\n`;
+        output.textContent += `Active entries: ${activeEntries.length}\n`;
+        output.textContent += `Active products: ${activeProducts.length}\n`;
+
+        // Check for duplicates by ID
+        const entryIds = allEntries.map(e => e.id);
+        const productIds = allProducts.map(p => p.id);
+        const uniqueEntryIds = new Set(entryIds);
+        const uniqueProductIds = new Set(productIds);
+
+        output.textContent += `\n=== Duplicate check ===\n`;
+        output.textContent += `Entry IDs: ${entryIds.length}, Unique: ${uniqueEntryIds.size}\n`;
+        output.textContent += `Product IDs: ${productIds.length}, Unique: ${uniqueProductIds.size}\n`;
+
+        // Show some example entries/products
+        output.textContent += `\n=== Sample entries (first 5) ===\n`;
+        allEntries.slice(0, 5).forEach((e, i) => {
+          output.textContent += `${i + 1}. ID: ${e.id}, Date: ${e.date}, Meal: ${e.mealType}, Deleted: ${e.deleted || false}\n`;
+        });
+
+        output.textContent += `\n=== Sample products (first 5) ===\n`;
+        allProducts.slice(0, 5).forEach((p, i) => {
+          output.textContent += `${i + 1}. ID: ${p.id}, Name: ${p.name}, Deleted: ${p.deleted || false}\n`;
+        });
+
+        // Check if there are items without proper IDs
+        const entriesWithoutId = allEntries.filter(e => !e.id);
+        const productsWithoutId = allProducts.filter(p => !p.id);
+
+        output.textContent += `\n=== Items without ID ===\n`;
+        output.textContent += `Entries without ID: ${entriesWithoutId.length}\n`;
+        output.textContent += `Products without ID: ${productsWithoutId.length}\n`;
+
+        output.textContent += `\n✅ Analysis complete!\n`;
+      } catch (error) {
+        output.textContent += `\n❌ Error: ${error.message}\n`;
+        console.error(error);
+      }
+    };
+  </script>
+</body>
+</html>

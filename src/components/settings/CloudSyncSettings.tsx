@@ -148,6 +148,39 @@ export function CloudSyncSettings() {
     }
   };
 
+  const handleForceSync = async () => {
+    if (!encryptionPassword) {
+      setError('Voer een encryptie wachtwoord in');
+      return;
+    }
+
+    if (!confirm('⚠️ WAARSCHUWING: Dit overschrijft ALLE data in Google Drive met je huidige lokale data.\n\nDe bestaande cloud backup wordt volledig vervangen.\n\nWeet je zeker dat je door wilt gaan?')) {
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+    setIsSyncing(true);
+
+    try {
+      // Force upload without merge
+      await syncService.syncToCloud(encryptionPassword, true);
+
+      if (rememberPassword) {
+        syncService.storePassword(encryptionPassword);
+      }
+
+      const now = new Date();
+      setLastSync(now);
+      setSuccess(`✅ Lokale data geforceerd naar Google Drive (${now.toLocaleTimeString('nl-NL')})`);
+      await loadCloudInfo(false);
+    } catch (err: any) {
+      setError(`Force push mislukt: ${err.message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleRestore = async () => {
     if (!encryptionPassword) {
       setError('Voer een encryptie wachtwoord in');
@@ -315,6 +348,29 @@ export function CloudSyncSettings() {
               }`}
             >
               📥 Pull vanaf Drive
+            </button>
+          </div>
+
+          {/* Force Push Button */}
+          <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4">
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-orange-900 flex items-center gap-2">
+                ⚠️ Geavanceerd: Force Push
+              </h4>
+              <p className="text-xs text-orange-700 mt-1">
+                Overschrijft cloud data volledig met lokale data (zonder merge). Gebruik alleen als je zeker weet dat je lokale data volledig correct is.
+              </p>
+            </div>
+            <button
+              onClick={handleForceSync}
+              disabled={isSyncing || !encryptionPassword}
+              className={`w-full px-4 py-2 rounded-lg font-medium text-sm ${
+                isSyncing || !encryptionPassword
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-orange-600 text-white hover:bg-orange-700'
+              }`}
+            >
+              🚨 Force Push naar Drive
             </button>
           </div>
 
