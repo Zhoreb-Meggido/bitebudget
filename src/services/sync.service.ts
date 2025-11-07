@@ -229,7 +229,7 @@ class SyncService {
       }
 
       // Cleanup product portions
-      const portions = await portionsService.getAllPortions();
+      const portions = await portionsService.getAllPortionsIncludingDeleted();
       const oldDeletedPortions = portions.filter(
         p => p.deleted && p.deleted_at && p.deleted_at < cutoffDate
       );
@@ -243,7 +243,7 @@ class SyncService {
       }
 
       // Cleanup meal templates
-      const templates = await templatesService.getAllTemplates();
+      const templates = await templatesService.getAllTemplatesIncludingDeleted();
       const oldDeletedTemplates = templates.filter(
         t => t.deleted && t.deleted_at && t.deleted_at < cutoffDate
       );
@@ -268,8 +268,8 @@ class SyncService {
     const products = await productsService.getAllProducts();
     const weights = await weightsService.getAllWeights();
     const settings = await settingsService.loadSettings();
-    const productPortions = await portionsService.getAllPortions();
-    const mealTemplates = await templatesService.getAllTemplates();
+    const productPortions = await portionsService.getAllPortionsIncludingDeleted();
+    const mealTemplates = await templatesService.getAllTemplatesIncludingDeleted();
 
     console.log('📤 Preparing export with:', {
       entries: entries.length,
