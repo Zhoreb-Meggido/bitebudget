@@ -9,7 +9,7 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate } from '@/types';
+import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate, DailyActivity } from '@/types';
 
 export class VoedseljournaalDB extends Dexie {
   // Tables
@@ -19,6 +19,7 @@ export class VoedseljournaalDB extends Dexie {
   settings!: Table<SettingsRecord, string>;
   productPortions!: Table<ProductPortion, number>;
   mealTemplates!: Table<MealTemplate, number>;
+  dailyActivities!: Table<DailyActivity, number>;
 
   constructor() {
     super('VoedseljournaalDB');
@@ -107,6 +108,17 @@ export class VoedseljournaalDB extends Dexie {
       settings: 'key',
       productPortions: 'id, productName, created_at, updated_at',
       mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at'
+    });
+
+    // Version 8 - Add daily activities (Garmin integration)
+    this.version(8).stores({
+      entries: 'id, date, created_at, updated_at',
+      products: 'id, name, ean, source, created_at, updated_at',
+      weights: 'id, date, created_at',
+      settings: 'key',
+      productPortions: 'id, productName, created_at, updated_at',
+      mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at',
+      dailyActivities: 'id, date, created_at, updated_at'
     });
   }
 }

@@ -164,6 +164,48 @@ export interface Weight {
 }
 
 // ============================================
+// DAILY ACTIVITY (Garmin Integration)
+// ============================================
+
+export interface DailyActivity {
+  id?: string | number;
+  date: string;                    // yyyy-MM-dd formaat
+  totalCalories: number;           // Totaal verbruik (kcal)
+  activeCalories: number;          // Actieve calorieën (kcal)
+  restingCalories: number;         // BMR/rustcalorieën (kcal)
+  steps: number;                   // Aantal stappen
+  intensityMinutes?: number;       // Actieve minuten
+  distanceMeters?: number;         // Totale afstand in meters
+  floorsClimbed?: number;          // Verdiepingen
+  heartRateResting?: number;       // Rusthartslag (bpm)
+  heartRateMax?: number;           // Max hartslag (bpm)
+  stressLevel?: number;            // Stress (0-100)
+  bodyBattery?: number;            // Body Battery (0-100)
+  sleepSeconds?: number;           // Slaapduur in seconden
+  activities?: GarminActivity[];   // Specifieke workouts/activiteiten
+  created_at: string;              // ISO timestamp
+  updated_at: string;              // ISO timestamp
+}
+
+export interface GarminActivity {
+  activityId: string;              // Garmin activity ID
+  activityName: string;            // "Running", "Cycling", etc.
+  startTime: string;               // ISO timestamp
+  duration: number;                // Duur in seconden
+  distance?: number;               // Afstand in meters
+  calories: number;                // Calorieën verbrand
+  averageHeartRate?: number;       // Gemiddelde hartslag (bpm)
+  maxHeartRate?: number;           // Max hartslag (bpm)
+}
+
+// OAuth tokens (opgeslagen in localStorage, niet in database)
+export interface GarminOAuthTokens {
+  accessToken: string;
+  accessTokenSecret: string;
+  expiresAt?: string;              // ISO timestamp
+}
+
+// ============================================
 // SETTINGS
 // ============================================
 
@@ -230,6 +272,7 @@ export interface BackupData {
   settings: UserSettings;
   productPortions?: ProductPortion[];  // v1.3+
   mealTemplates?: MealTemplate[];      // v1.3+
+  dailyActivities?: DailyActivity[];   // v1.5+ (Garmin integration)
 }
 
 // ============================================
