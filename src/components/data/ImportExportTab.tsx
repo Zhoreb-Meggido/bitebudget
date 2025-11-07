@@ -281,87 +281,87 @@ export function ImportExportTab() {
 
       {/* Export Section */}
       <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Exporteren</h2>
           <p className="text-sm text-gray-600 mt-1">Download je data als JSON bestand</p>
         </div>
 
-        <div className="p-6 space-y-4">
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-            <div>
-              <h3 className="font-medium text-gray-900">Volledige Backup</h3>
-              <p className="text-sm text-gray-600">
-                Alle data: {entries.length} maaltijden, {products.length} producten, {weights.length} gewichten, {portions.length} porties, {templates.length} templates, instellingen
+        <div className="p-4 sm:p-6 space-y-2 sm:space-y-3">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Volledige Backup</h3>
+              <p className="text-xs sm:text-sm text-gray-600 truncate">
+                {entries.length} maaltijden, {products.length} producten, {weights.length} gewichten, {portions.length} porties, {templates.length} templates
               </p>
             </div>
             <button
               onClick={handleExportAll}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+              className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
             >
-              Exporteer Alles
+              Exporteer
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-            <div>
-              <h3 className="font-medium text-gray-900">Maaltijden</h3>
-              <p className="text-sm text-gray-600">{entries.length} maaltijden</p>
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Maaltijden</h3>
+              <p className="text-xs sm:text-sm text-gray-600">{entries.length} maaltijden</p>
             </div>
             <button
               onClick={handleExportEntries}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
+              className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
             >
               Exporteer
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-            <div>
-              <h3 className="font-medium text-gray-900">Producten Database</h3>
-              <p className="text-sm text-gray-600">{products.length} producten</p>
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Producten Database</h3>
+              <p className="text-xs sm:text-sm text-gray-600">{products.length} producten</p>
             </div>
             <button
               onClick={handleExportProducts}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
+              className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
             >
               Exporteer
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-            <div>
-              <h3 className="font-medium text-gray-900">Gewichten</h3>
-              <p className="text-sm text-gray-600">{weights.length} metingen</p>
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Gewichten</h3>
+              <p className="text-xs sm:text-sm text-gray-600">{weights.length} metingen</p>
             </div>
             <button
               onClick={handleExportWeights}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
+              className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
             >
               Exporteer
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-            <div>
-              <h3 className="font-medium text-gray-900">Porties</h3>
-              <p className="text-sm text-gray-600">{portions.length} porties</p>
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Porties</h3>
+              <p className="text-xs sm:text-sm text-gray-600">{portions.length} porties</p>
             </div>
             <button
               onClick={handleExportPortions}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
+              className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
             >
               Exporteer
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-            <div>
-              <h3 className="font-medium text-gray-900">Templates</h3>
-              <p className="text-sm text-gray-600">{templates.length} templates</p>
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Templates</h3>
+              <p className="text-xs sm:text-sm text-gray-600">{templates.length} templates</p>
             </div>
             <button
               onClick={handleExportTemplates}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium"
+              className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
             >
               Exporteer
             </button>
@@ -371,13 +371,13 @@ export function ImportExportTab() {
 
       {/* Import Section */}
       <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Importeren</h2>
           <p className="text-sm text-gray-600 mt-1">Upload een eerder geëxporteerd JSON bestand</p>
         </div>
 
-        <div className="p-6">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+        <div className="p-4 sm:p-6">
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center hover:border-blue-400 transition-colors">
             <input
               type="file"
               accept=".json"
@@ -407,31 +407,31 @@ export function ImportExportTab() {
 
       {/* Danger Zone */}
       <div className="bg-white rounded-lg shadow border-2 border-red-200">
-        <div className="p-6 border-b border-red-200 bg-red-50">
+        <div className="p-4 sm:p-6 border-b border-red-200 bg-red-50">
           <h2 className="text-xl font-semibold text-red-900">Danger Zone</h2>
           <p className="text-sm text-red-700 mt-1">Onomkeerbare acties - wees voorzichtig!</p>
         </div>
 
-        <div className="p-6">
-          <div className="flex items-center justify-between p-4 border border-red-300 rounded-lg bg-red-50">
-            <div>
-              <h3 className="font-medium text-red-900">Alle Data Verwijderen</h3>
-              <p className="text-sm text-red-700">
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-red-300 rounded-lg bg-red-50">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-red-900 text-sm sm:text-base">Alle Data Verwijderen</h3>
+              <p className="text-xs sm:text-sm text-red-700">
                 Verwijdert ALLE maaltijden, producten en gewichten permanent
               </p>
             </div>
             <button
               onClick={handleDeleteAll}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium"
+              className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
             >
-              Alles Verwijderen
+              Verwijderen
             </button>
           </div>
         </div>
       </div>
 
       {/* Info Section */}
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
+      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
         <h3 className="font-medium text-blue-900 mb-2">💡 Tips</h3>
         <ul className="text-sm text-blue-800 space-y-1">
           <li>• Maak regelmatig een volledige backup van je data</li>
