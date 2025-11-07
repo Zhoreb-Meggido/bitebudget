@@ -24,6 +24,7 @@ export interface ParsedGarminData {
     max: number;
   };
   sleepSeconds?: number;
+  bodyBattery?: number;
 }
 
 export interface ImportResult {
@@ -257,11 +258,29 @@ class GarminImportService {
   }
 
   /**
-   * Parse Sleep CSV (weekly summary)
-   * Format: Date,Avg Score,Avg Quality,Avg Duration,Avg Sleep Need,Avg Bedtime,Avg Wake Time
-   *         Nov 1-7,65,Fair,6h 11min,8h 24min,3:14 AM,9:35 AM
+   * Parse Sleep CSV (supports both weekly and daily formats)
+   * Weekly format: Date,Avg Score,Avg Quality,Avg Duration,...
+   *                Nov 1-7,65,Fair,6h 11min,...
+   * Daily format: Sleep Score 4 Weeks,Score,Resting Heart Rate,Body Battery,Pulse Ox,Respiration,Skin Temp Change,HRV Status,Quality,Duration,...
+   *               2025-11-07,88,53,72,96.18,14.63,+0.3°,34,Good,7h 55min,...
    */
   private parseSleepCSV(lines: string[]): ParsedGarminData[] {
+    if (lines.length < 2) return [];
+
+    const headers = lines[0].toLowerCase();
+
+    // Detect format based on headers
+    if (headers.includes('sleep score') || headers.includes('body battery')) {
+      return this.parseSleepDailyCSV(lines);
+    } else {
+      return this.parseSleepWeeklyCSV(lines);
+    }
+  }
+
+  /**
+   * Parse weekly sleep summary
+   */
+  private parseSleepWeeklyCSV(lines: string[]): ParsedGarminData[] {
     const result: ParsedGarminData[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -280,6 +299,66 @@ class GarminImportService {
           date,
           sleepSeconds,
         });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Parse daily sleep data
+   * Format: Sleep Score 4 Weeks,Score,Resting Heart Rate,Body Battery,Pulse Ox,Respiration,Skin Temp Change,HRV Status,Quality,Duration,...
+   */
+  private parseSleepDailyCSV(lines: string[]): ParsedGarminData[] {
+    const result: ParsedGarminData[] = [];
+
+    // Parse headers to find column indices
+    const headers = lines[0].split(',');
+    const dateCol = 0;
+    const restingHRCol = headers.findIndex(h => h.toLowerCase().includes('resting heart rate'));
+    const bodyBatteryCol = headers.findIndex(h => h.toLowerCase().includes('body battery'));
+    const durationCol = headers.findIndex(h => h.toLowerCase() === 'duration');
+
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(',');
+      if (parts.length < 2) continue;
+
+      // Parse date (already in YYYY-MM-DD format)
+      const date = this.parseDate(parts[dateCol]);
+      if (!date) continue;
+
+      const data: ParsedGarminData = { date };
+
+      // Parse duration
+      if (durationCol >= 0 && parts[durationCol]) {
+        const sleepSeconds = this.parseDuration(parts[durationCol]);
+        if (sleepSeconds > 0) {
+          data.sleepSeconds = sleepSeconds;
+        }
+      }
+
+      // Parse resting heart rate
+      if (restingHRCol >= 0 && parts[restingHRCol]) {
+        const restingHR = parseFloat(parts[restingHRCol]);
+        if (!isNaN(restingHR) && restingHR > 0) {
+          data.heartRate = {
+            resting: restingHR,
+            max: 0, // Not available in this format
+          };
+        }
+      }
+
+      // Parse Body Battery
+      if (bodyBatteryCol >= 0 && parts[bodyBatteryCol]) {
+        const bodyBattery = parseFloat(parts[bodyBatteryCol]);
+        if (!isNaN(bodyBattery) && bodyBattery > 0) {
+          data.bodyBattery = bodyBattery;
+        }
+      }
+
+      // Only add if we have some data
+      if (data.sleepSeconds || data.heartRate || data.bodyBattery) {
+        result.push(data);
       }
     }
 
@@ -423,7 +502,8 @@ class GarminImportService {
           dayData.stress ||
           dayData.distance ||
           dayData.heartRate ||
-          dayData.sleepSeconds;
+          dayData.sleepSeconds ||
+          dayData.bodyBattery;
 
         if (!hasData) {
           continue; // Skip empty days
@@ -441,6 +521,7 @@ class GarminImportService {
           heartRateResting: dayData.heartRate?.resting,
           heartRateMax: dayData.heartRate?.max,
           sleepSeconds: dayData.sleepSeconds,
+          bodyBattery: dayData.bodyBattery,
         };
 
         await activitiesService.addOrUpdateActivity(activity);
