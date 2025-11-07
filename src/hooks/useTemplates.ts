@@ -27,6 +27,17 @@ export function useTemplates() {
 
   useEffect(() => {
     loadTemplates();
+
+    // Listen for sync events to refresh data
+    const handleSync = () => {
+      console.log('🔄 useTemplates: Reloading after sync');
+      loadTemplates();
+    };
+    window.addEventListener('data-synced', handleSync);
+
+    return () => {
+      window.removeEventListener('data-synced', handleSync);
+    };
   }, [loadTemplates]);
 
   const addTemplate = useCallback(async (template: Omit<MealTemplate, 'id' | 'created_at' | 'updated_at'>) => {

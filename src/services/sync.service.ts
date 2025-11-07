@@ -659,6 +659,9 @@ class SyncService {
 
       // Store last sync time
       localStorage.setItem('last_sync_time', new Date().toISOString());
+
+      // Dispatch event to trigger UI refresh
+      window.dispatchEvent(new CustomEvent('data-synced'));
     } finally {
       this.isSyncing = false;
     }
@@ -701,6 +704,9 @@ class SyncService {
 
     // Store last sync time
     localStorage.setItem('last_sync_time', new Date().toISOString());
+
+    // Dispatch event to trigger UI refresh
+    window.dispatchEvent(new CustomEvent('data-synced'));
   }
 
   /**

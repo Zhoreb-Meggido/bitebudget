@@ -20,6 +20,17 @@ export function useEntries() {
 
   useEffect(() => {
     loadEntries();
+
+    // Listen for sync events to refresh data
+    const handleSync = () => {
+      console.log('🔄 useEntries: Reloading after sync');
+      loadEntries();
+    };
+    window.addEventListener('data-synced', handleSync);
+
+    return () => {
+      window.removeEventListener('data-synced', handleSync);
+    };
   }, [loadEntries]);
 
   const addEntry = useCallback(async (entry: Omit<Entry, 'id' | 'created_at' | 'updated_at'>) => {

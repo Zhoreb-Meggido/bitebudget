@@ -337,23 +337,23 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
             {/* Selected products - Fixed with max height, more space on desktop */}
             {selectedProducts.length > 0 && (
               <div className="flex-shrink-0 px-6 pt-3">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 max-h-[200px] sm:max-h-[300px] overflow-y-auto">
-                  <h4 className="text-xs font-semibold text-gray-600 mb-2 sticky top-0 bg-blue-50">Geselecteerd ({selectedProducts.length}):</h4>
-                  <div className="space-y-2">
-                    {selectedProducts.map(name => {
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 max-h-[200px] sm:max-h-[300px] overflow-y-auto">
+                  <h4 className="text-xs font-semibold text-gray-600 mb-1 sticky top-0 bg-blue-50">Geselecteerd ({selectedProducts.length}):</h4>
+                  <div className="space-y-1">
+                    {selectedProducts.slice().reverse().map(name => {
                       const product = products.find(p => p.name === name);
                       const portions = productPortions[name] || [];
                       const hasPortions = portions.length > 0;
 
                       return (
-                        <div key={name} className="bg-white rounded-lg px-3 py-2 border border-blue-300">
+                        <div key={name} className="bg-white rounded-lg px-2 py-1 border border-blue-300">
                           {/* Desktop: alles op 1 regel, Mobile: gestapeld */}
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1">
                             {/* Product naam */}
                             <span className="flex-1 text-sm font-medium truncate">{product?.favorite && '⭐ '}{name}</span>
 
                             {/* Portie selector en gram input */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                               {hasPortions && (
                                 <select
                                   key={`${name}-${portions.length}`}
@@ -394,7 +394,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                               <span className="text-xs text-gray-500">g</span>
 
                               {/* + Portie en Delete knop samen op 1 regel */}
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
                                 {!hasPortions && (
                                   <button
                                     onClick={() => {

@@ -16,7 +16,11 @@
       "Bash(node scripts/generate-icons.js:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(for file in src/hooks/useProducts.ts src/hooks/useWeights.ts src/hooks/usePortions.ts src/hooks/useTemplates.ts)",
+      "Bash(do:*)",
+      "Bash(echo:*)",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

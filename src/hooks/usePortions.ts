@@ -30,6 +30,17 @@ export function usePortions(productName?: string) {
 
   useEffect(() => {
     loadPortions();
+
+    // Listen for sync events to refresh data
+    const handleSync = () => {
+      console.log('🔄 usePortions: Reloading after sync');
+      loadPortions();
+    };
+    window.addEventListener('data-synced', handleSync);
+
+    return () => {
+      window.removeEventListener('data-synced', handleSync);
+    };
   }, [loadPortions]);
 
   const addPortion = useCallback(async (portion: Omit<ProductPortion, 'id' | 'created_at' | 'updated_at'>) => {

@@ -20,6 +20,17 @@ export function useProducts() {
 
   useEffect(() => {
     loadProducts();
+
+    // Listen for sync events to refresh data
+    const handleSync = () => {
+      console.log('🔄 useProducts: Reloading after sync');
+      loadProducts();
+    };
+    window.addEventListener('data-synced', handleSync);
+
+    return () => {
+      window.removeEventListener('data-synced', handleSync);
+    };
   }, [loadProducts]);
 
   const addProduct = useCallback(async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {

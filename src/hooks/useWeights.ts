@@ -31,6 +31,17 @@ export function useWeights() {
 
   useEffect(() => {
     loadWeights();
+
+    // Listen for sync events to refresh data
+    const handleSync = () => {
+      console.log('🔄 useWeights: Reloading after sync');
+      loadWeights();
+    };
+    window.addEventListener('data-synced', handleSync);
+
+    return () => {
+      window.removeEventListener('data-synced', handleSync);
+    };
   }, [loadWeights]);
 
   // Voeg nieuw gewicht toe
