@@ -6,7 +6,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { weightsService } from '@/services/weights.service';
-import { syncService } from '@/services/sync.service';
 import type { Weight } from '@/types';
 
 export function useWeights() {
@@ -40,8 +39,6 @@ export function useWeights() {
       await weightsService.addWeight(weight);
       await loadWeights();
 
-      // Trigger auto-sync if enabled
-      syncService.triggerAutoSync();
     } catch (err) {
       console.error('❌ Failed to add weight:', err);
       setError(err as Error);
@@ -55,8 +52,6 @@ export function useWeights() {
       await weightsService.updateWeight(id, updates);
       await loadWeights();
 
-      // Trigger auto-sync if enabled
-      syncService.triggerAutoSync();
     } catch (err) {
       console.error('❌ Failed to update weight:', err);
       setError(err as Error);
@@ -70,8 +65,6 @@ export function useWeights() {
       await weightsService.deleteWeight(id);
       await loadWeights();
 
-      // Trigger auto-sync if enabled
-      syncService.triggerAutoSync();
     } catch (err) {
       console.error('❌ Failed to delete weight:', err);
       setError(err as Error);

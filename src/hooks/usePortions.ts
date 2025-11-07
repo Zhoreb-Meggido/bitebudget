@@ -4,7 +4,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { portionsService } from '@/services/portions.service';
-import { syncService } from '@/services/sync.service';
 import type { ProductPortion } from '@/types';
 
 export function usePortions(productName?: string) {
@@ -41,9 +40,6 @@ export function usePortions(productName?: string) {
     }
     setAllPortions(prev => [...prev, newPortion]);
 
-    // Trigger auto-sync if enabled
-    syncService.triggerAutoSync();
-
     return newPortion;
   }, [productName]);
 
@@ -55,8 +51,6 @@ export function usePortions(productName?: string) {
     }
     setAllPortions(prev => prev.map(p => (p.id === id ? { ...p, ...updates } : p)));
 
-    // Trigger auto-sync if enabled
-    syncService.triggerAutoSync();
   }, [productName]);
 
   const deletePortion = useCallback(async (id: number | string) => {
@@ -67,16 +61,12 @@ export function usePortions(productName?: string) {
     }
     setAllPortions(prev => prev.filter(p => p.id !== id));
 
-    // Trigger auto-sync if enabled
-    syncService.triggerAutoSync();
   }, [productName]);
 
   const setDefaultPortion = useCallback(async (productName: string, portionId: number | string) => {
     await portionsService.setDefaultPortion(productName, portionId);
     await loadPortions(); // Reload to get updated defaults
 
-    // Trigger auto-sync if enabled
-    syncService.triggerAutoSync();
   }, [loadPortions]);
 
   return {

@@ -4,7 +4,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { templatesService } from '@/services/templates.service';
-import { syncService } from '@/services/sync.service';
 import type { MealTemplate } from '@/types';
 
 export function useTemplates() {
@@ -39,9 +38,6 @@ export function useTemplates() {
       setFavoriteTemplates(prev => [...prev, newTemplate]);
     }
 
-    // Trigger auto-sync if enabled
-    syncService.triggerAutoSync();
-
     return newTemplate;
   }, []);
 
@@ -52,8 +48,6 @@ export function useTemplates() {
     setRecentTemplates(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
     setFavoriteTemplates(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
 
-    // Trigger auto-sync if enabled
-    syncService.triggerAutoSync();
   }, []);
 
   const deleteTemplate = useCallback(async (id: number | string) => {
@@ -63,24 +57,18 @@ export function useTemplates() {
     setRecentTemplates(prev => prev.filter(t => t.id !== id));
     setFavoriteTemplates(prev => prev.filter(t => t.id !== id));
 
-    // Trigger auto-sync if enabled
-    syncService.triggerAutoSync();
   }, []);
 
   const toggleFavorite = useCallback(async (id: number | string) => {
     await templatesService.toggleFavorite(id);
     await loadTemplates(); // Reload to get updated favorites
 
-    // Trigger auto-sync if enabled
-    syncService.triggerAutoSync();
   }, [loadTemplates]);
 
   const trackUsage = useCallback(async (id: number | string) => {
     await templatesService.trackUsage(id);
     await loadTemplates(); // Reload to get updated recent list
 
-    // Trigger auto-sync if enabled
-    syncService.triggerAutoSync();
   }, [loadTemplates]);
 
   const getTemplatesByCategory = useCallback(async (category: string) => {

@@ -231,7 +231,7 @@ export function CloudSyncSettings() {
     } else {
       syncService.enableAutoSync(encryptionPassword);
       setAutoSyncEnabled(true);
-      setSuccess('▶️ Auto-sync ingeschakeld - wijzigingen worden automatisch gesynchroniseerd');
+      setSuccess('▶️ Auto-sync ingeschakeld - synchroniseert elke 5 minuten');
     }
 
     setTimeout(() => setSuccess(null), 3000);
@@ -380,7 +380,7 @@ export function CloudSyncSettings() {
               <div className="flex-1">
                 <h4 className="text-sm font-semibold text-gray-900">🔄 Automatische Synchronisatie</h4>
                 <p className="text-xs text-gray-600 mt-1">
-                  Synchroniseer automatisch bij wijzigingen (30 sec vertraging)
+                  Synchroniseer automatisch elke 5 minuten (bidirectioneel)
                 </p>
               </div>
               <button

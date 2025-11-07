@@ -58,18 +58,24 @@ class SyncService {
       clearInterval(this.autoSyncInterval);
     }
 
-    // Check for updates every 5 minutes
+    // Bidirectional sync every 5 minutes (pull + push)
     this.autoSyncInterval = window.setInterval(async () => {
       try {
-        await this.pullIfNewer(password);
+        console.log('⏰ Auto-sync: Running periodic sync...');
+        await this.syncToCloud(password, false); // Smart merge (not force)
       } catch (error) {
-        console.error('Auto-sync pull failed:', error);
+        console.error('Auto-sync failed:', error);
+
+        // Check if failure was due to token expiry
+        if (!googleDriveService.isSignedIn()) {
+          window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
+        }
       }
     }, 5 * 60 * 1000); // 5 minutes
   }
 
   /**
-   * Enable auto-sync (will check for updates every 5 minutes)
+   * Enable auto-sync (bidirectional sync every 5 minutes)
    */
   enableAutoSync(password: string): void {
     this.autoSyncEnabled = true;
