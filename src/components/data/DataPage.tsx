@@ -22,39 +22,41 @@ export function DataPage() {
           <nav className="flex -mb-px overflow-x-auto">
             <button
               onClick={() => setActiveTab('products')}
-              className={`px-6 py-4 text-sm font-medium border-b-2 whitespace-nowrap ${
+              className={`px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium border-b-2 whitespace-nowrap ${
                 activeTab === 'products'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              📦 Producten & Porties
+              <span className="sm:hidden">🍽️ Producten</span>
+              <span className="hidden sm:inline">🍽️ Producten & Porties</span>
             </button>
             <button
               onClick={() => setActiveTab('templates')}
-              className={`px-6 py-4 text-sm font-medium border-b-2 whitespace-nowrap ${
+              className={`px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium border-b-2 whitespace-nowrap ${
                 activeTab === 'templates'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              ⭐ Templates
+              📋 Templates
             </button>
             <button
               onClick={() => setActiveTab('import-export')}
-              className={`px-6 py-4 text-sm font-medium border-b-2 whitespace-nowrap ${
+              className={`px-3 sm:px-6 py-3 sm:py-4 text-sm font-medium border-b-2 whitespace-nowrap ${
                 activeTab === 'import-export'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              💾 Import/Export
+              <span className="sm:hidden">💾 Import</span>
+              <span className="hidden sm:inline">💾 Import/Export</span>
             </button>
           </nav>
         </div>
 
         {/* Tab Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {activeTab === 'products' && <ProductsPortionsTab />}
           {activeTab === 'templates' && <TemplatesTab />}
           {activeTab === 'import-export' && <ImportExportTab />}
