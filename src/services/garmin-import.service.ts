@@ -69,8 +69,9 @@ class GarminImportService {
       throw new Error('CSV file is empty or invalid');
     }
 
-    // Detect type based on headers
+    // Detect type based on headers and filename
     const headers = lines[0].toLowerCase();
+    const filenameLower = filename.toLowerCase();
 
     if (headers.includes('active calories')) {
       return this.parseCaloriesCSV(lines);
@@ -78,7 +79,7 @@ class GarminImportService {
       return this.parseIntensityCSV(lines);
     } else if (headers.includes('stress')) {
       return this.parseStressCSV(lines);
-    } else if (headers.includes('steps')) {
+    } else if (headers.includes('steps') || (headers.includes('actual') && headers.includes('goal')) || filenameLower.includes('steps')) {
       return this.parseStepsCSV(lines);
     } else if (headers.includes('distance')) {
       return this.parseDistanceCSV(lines);
