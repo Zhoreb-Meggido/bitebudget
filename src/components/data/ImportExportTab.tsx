@@ -8,6 +8,7 @@ import { portionsService } from '@/services/portions.service';
 import { templatesService } from '@/services/templates.service';
 import { downloadTextFile } from '@/utils/download.utils';
 import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate } from '@/types';
+import { GarminImportSection } from './GarminImportSection';
 
 interface BackupData {
   version: string;
@@ -267,6 +268,9 @@ export function ImportExportTab() {
 
   return (
     <div className="space-y-6">
+
+      {/* Garmin CSV Import */}
+      <GarminImportSection />
 
       {/* Status Messages */}
       {(exportStatus || importStatus) && (
