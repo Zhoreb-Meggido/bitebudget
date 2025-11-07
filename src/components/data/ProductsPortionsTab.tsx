@@ -6,9 +6,10 @@ import { PortionEditModal } from './PortionEditModal';
 import { BarcodeScanner } from '../journal/BarcodeScanner';
 import { OpenFoodFactsSearch } from '../journal/OpenFoodFactsSearch';
 import { openFoodFactsService } from '@/services/openfoodfacts.service';
+import { productsService } from '@/services/products.service';
 
 export function ProductsPortionsTab() {
-  const { products, isLoading, addProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, isLoading, addProduct, updateProduct, deleteProduct, reloadProducts } = useProducts();
   const { portions: allPortions, addPortion, updatePortion, deletePortion, setDefaultPortion } = usePortions();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,6 +28,10 @@ export function ProductsPortionsTab() {
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showOffSearch, setShowOffSearch] = useState(false);
   const [isLoadingFromOff, setIsLoadingFromOff] = useState(false);
+
+  // JSON import state
+  const [showJsonImport, setShowJsonImport] = useState(false);
+  const [jsonInput, setJsonInput] = useState('');
 
   // Handlers
   const handleAddProduct = () => {
@@ -85,6 +90,22 @@ export function ProductsPortionsTab() {
     }
   };
 
+  // JSON import handler
+  const handleImportJson = async () => {
+    try {
+      const data = JSON.parse(jsonInput);
+      const productsToMerge = Array.isArray(data) ? data : [data];
+      const result = await productsService.mergeProducts(productsToMerge);
+      alert(`✓ ${result.added} toegevoegd, ${result.updated} bijgewerkt!`);
+      await reloadProducts();
+      setJsonInput('');
+      setShowJsonImport(false);
+    } catch (error) {
+      console.error('Error importing JSON:', error);
+      alert('Ongeldige JSON. Controleer het formaat.');
+    }
+  };
+
   // Barcode scan handler
   const handleBarcodeScan = async (barcode: string) => {
     console.log('Barcode scanned:', barcode);
@@ -95,12 +116,9 @@ export function ProductsPortionsTab() {
       const offProduct = await openFoodFactsService.getProductByBarcode(barcode);
 
       if (offProduct) {
-        // Add product from OpenFoodFacts
+        // Add product from OpenFoodFacts with all fields
         await addProduct({
           name: offProduct.name,
-          brand: offProduct.brand,
-          ean: barcode,
-          source: 'barcode',
           calories: offProduct.calories,
           protein: offProduct.protein,
           carbohydrates: offProduct.carbohydrates,
@@ -109,33 +127,36 @@ export function ProductsPortionsTab() {
           saturatedFat: offProduct.saturatedFat,
           fiber: offProduct.fiber,
           sodium: offProduct.sodium,
+          favorite: false,
+          source: 'barcode',
+          ean: offProduct.ean,
+          brand: offProduct.brand,
           nutri_score: offProduct.nutri_score,
           image_url: offProduct.image_url,
-          favorite: false,
+          openfoodfacts_id: offProduct.openfoodfacts_id,
+          last_synced: offProduct.last_synced,
         });
         alert(`✓ Product toegevoegd: ${offProduct.name}`);
       } else {
-        alert('Product niet gevonden in OpenFoodFacts database. Probeer handmatig toevoegen.');
+        alert('❌ Product niet gevonden in OpenFoodFacts database');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching product from OFF:', error);
-      alert('Fout bij ophalen product. Controleer je internetverbinding.');
+      alert(error.message || 'Fout bij ophalen product. Controleer je internetverbinding.');
     } finally {
       setIsLoadingFromOff(false);
     }
   };
 
   // OpenFoodFacts search handler
-  const handleOffProductSelect = async (offProduct: any) => {
+  const handleOffProductSelect = async (offProduct: Product) => {
     setShowOffSearch(false);
     setIsLoadingFromOff(true);
 
     try {
+      // Add product with all OpenFoodFacts fields
       await addProduct({
         name: offProduct.name,
-        brand: offProduct.brand,
-        ean: offProduct.ean,
-        source: 'search',
         calories: offProduct.calories,
         protein: offProduct.protein,
         carbohydrates: offProduct.carbohydrates,
@@ -144,14 +165,19 @@ export function ProductsPortionsTab() {
         saturatedFat: offProduct.saturatedFat,
         fiber: offProduct.fiber,
         sodium: offProduct.sodium,
+        favorite: false,
+        source: 'search',
+        ean: offProduct.ean,
+        brand: offProduct.brand,
         nutri_score: offProduct.nutri_score,
         image_url: offProduct.image_url,
-        favorite: false,
+        openfoodfacts_id: offProduct.openfoodfacts_id,
+        last_synced: offProduct.last_synced,
       });
       alert(`✓ Product toegevoegd: ${offProduct.name}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding product from OFF:', error);
-      alert('Fout bij toevoegen product.');
+      alert(error.message || 'Fout bij toevoegen product.');
     } finally {
       setIsLoadingFromOff(false);
     }
@@ -176,6 +202,73 @@ export function ProductsPortionsTab() {
 
   return (
     <div className="space-y-4">
+      {/* Add New Product Buttons - MOVED TO TOP */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <button
+          onClick={handleAddProduct}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
+          disabled={isLoadingFromOff}
+        >
+          ➕ Nieuw
+        </button>
+        <button
+          onClick={() => setShowBarcodeScanner(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+          disabled={isLoadingFromOff}
+        >
+          📷 Scan
+        </button>
+        <button
+          onClick={() => setShowOffSearch(true)}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700"
+          disabled={isLoadingFromOff}
+        >
+          🔍 Zoek
+        </button>
+        <button
+          onClick={() => setShowJsonImport(!showJsonImport)}
+          className="px-4 py-2 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700"
+        >
+          📥 JSON
+        </button>
+      </div>
+
+      {/* JSON Import Section */}
+      {showJsonImport && (
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <textarea
+            value={jsonInput}
+            onChange={(e) => setJsonInput(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg font-mono text-sm h-32 mb-2"
+            placeholder='{"name": "Product", "calories": 100, ...} of [...]'
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleImportJson}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+            >
+              Importeer
+            </button>
+            <button
+              onClick={() => {
+                setShowJsonImport(false);
+                setJsonInput('');
+              }}
+              className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium"
+            >
+              Annuleer
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Loading indicator */}
+      {isLoadingFromOff && (
+        <div className="text-sm text-blue-600 bg-blue-50 px-4 py-2 rounded-lg">
+          Bezig met ophalen product uit OpenFoodFacts...
+        </div>
+      )}
+
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1">
@@ -226,38 +319,6 @@ export function ProductsPortionsTab() {
         )}
       </div>
 
-      {/* Add New Product Buttons */}
-      <div className="pt-4 border-t border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            onClick={handleAddProduct}
-            className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
-            disabled={isLoadingFromOff}
-          >
-            ✏️ Handmatig
-          </button>
-          <button
-            onClick={() => setShowBarcodeScanner(true)}
-            className="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700"
-            disabled={isLoadingFromOff}
-          >
-            📷 Scan Barcode
-          </button>
-          <button
-            onClick={() => setShowOffSearch(true)}
-            className="flex-1 sm:flex-none px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700"
-            disabled={isLoadingFromOff}
-          >
-            🔍 Zoek in OFF
-          </button>
-        </div>
-        {isLoadingFromOff && (
-          <div className="mt-2 text-sm text-gray-600">
-            Bezig met ophalen product uit OpenFoodFacts...
-          </div>
-        )}
-      </div>
-
       {/* Modals */}
       <ProductEditModal
         isOpen={showProductModal}
@@ -274,50 +335,18 @@ export function ProductsPortionsTab() {
       />
 
       {/* Barcode Scanner Modal */}
-      {showBarcodeScanner && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h2 className="text-xl font-bold">Scan Barcode</h2>
-              <button
-                onClick={() => setShowBarcodeScanner(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-4">
-              <BarcodeScanner
-                onScan={handleBarcodeScan}
-                onClose={() => setShowBarcodeScanner(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onScan={handleBarcodeScan}
+        onClose={() => setShowBarcodeScanner(false)}
+      />
 
       {/* OpenFoodFacts Search Modal */}
-      {showOffSearch && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white p-4 border-b flex justify-between items-center">
-              <h2 className="text-xl font-bold">Zoek in OpenFoodFacts</h2>
-              <button
-                onClick={() => setShowOffSearch(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-4">
-              <OpenFoodFactsSearch
-                onProductSelect={handleOffProductSelect}
-                onClose={() => setShowOffSearch(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <OpenFoodFactsSearch
+        isOpen={showOffSearch}
+        onSelectProduct={handleOffProductSelect}
+        onClose={() => setShowOffSearch(false)}
+      />
     </div>
   );
 }
@@ -378,6 +407,30 @@ function ProductWithPortions({
         <div className="text-sm text-gray-600">
           📊 Per 100{product.calories > 0 ? 'g' : 'ml'}: {product.calories} kcal, {product.protein}g eiwit, {product.fat}g vet
           {product.carbohydrates !== undefined && `, ${product.carbohydrates}g koolhydraten`}
+        </div>
+
+        {/* Source and Nutri-Score Badges */}
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          {/* Source Badge */}
+          <span className={`text-xs px-2 py-0.5 rounded ${
+            product.source === 'barcode' ? 'bg-blue-100 text-blue-700' :
+            product.source === 'search' ? 'bg-purple-100 text-purple-700' :
+            'bg-gray-100 text-gray-700'
+          }`}>
+            {product.source === 'barcode' ? '📷 Barcode' : product.source === 'search' ? '🔍 Search' : '✏️ Manual'}
+          </span>
+          {/* Nutri-Score Badge */}
+          {product.nutri_score && (
+            <span className={`text-xs px-2 py-0.5 rounded font-bold ${
+              product.nutri_score === 'A' ? 'bg-green-500 text-white' :
+              product.nutri_score === 'B' ? 'bg-green-300 text-gray-800' :
+              product.nutri_score === 'C' ? 'bg-yellow-300 text-gray-800' :
+              product.nutri_score === 'D' ? 'bg-orange-400 text-white' :
+              'bg-red-500 text-white'
+            }`}>
+              Nutri-Score: {product.nutri_score}
+            </span>
+          )}
         </div>
       </div>
 
