@@ -1,38 +1,31 @@
 /**
- * One-time fix script to correct weekly calories data
+ * One-time script to remove weekly calories data (unreliable averages)
  *
  * INSTRUCTIONS:
  * 1. Open browser console (F12)
  * 2. Copy and paste this entire function
- * 3. Run: fixWeeklyCalories()
+ * 3. Run: removeWeeklyCalories()
  */
 
-async function fixWeeklyCalories() {
-  console.log('🔧 Fixing weekly calories data...');
+async function removeWeeklyCalories() {
+  console.log('🔧 Removing weekly calories data...');
 
   // Access the database
   const db = window.db || (await import('./src/services/database.service')).db;
 
   const activities = await db.dailyActivities.toArray();
-  let fixedCount = 0;
+  let removedCount = 0;
 
   for (const activity of activities) {
-    // If total calories > 5000, it's weekly data that needs to be divided by 7
+    // If total calories > 5000, it's weekly data that should be removed
     if (activity.totalCalories > 5000) {
-      const updated = {
-        ...activity,
-        totalCalories: Math.round(activity.totalCalories / 7),
-        activeCalories: Math.round(activity.activeCalories / 7),
-        restingCalories: Math.round(activity.restingCalories / 7),
-        updated_at: new Date().toISOString(),
-      };
-
-      await db.dailyActivities.update(activity.id!, updated);
-      console.log(`✅ Fixed ${activity.date}: ${activity.totalCalories} → ${updated.totalCalories}`);
-      fixedCount++;
+      await db.dailyActivities.delete(activity.id!);
+      console.log(`❌ Removed ${activity.date}: ${activity.totalCalories} calories (weekly average)`);
+      removedCount++;
     }
   }
 
-  console.log(`\n✅ Fixed ${fixedCount} activities with weekly calories data`);
-  return fixedCount;
+  console.log(`\n✅ Removed ${removedCount} activities with weekly calories data`);
+  console.log('💡 Tip: Re-import with daily/monthly Garmin exports for accurate data');
+  return removedCount;
 }

@@ -94,16 +94,16 @@ class GarminImportService {
 
   /**
    * Parse Calories CSV
-   * Supports both daily and weekly formats:
+   * Only accepts daily data - weekly summaries are skipped
    * - Daily: ,Active Calories,Resting Calories,Total
    *          10/31/2024,707,2143,2850
-   * - Weekly: ,Active Calories,Resting Calories,Total
-   *           10/31/2024,4950,15036,19986
+   * - Weekly (SKIPPED): ,Active Calories,Resting Calories,Total
+   *                     10/31/2024,4950,15036,19986
    */
   private parseCaloriesCSV(lines: string[]): ParsedGarminData[] {
     const result: ParsedGarminData[] = [];
 
-    // Detect if data is weekly or daily by checking first data row
+    // Detect if data is weekly by checking total calories and date intervals
     let isWeeklyData = false;
     if (lines.length > 1) {
       const firstDataParts = lines[1].split(',');
@@ -114,9 +114,10 @@ class GarminImportService {
       }
     }
 
-    const divisor = isWeeklyData ? 7 : 1;
     if (isWeeklyData) {
-      console.log('📊 Detected weekly calories data, converting to daily averages');
+      console.warn('⚠️ Skipping weekly calories data - please download daily/monthly exports for accurate data');
+      console.warn('   Tip: In Garmin Connect, download 1-month periods instead of full year for daily values');
+      return result; // Return empty array - skip this file
     }
 
     for (let i = 1; i < lines.length; i++) {
@@ -133,9 +134,9 @@ class GarminImportService {
       result.push({
         date,
         calories: {
-          active: Math.round(active / divisor),
-          resting: Math.round(resting / divisor),
-          total: Math.round(total / divisor),
+          active: Math.round(active),
+          resting: Math.round(resting),
+          total: Math.round(total),
         },
       });
     }
