@@ -94,11 +94,30 @@ class GarminImportService {
 
   /**
    * Parse Calories CSV
-   * Format: ,Active Calories,Resting Calories,Total
-   *         10/31/2024,4950,15036,19986
+   * Supports both daily and weekly formats:
+   * - Daily: ,Active Calories,Resting Calories,Total
+   *          10/31/2024,707,2143,2850
+   * - Weekly: ,Active Calories,Resting Calories,Total
+   *           10/31/2024,4950,15036,19986
    */
   private parseCaloriesCSV(lines: string[]): ParsedGarminData[] {
     const result: ParsedGarminData[] = [];
+
+    // Detect if data is weekly or daily by checking first data row
+    let isWeeklyData = false;
+    if (lines.length > 1) {
+      const firstDataParts = lines[1].split(',');
+      if (firstDataParts.length >= 4) {
+        const totalCalories = parseFloat(firstDataParts[3]) || 0;
+        // If total > 5000, it's likely weekly data (normal daily is 1500-3500)
+        isWeeklyData = totalCalories > 5000;
+      }
+    }
+
+    const divisor = isWeeklyData ? 7 : 1;
+    if (isWeeklyData) {
+      console.log('📊 Detected weekly calories data, converting to daily averages');
+    }
 
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(',');
@@ -107,12 +126,16 @@ class GarminImportService {
       const date = this.parseDate(parts[0]);
       if (!date) continue;
 
+      const active = parseFloat(parts[1]) || 0;
+      const resting = parseFloat(parts[2]) || 0;
+      const total = parseFloat(parts[3]) || 0;
+
       result.push({
         date,
         calories: {
-          active: parseFloat(parts[1]) || 0,
-          resting: parseFloat(parts[2]) || 0,
-          total: parseFloat(parts[3]) || 0,
+          active: Math.round(active / divisor),
+          resting: Math.round(resting / divisor),
+          total: Math.round(total / divisor),
         },
       });
     }
