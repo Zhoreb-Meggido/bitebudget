@@ -47,12 +47,23 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
               }
             }, 200);
           } else {
-            setError('Geen camera gevonden');
+            setError('📷 Geen camera gevonden op dit apparaat.');
           }
         })
         .catch((err) => {
-          console.error('Error getting cameras:', err);
-          setError('Geen toegang tot camera');
+          // Only log to console for debugging, don't show to user by default
+          console.log('Camera detection:', err.name, err.message);
+
+          // User-friendly error messages
+          if (err.name === 'NotFoundError' || err.message?.includes('not be found')) {
+            setError('📷 Geen camera beschikbaar. Gebruik een mobiel apparaat of laptop met camera, of probeer de OpenFoodFacts zoekfunctie.');
+          } else if (err.name === 'NotAllowedError') {
+            setError('❌ Camera toegang geweigerd. Geef toestemming in je browser instellingen en probeer opnieuw.');
+          } else if (err.name === 'NotReadableError') {
+            setError('⚠️ Camera is al in gebruik door een andere app. Sluit deze eerst en probeer opnieuw.');
+          } else {
+            setError('📷 Camera niet beschikbaar op dit apparaat. Gebruik de OpenFoodFacts zoekfunctie of voeg handmatig een product toe.');
+          }
         });
     }
 
