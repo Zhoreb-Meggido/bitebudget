@@ -3,9 +3,9 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  // Base path for GitHub Pages (repo name)
-  base: '/bitebudget/',
+export default defineConfig(({ command }) => ({
+  // Base path for GitHub Pages (repo name) - only in production
+  base: command === 'build' ? '/bitebudget/' : '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -49,4 +49,4 @@ export default defineConfig({
       }
     }
   }
-})
+}))
