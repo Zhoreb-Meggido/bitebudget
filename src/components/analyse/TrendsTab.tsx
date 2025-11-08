@@ -106,7 +106,7 @@ export function TrendsTab() {
     };
   }, [filteredActivities]);
 
-  // Prepare chart data
+  // Prepare chart data with multiple Y-axes
   const chartData = useMemo(() => {
     const labels = filteredActivities.map(a => {
       const date = new Date(a.date);
@@ -117,31 +117,40 @@ export function TrendsTab() {
       .filter(metric => selectedMetrics.has(metric.key))
       .map(metric => {
         let data: number[];
+        let yAxisID: string;
 
         switch (metric.key) {
           case 'steps':
             data = filteredActivities.map(a => a.steps || 0);
+            yAxisID = 'y-steps';
             break;
           case 'calories':
             data = filteredActivities.map(a => a.totalCalories || 0);
+            yAxisID = 'y-calories';
             break;
           case 'intensityMinutes':
             data = filteredActivities.map(a => a.intensityMinutes || 0);
+            yAxisID = 'y-minutes';
             break;
           case 'restingHeartRate':
             data = filteredActivities.map(a => a.restingHeartRate || 0);
+            yAxisID = 'y-heartrate';
             break;
           case 'stressLevel':
             data = filteredActivities.map(a => a.stressLevel || 0);
+            yAxisID = 'y-stress';
             break;
           case 'sleepDuration':
             data = filteredActivities.map(a => (a.sleepSeconds || 0) / 3600); // Convert to hours
+            yAxisID = 'y-sleep';
             break;
           case 'distance':
             data = filteredActivities.map(a => (a.distance || 0) / 1000); // Convert to km
+            yAxisID = 'y-distance';
             break;
           default:
             data = [];
+            yAxisID = 'y';
         }
 
         return {
@@ -151,50 +160,194 @@ export function TrendsTab() {
           backgroundColor: metric.color + '20',
           tension: 0.3,
           borderWidth: 2,
+          yAxisID,
         };
       });
 
     return { labels, datasets };
   }, [filteredActivities, selectedMetrics]);
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index' as const,
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          usePointStyle: true,
-          padding: 15,
-        },
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
-        },
-      },
+  const chartOptions = useMemo(() => {
+    // Build scales dynamically based on selected metrics
+    const scales: any = {
       x: {
         grid: {
           display: false,
         },
       },
-    },
-  };
+    };
+
+    // Add Y-axis for each selected metric
+    if (selectedMetrics.has('steps')) {
+      scales['y-steps'] = {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Stappen',
+          color: 'rgb(59, 130, 246)',
+        },
+        ticks: {
+          color: 'rgb(59, 130, 246)',
+        },
+        grid: {
+          color: 'rgba(59, 130, 246, 0.1)',
+        },
+      };
+    }
+
+    if (selectedMetrics.has('calories')) {
+      scales['y-calories'] = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Calorieën',
+          color: 'rgb(239, 68, 68)',
+        },
+        ticks: {
+          color: 'rgb(239, 68, 68)',
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      };
+    }
+
+    if (selectedMetrics.has('intensityMinutes')) {
+      scales['y-minutes'] = {
+        type: 'linear',
+        display: true,
+        position: selectedMetrics.has('calories') ? 'right' : 'right',
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Intensity Min',
+          color: 'rgb(147, 51, 234)',
+        },
+        ticks: {
+          color: 'rgb(147, 51, 234)',
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      };
+    }
+
+    if (selectedMetrics.has('restingHeartRate')) {
+      scales['y-heartrate'] = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        min: 40,
+        max: 100,
+        title: {
+          display: true,
+          text: 'HR (bpm)',
+          color: 'rgb(236, 72, 153)',
+        },
+        ticks: {
+          color: 'rgb(236, 72, 153)',
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      };
+    }
+
+    if (selectedMetrics.has('stressLevel')) {
+      scales['y-stress'] = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        min: 0,
+        max: 100,
+        title: {
+          display: true,
+          text: 'Stress',
+          color: 'rgb(245, 158, 11)',
+        },
+        ticks: {
+          color: 'rgb(245, 158, 11)',
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      };
+    }
+
+    if (selectedMetrics.has('sleepDuration')) {
+      scales['y-sleep'] = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        min: 0,
+        max: 12,
+        title: {
+          display: true,
+          text: 'Slaap (uur)',
+          color: 'rgb(34, 197, 94)',
+        },
+        ticks: {
+          color: 'rgb(34, 197, 94)',
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      };
+    }
+
+    if (selectedMetrics.has('distance')) {
+      scales['y-distance'] = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Afstand (km)',
+          color: 'rgb(14, 165, 233)',
+        },
+        ticks: {
+          color: 'rgb(14, 165, 233)',
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      };
+    }
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index' as const,
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          position: 'bottom' as const,
+          labels: {
+            usePointStyle: true,
+            padding: 15,
+          },
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleColor: '#fff',
+          bodyColor: '#fff',
+          borderColor: 'rgba(255, 255, 255, 0.1)',
+          borderWidth: 1,
+        },
+      },
+      scales,
+    };
+  }, [selectedMetrics]);
 
   const toggleMetric = (key: MetricKey) => {
     setSelectedMetrics(prev => {
