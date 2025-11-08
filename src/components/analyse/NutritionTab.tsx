@@ -397,14 +397,13 @@ export function NutritionTab() {
           </select>
         </div>
 
-        <div className="p-6">
-          {heatmapData.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">Geen data beschikbaar</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <div className="inline-block min-w-full">
-                {/* Day labels */}
-                <div className="flex gap-1 mb-2">
+        {heatmapData.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">Geen data beschikbaar</div>
+        ) : (
+          <div className="overflow-x-auto p-6">
+            <div className="inline-block min-w-full">
+              {/* Day labels */}
+              <div className="flex gap-1 mb-2">
                   <div className="w-12"></div>
                   {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map(day => (
                     <div key={day} className="w-10 text-center text-xs text-gray-600 font-medium">
@@ -466,7 +465,6 @@ export function NutritionTab() {
               </div>
             </div>
           )}
-        </div>
       </div>
 
       {/* Weekday Trends */}
@@ -476,9 +474,8 @@ export function NutritionTab() {
           <p className="text-sm text-gray-600 mt-1">Gemiddelden gebaseerd op de laatste 60 dagen</p>
         </div>
 
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {[1, 2, 3, 4, 5, 6, 0].map(dayNum => {
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {[1, 2, 3, 4, 5, 6, 0].map(dayNum => {
               const weekday = weekdayTrends[dayNum as keyof typeof weekdayTrends];
               if (weekday.days.length === 0) return null;
 
@@ -593,7 +590,6 @@ export function NutritionTab() {
                 </div>
               );
             })}
-          </div>
         </div>
       </div>
     </div>
