@@ -33,7 +33,30 @@ function App() {
       // Setup install prompt handler
       setupInstallPrompt();
     } else {
-      console.log('🔧 Development mode: Service worker disabled');
+      // Development mode: actively unregister any existing service workers
+      console.log('🔧 Development mode: Unregistering service workers...');
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((registration) => {
+            registration.unregister().then((success) => {
+              if (success) {
+                console.log('🗑️ Service worker unregistered successfully');
+              }
+            });
+          });
+        });
+
+        // Also clear any caches
+        if ('caches' in window) {
+          caches.keys().then((cacheNames) => {
+            cacheNames.forEach((cacheName) => {
+              caches.delete(cacheName);
+              console.log('🗑️ Cache deleted:', cacheName);
+            });
+          });
+        }
+      }
     }
   }, []);
 
