@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { NutritionTab } from './NutritionTab';
 import { ActivityTab } from './ActivityTab';
 import { BalanceTab } from './BalanceTab';
+import { TrendsTab } from './TrendsTab';
 
-type TabType = 'nutrition' | 'activity' | 'balance';
+type TabType = 'nutrition' | 'activity' | 'balance' | 'trends';
 
 export function AnalysePageWithTabs() {
   const [activeTab, setActiveTab] = useState<TabType>('nutrition');
@@ -12,6 +13,7 @@ export function AnalysePageWithTabs() {
     { id: 'nutrition' as TabType, label: 'Voeding', icon: '🍎' },
     { id: 'activity' as TabType, label: 'Activiteit', icon: '🏃' },
     { id: 'balance' as TabType, label: 'Balance', icon: '⚖️' },
+    { id: 'trends' as TabType, label: 'Trends', icon: '📊' },
   ];
 
   return (
@@ -50,6 +52,7 @@ export function AnalysePageWithTabs() {
           {activeTab === 'nutrition' && <NutritionTab />}
           {activeTab === 'activity' && <ActivityTab />}
           {activeTab === 'balance' && <BalanceTab />}
+          {activeTab === 'trends' && <TrendsTab />}
         </div>
       </div>
     </div>
