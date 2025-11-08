@@ -321,19 +321,35 @@ class SyncService {
     const localWeightsMap = new Map(localWeights.map(w => [w.date, w]));
 
     // Merge entries - add cloud entries that don't exist locally or are newer
+    let entriesAdded = 0;
+    let entriesUpdated = 0;
+    let entriesSkipped = 0;
+
     for (const cloudEntry of cloudData.entries) {
       const key = `${cloudEntry.date}-${cloudEntry.time}-${cloudEntry.name}`;
       const localEntry = localEntriesMap.get(key);
 
       if (!localEntry) {
         // New entry from cloud
-        await entriesService.addEntry(cloudEntry);
+        console.log(`➕ Adding new entry from cloud: ${key}`);
+        try {
+          await entriesService.addEntry(cloudEntry);
+          entriesAdded++;
+        } catch (err) {
+          console.error(`❌ Failed to add entry ${key}:`, err);
+        }
       } else if (cloudEntry.updated_at && localEntry.updated_at &&
                  new Date(cloudEntry.updated_at) > new Date(localEntry.updated_at)) {
         // Cloud entry is newer - propagate all changes including deletion
+        console.log(`🔄 Updating entry (cloud is newer): ${key}`);
         await entriesService.updateEntry(localEntry.id!, cloudEntry);
+        entriesUpdated++;
+      } else {
+        entriesSkipped++;
       }
     }
+
+    console.log(`✅ Entries merge complete: ${entriesAdded} added, ${entriesUpdated} updated, ${entriesSkipped} skipped`);
 
     // Merge products - add cloud products that don't exist locally or are newer
     for (const cloudProduct of cloudData.products) {
