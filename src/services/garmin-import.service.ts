@@ -39,6 +39,7 @@ class GarminImportService {
    * Parse multiple Garmin CSV files and merge data by date
    */
   async parseMultipleFiles(files: File[]): Promise<ParsedGarminData[]> {
+    console.log(`🔍 Starting to parse ${files.length} file(s)`);
     const allData = new Map<string, ParsedGarminData>();
 
     for (const file of files) {
@@ -46,15 +47,20 @@ class GarminImportService {
         const text = await file.text();
         const fileData = this.parseCSV(text, file.name);
 
+        console.log(`✅ Parsed ${fileData.length} records from ${file.name}`);
+
         // Merge data by date
         for (const dayData of fileData) {
           const existing = allData.get(dayData.date) || { date: dayData.date };
           allData.set(dayData.date, { ...existing, ...dayData });
         }
       } catch (error) {
-        console.error(`Error parsing ${file.name}:`, error);
+        console.error(`❌ Error parsing ${file.name}:`, error);
       }
     }
+
+    const totalRecords = Array.from(allData.values()).length;
+    console.log(`📊 Total merged records: ${totalRecords}`);
 
     return Array.from(allData.values()).sort((a, b) => a.date.localeCompare(b.date));
   }
@@ -65,6 +71,8 @@ class GarminImportService {
   private parseCSV(text: string, filename: string): ParsedGarminData[] {
     const lines = text.split('\n').filter(line => line.trim());
 
+    console.log(`📄 Parsing file: ${filename}`);
+
     if (lines.length < 2) {
       throw new Error('CSV file is empty or invalid');
     }
@@ -73,23 +81,33 @@ class GarminImportService {
     const headers = lines[0].toLowerCase();
     const filenameLower = filename.toLowerCase();
 
+    console.log(`📋 Headers: ${headers.substring(0, 200)}...`);
+
     if (headers.includes('active calories')) {
+      console.log('✅ Detected: Calories CSV');
       return this.parseCaloriesCSV(lines);
     } else if (headers.includes('intensity minutes')) {
+      console.log('✅ Detected: Intensity CSV');
       return this.parseIntensityCSV(lines);
     } else if (headers.includes('stress')) {
+      console.log('✅ Detected: Stress CSV');
       return this.parseStressCSV(lines);
     } else if (headers.includes('steps') || (headers.includes('actual') && headers.includes('goal')) || filenameLower.includes('steps')) {
+      console.log('✅ Detected: Steps CSV');
       return this.parseStepsCSV(lines);
     } else if (headers.includes('distance')) {
+      console.log('✅ Detected: Distance CSV');
       return this.parseDistanceCSV(lines);
     } else if (headers.includes('heart rate') || headers.includes('resting hr')) {
+      console.log('✅ Detected: Heart Rate CSV');
       return this.parseHeartRateCSV(lines);
     } else if (headers.includes('sleep') || headers.includes('avg duration')) {
+      console.log('✅ Detected: Sleep CSV');
       return this.parseSleepCSV(lines);
     }
 
     // Try generic parsing as fallback
+    console.log('⚠️ Unknown format, using generic parser');
     return this.parseGenericCSV(lines);
   }
 
@@ -305,8 +323,10 @@ class GarminImportService {
 
     // Detect format based on headers
     if (headers.includes('sleep score') || headers.includes('body battery')) {
+      console.log('🛏️ Parsing as daily sleep format (has sleep score or body battery)');
       return this.parseSleepDailyCSV(lines);
     } else {
+      console.log('🛏️ Parsing as weekly sleep format');
       return this.parseSleepWeeklyCSV(lines);
     }
   }
