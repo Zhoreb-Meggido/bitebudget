@@ -182,10 +182,10 @@ export function BalanceTab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
-          <strong>Calorie Balance:</strong> Inname (voeding) - Verbruik (Garmin).
+          <strong>Calorie Balans:</strong> Inname (voeding) - Verbruik (Garmin).
           Negatief = calorie tekort (afvallen), Positief = calorie overschot (aankomen).
         </p>
       </div>
@@ -199,7 +199,7 @@ export function BalanceTab() {
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-500">Ø Balance</div>
+            <div className="text-sm font-medium text-gray-500">Ø Balans</div>
             <div className={`mt-2 text-3xl font-bold ${stats.avgBalance < 0 ? 'text-green-600' : 'text-orange-600'}`}>
               {stats.avgBalance > 0 ? '+' : ''}{stats.avgBalance}
             </div>
@@ -245,30 +245,30 @@ export function BalanceTab() {
           </div>
         </div>
 
-        <div className="p-6">
-          {chartData.labels.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p className="text-lg mb-2">Geen complete data beschikbaar</p>
-              <p className="text-sm">Zorg dat je zowel voeding als activiteit data hebt voor dezelfde dagen</p>
-            </div>
-          ) : (
-            <>
+        {chartData.labels.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">
+            <p className="text-lg mb-2">Geen complete data beschikbaar</p>
+            <p className="text-sm">Zorg dat je zowel voeding als activiteit data hebt voor dezelfde dagen</p>
+          </div>
+        ) : (
+          <>
+            <div className="p-6 pb-2">
               <div className="h-[300px] sm:h-[400px]">
                 <Line data={chartData} options={chartOptions} />
               </div>
-              {/* Mobile hint */}
-              <div className="mt-4 text-xs text-gray-500 text-center sm:hidden">
-                💡 Tip: Tik op de grafiek voor details per datum
-              </div>
-            </>
-          )}
-        </div>
+            </div>
+            {/* Mobile hint */}
+            <div className="px-6 pb-6 text-xs text-gray-500 text-center sm:hidden">
+              💡 Tip: Tik op de grafiek voor details per datum
+            </div>
+          </>
+        )}
       </div>
 
       {/* Balance Table */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Dagelijkse Calorie Balance</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Dagelijkse Calorie Balans</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -277,7 +277,7 @@ export function BalanceTab() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inname</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verbruik</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balans</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
               </tr>
             </thead>
