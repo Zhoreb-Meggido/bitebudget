@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { useEntries, useProducts, useWeights, useSettings, usePortions, useTemplates } from '@/hooks';
+import { useEntries, useProducts, useWeights, useSettings, usePortions, useTemplates, useActivities } from '@/hooks';
 import { entriesService } from '@/services/entries.service';
 import { productsService } from '@/services/products.service';
 import { weightsService } from '@/services/weights.service';
 import { settingsService } from '@/services/settings.service';
 import { portionsService } from '@/services/portions.service';
 import { templatesService } from '@/services/templates.service';
+import { activitiesService } from '@/services/activities.service';
 import { downloadTextFile } from '@/utils/download.utils';
-import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity } from '@/types';
 import { GarminImportSection } from './GarminImportSection';
 
 interface BackupData {
@@ -19,6 +20,7 @@ interface BackupData {
   settings?: UserSettings;
   productPortions?: ProductPortion[];
   mealTemplates?: MealTemplate[];
+  dailyActivities?: DailyActivity[];
 }
 
 export function ImportExportTab() {
@@ -28,6 +30,7 @@ export function ImportExportTab() {
   const { settings, reloadSettings } = useSettings();
   const { portions, reloadPortions } = usePortions();
   const { templates, reloadTemplates } = useTemplates();
+  const { activities, reloadActivities } = useActivities();
 
   const [importing, setImporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string>('');
@@ -36,7 +39,7 @@ export function ImportExportTab() {
   // Export all data
   const handleExportAll = () => {
     const backup: BackupData = {
-      version: '1.3',
+      version: '1.5',
       exportDate: new Date().toISOString(),
       entries,
       products,
@@ -44,6 +47,7 @@ export function ImportExportTab() {
       settings,
       productPortions: portions,
       mealTemplates: templates,
+      dailyActivities: activities,
     };
 
     const json = JSON.stringify(backup, null, 2);
@@ -126,6 +130,20 @@ export function ImportExportTab() {
     setTimeout(() => setExportStatus(''), 3000);
   };
 
+  const handleExportActivities = () => {
+    const backup: BackupData = {
+      version: '1.5',
+      exportDate: new Date().toISOString(),
+      dailyActivities: activities,
+    };
+
+    const json = JSON.stringify(backup, null, 2);
+    const filename = `voedseljournaal-activities-${new Date().toISOString().split('T')[0]}.json`;
+    downloadTextFile(json, filename);
+    setExportStatus('✓ Activiteiten geëxporteerd');
+    setTimeout(() => setExportStatus(''), 3000);
+  };
+
   // Import data
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -197,6 +215,18 @@ export function ImportExportTab() {
         console.log(`✅ Imported ${data.mealTemplates.length} templates`);
       }
 
+      // Import activities (v1.5+)
+      if (data.dailyActivities && data.dailyActivities.length > 0) {
+        for (const activity of data.dailyActivities) {
+          try {
+            await activitiesService.addOrUpdateActivity(activity);
+          } catch (err) {
+            console.warn('Failed to import activity:', activity.date, err);
+          }
+        }
+        console.log(`✅ Imported ${data.dailyActivities.length} activities`);
+      }
+
       // Reload all data
       await Promise.all([
         reloadEntries(),
@@ -205,6 +235,7 @@ export function ImportExportTab() {
         reloadSettings(),
         reloadPortions(),
         reloadTemplates(),
+        reloadActivities(),
       ]);
 
       const summary = [
@@ -245,21 +276,23 @@ export function ImportExportTab() {
     if (!doubleCheck) return;
 
     try {
-      const [entriesCount, productsCount, weightsCount, portionsCount, templatesCount] = await Promise.all([
+      const [entriesCount, productsCount, weightsCount, portionsCount, templatesCount, activitiesCount] = await Promise.all([
         entriesService.clearAllEntries(),
         productsService.clearAllProducts(),
         weightsService.deleteAllWeights(),
         portionsService.clearAllPortions(),
         templatesService.clearAllTemplates(),
+        activitiesService.clearAllActivities(),
       ]);
 
       await Promise.all([
         reloadEntries(),
         reloadProducts(),
         reloadWeights(),
+        reloadActivities(),
       ]);
 
-      alert(`Alle data is verwijderd:\n- ${entriesCount} entries\n- ${productsCount} producten\n- ${weightsCount} gewichten\n- ${portionsCount} porties\n- ${templatesCount} templates`);
+      alert(`Alle data is verwijderd:\n- ${entriesCount} entries\n- ${productsCount} producten\n- ${weightsCount} gewichten\n- ${portionsCount} porties\n- ${templatesCount} templates\n- ${activitiesCount} activiteiten`);
     } catch (error) {
       console.error('Delete failed:', error);
       alert('Fout bij verwijderen van data');
@@ -295,7 +328,7 @@ export function ImportExportTab() {
             <div className="min-w-0 flex-1 mr-3">
               <h3 className="font-medium text-gray-900 text-sm sm:text-base">Volledige Backup</h3>
               <p className="text-xs sm:text-sm text-gray-600 truncate">
-                {entries.length} maaltijden, {products.length} producten, {weights.length} gewichten, {portions.length} porties, {templates.length} templates
+                {entries.length} maaltijden, {products.length} producten, {weights.length} gewichten, {portions.length} porties, {templates.length} templates, {activities.length} activiteiten
               </p>
             </div>
             <button
@@ -365,6 +398,19 @@ export function ImportExportTab() {
             </div>
             <button
               onClick={handleExportTemplates}
+              className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
+            >
+              Exporteer
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Activiteiten</h3>
+              <p className="text-xs sm:text-sm text-gray-600">{activities.length} dagen</p>
+            </div>
+            <button
+              onClick={handleExportActivities}
               className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
             >
               Exporteer
