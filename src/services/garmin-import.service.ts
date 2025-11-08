@@ -587,22 +587,48 @@ class GarminImportService {
           continue; // Skip empty days
         }
 
-        const activity: Omit<DailyActivity, 'id' | 'created_at' | 'updated_at'> = {
+        // Build activity object with only fields that have data
+        // This prevents overwriting existing data with zeros/undefined
+        const activity: Partial<Omit<DailyActivity, 'id' | 'created_at' | 'updated_at'>> & { date: string } = {
           date: dayData.date,
-          totalCalories: dayData.calories?.total || 0,
-          activeCalories: dayData.calories?.active || 0,
-          restingCalories: dayData.calories?.resting || 0,
-          steps: dayData.steps || 0,
-          intensityMinutes: dayData.intensityMinutes,
-          distanceMeters: dayData.distance,
-          stressLevel: dayData.stress,
-          heartRateResting: dayData.heartRate?.resting,
-          heartRateMax: dayData.heartRate?.max,
-          sleepSeconds: dayData.sleepSeconds,
-          bodyBattery: dayData.bodyBattery,
         };
 
-        await activitiesService.addOrUpdateActivity(activity);
+        // Only add calorie fields if we have calorie data
+        if (dayData.calories) {
+          activity.totalCalories = dayData.calories.total || 0;
+          activity.activeCalories = dayData.calories.active || 0;
+          activity.restingCalories = dayData.calories.resting || 0;
+        }
+
+        // Only add steps if we have steps data
+        if (dayData.steps && dayData.steps > 0) {
+          activity.steps = dayData.steps;
+        }
+
+        // Only add other fields if they have data
+        if (dayData.intensityMinutes !== undefined) {
+          activity.intensityMinutes = dayData.intensityMinutes;
+        }
+        if (dayData.distance !== undefined) {
+          activity.distanceMeters = dayData.distance;
+        }
+        if (dayData.stress !== undefined) {
+          activity.stressLevel = dayData.stress;
+        }
+        if (dayData.heartRate?.resting !== undefined) {
+          activity.heartRateResting = dayData.heartRate.resting;
+        }
+        if (dayData.heartRate?.max !== undefined) {
+          activity.heartRateMax = dayData.heartRate.max;
+        }
+        if (dayData.sleepSeconds !== undefined) {
+          activity.sleepSeconds = dayData.sleepSeconds;
+        }
+        if (dayData.bodyBattery !== undefined) {
+          activity.bodyBattery = dayData.bodyBattery;
+        }
+
+        await activitiesService.addOrUpdateActivity(activity as Omit<DailyActivity, 'id' | 'created_at' | 'updated_at'>);
         imported++;
       } catch (error: any) {
         const errorMsg = error?.message || error?.toString() || 'Unknown error';
