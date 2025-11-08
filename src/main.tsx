@@ -22,15 +22,19 @@ function App() {
 
   // Register PWA service worker and install prompt
   useEffect(() => {
-    // Register service worker
-    registerServiceWorker().then((registration) => {
-      if (registration) {
-        console.log('✅ PWA ready for offline use');
-      }
-    });
+    // Only register service worker in production (not during development)
+    if (import.meta.env.PROD) {
+      registerServiceWorker().then((registration) => {
+        if (registration) {
+          console.log('✅ PWA ready for offline use');
+        }
+      });
 
-    // Setup install prompt handler
-    setupInstallPrompt();
+      // Setup install prompt handler
+      setupInstallPrompt();
+    } else {
+      console.log('🔧 Development mode: Service worker disabled');
+    }
   }, []);
 
   if (error) {
