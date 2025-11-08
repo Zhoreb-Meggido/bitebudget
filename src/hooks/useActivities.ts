@@ -1,0 +1,50 @@
+/**
+ * useActivities Hook - Beheer daily activities (Garmin data)
+ */
+
+import { useState, useEffect, useCallback } from 'react';
+import { activitiesService } from '@/services/activities.service';
+import type { DailyActivity } from '@/types';
+
+export function useActivities() {
+  const [activities, setActivities] = useState<DailyActivity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadActivities = useCallback(async () => {
+    setIsLoading(true);
+    const data = await activitiesService.getAllActivities();
+    setActivities(data);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadActivities();
+
+    // Listen for sync events to refresh data
+    const handleSync = () => {
+      console.log('🔄 useActivities: Reloading after sync');
+      loadActivities();
+    };
+    window.addEventListener('data-synced', handleSync);
+
+    return () => {
+      window.removeEventListener('data-synced', handleSync);
+    };
+  }, [loadActivities]);
+
+  const getActivityByDate = useCallback((date: string) => {
+    return activities.find(a => a.date === date);
+  }, [activities]);
+
+  const getActivitiesBetweenDates = useCallback((startDate: string, endDate: string) => {
+    return activities.filter(a => a.date >= startDate && a.date <= endDate);
+  }, [activities]);
+
+  return {
+    activities,
+    isLoading,
+    getActivityByDate,
+    getActivitiesBetweenDates,
+    reloadActivities: loadActivities,
+  };
+}
