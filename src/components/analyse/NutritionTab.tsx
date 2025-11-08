@@ -276,7 +276,7 @@ export function NutritionTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Week Comparison */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">

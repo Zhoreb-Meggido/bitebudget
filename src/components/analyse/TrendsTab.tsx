@@ -387,7 +387,7 @@ export function TrendsTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       {/* Quick Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
@@ -490,29 +490,29 @@ export function TrendsTab() {
           </div>
         </div>
 
-        <div className="p-6">
-          {filteredActivities.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p className="text-lg mb-2">Geen activity data beschikbaar</p>
-              <p className="text-sm">Importeer Garmin CSV data om trends te zien</p>
-            </div>
-          ) : selectedMetrics.size === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p className="text-lg mb-2">Selecteer minimaal één metric</p>
-              <p className="text-sm">Klik op de metric buttons hierboven</p>
-            </div>
-          ) : (
-            <>
+        {filteredActivities.length === 0 ? (
+          <div className="p-6 text-center text-gray-500">
+            <p className="text-lg mb-2">Geen activity data beschikbaar</p>
+            <p className="text-sm">Importeer Garmin CSV data om trends te zien</p>
+          </div>
+        ) : selectedMetrics.size === 0 ? (
+          <div className="p-6 text-center text-gray-500">
+            <p className="text-lg mb-2">Selecteer minimaal één metric</p>
+            <p className="text-sm">Klik op de metric buttons hierboven</p>
+          </div>
+        ) : (
+          <>
+            <div className="p-6 pb-2">
               <div className="h-[400px] sm:h-[400px]">
                 <Line data={chartData} options={chartOptions} />
               </div>
-              {/* Mobile hint */}
-              <div className="mt-4 text-xs text-gray-500 text-center sm:hidden">
-                💡 Tip: Tik op de grafiek voor details per datum
-              </div>
-            </>
-          )}
-        </div>
+            </div>
+            {/* Mobile hint */}
+            <div className="px-6 pb-6 text-xs text-gray-500 text-center sm:hidden">
+              💡 Tip: Tik op de grafiek voor details per datum
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
