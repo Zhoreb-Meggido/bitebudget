@@ -276,9 +276,9 @@ export function NutritionTab() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div>
       {/* Week Comparison */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="border-b border-gray-200">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Week Vergelijking</h2>
         </div>
@@ -377,7 +377,7 @@ export function NutritionTab() {
       </div>
 
       {/* Calendar Heatmap */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="border-b border-gray-200">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">Kalender Overzicht</h2>
 
@@ -468,7 +468,7 @@ export function NutritionTab() {
       </div>
 
       {/* Weekday Trends */}
-      <div className="bg-white rounded-lg shadow">
+      <div>
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Trends per Weekdag</h2>
           <p className="text-sm text-gray-600 mt-1">Gemiddelden gebaseerd op de laatste 60 dagen</p>

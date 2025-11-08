@@ -182,17 +182,20 @@ export function BalanceTab() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Calorie Balans:</strong> Inname (voeding) - Verbruik (Garmin).
-          Negatief = calorie tekort (afvallen), Positief = calorie overschot (aankomen).
-        </p>
+    <div>
+      <div className="p-6 border-b border-gray-200">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-sm text-blue-800">
+            <strong>Calorie Balans:</strong> Inname (voeding) - Verbruik (Garmin).
+            Negatief = calorie tekort (afvallen), Positief = calorie overschot (aankomen).
+          </p>
+        </div>
       </div>
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-6 border-b border-gray-200">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-500">Dagen Compleet</div>
             <div className="mt-2 text-3xl font-bold text-gray-900">{stats.totalDays}</div>
@@ -215,11 +218,12 @@ export function BalanceTab() {
             <div className="text-sm font-medium text-gray-500">Dagen Overschot</div>
             <div className="mt-2 text-3xl font-bold text-orange-600">{stats.daysSurplus}</div>
           </div>
+          </div>
         </div>
       )}
 
       {/* Balance Chart */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="border-b border-gray-200">
         <div className="p-6 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h3 className="text-lg font-semibold text-gray-900">Inname vs Verbruik</h3>
@@ -266,7 +270,7 @@ export function BalanceTab() {
       </div>
 
       {/* Balance Table */}
-      <div className="bg-white rounded-lg shadow">
+      <div>
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Dagelijkse Calorie Balans</h3>
         </div>
