@@ -1,5 +1,26 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useEntries, useActivities } from '@/hooks';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface DayBalance {
   date: string;
@@ -11,6 +32,7 @@ interface DayBalance {
 export function BalanceTab() {
   const { entries } = useEntries();
   const { activities, isLoading: loading } = useActivities();
+  const [chartPeriod, setChartPeriod] = useState<7 | 14 | 30>(30);
 
   // Combine food intake with activity expenditure
   const balanceData = useMemo(() => {
@@ -65,6 +87,87 @@ export function BalanceTab() {
     };
   }, [balanceData]);
 
+  // Prepare chart data for the selected period
+  const chartData = useMemo(() => {
+    // Filter data for the selected period, sorted chronologically (oldest first)
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - chartPeriod);
+    const cutoff = cutoffDate.toISOString().split('T')[0];
+
+    const filteredData = balanceData
+      .filter(d => d.date >= cutoff && d.intake > 0 && d.expenditure > 0)
+      .sort((a, b) => a.date.localeCompare(b.date)); // Oldest first for chart
+
+    const labels = filteredData.map(d => {
+      const date = new Date(d.date);
+      return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
+    });
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Inname (kcal)',
+          data: filteredData.map(d => d.intake),
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.3,
+          borderWidth: 2,
+          fill: false,
+        },
+        {
+          label: 'Verbruik (kcal)',
+          data: filteredData.map(d => d.expenditure),
+          borderColor: 'rgb(249, 115, 22)',
+          backgroundColor: 'rgba(249, 115, 22, 0.1)',
+          tension: 0.3,
+          borderWidth: 2,
+          fill: false,
+        },
+      ],
+    };
+  }, [balanceData, chartPeriod]);
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          usePointStyle: true,
+          padding: 15,
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Calorieën',
+        },
+      },
+      x: {
+        grid: {
+          display: false,
+        },
+      },
+    },
+  };
+
   if (loading) {
     return <div className="p-6 text-center text-gray-500">Laden...</div>;
   }
@@ -89,7 +192,7 @@ export function BalanceTab() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="text-sm font-medium text-gray-500">Dagen Compleet</div>
             <div className="mt-2 text-3xl font-bold text-gray-900">{stats.totalDays}</div>
@@ -114,6 +217,53 @@ export function BalanceTab() {
           </div>
         </div>
       )}
+
+      {/* Balance Chart */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h3 className="text-lg font-semibold text-gray-900">Inname vs Verbruik</h3>
+
+            {/* Period Selector */}
+            <div className="flex gap-2">
+              {[7, 14, 30].map((days) => (
+                <button
+                  key={days}
+                  onClick={() => setChartPeriod(days as typeof chartPeriod)}
+                  className={`
+                    px-4 py-2 rounded-lg font-medium text-sm transition-colors
+                    ${chartPeriod === days
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  {days}d
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {chartData.labels.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p className="text-lg mb-2">Geen complete data beschikbaar</p>
+              <p className="text-sm">Zorg dat je zowel voeding als activiteit data hebt voor dezelfde dagen</p>
+            </div>
+          ) : (
+            <>
+              <div className="h-[300px] sm:h-[400px]">
+                <Line data={chartData} options={chartOptions} />
+              </div>
+              {/* Mobile hint */}
+              <div className="mt-4 text-xs text-gray-500 text-center sm:hidden">
+                💡 Tip: Tik op de grafiek voor details per datum
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Balance Table */}
       <div className="bg-white rounded-lg shadow">
