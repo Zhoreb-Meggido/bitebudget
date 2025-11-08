@@ -321,6 +321,7 @@ class SyncService {
     const localWeightsMap = new Map(localWeights.map(w => [w.date, w]));
 
     // Merge entries - add cloud entries that don't exist locally or are newer
+    console.log(`🍽️ Merging ${cloudData.entries.length} entries from cloud...`);
     let entriesAdded = 0;
     let entriesUpdated = 0;
     let entriesSkipped = 0;
@@ -352,27 +353,44 @@ class SyncService {
     console.log(`✅ Entries merge complete: ${entriesAdded} added, ${entriesUpdated} updated, ${entriesSkipped} skipped`);
 
     // Merge products - add cloud products that don't exist locally or are newer
+    console.log(`🥗 Merging ${cloudData.products.length} products from cloud...`);
+    let productsAdded = 0;
+    let productsUpdated = 0;
+    let productsSkipped = 0;
+
     for (const cloudProduct of cloudData.products) {
       const localProduct = localProductsMap.get(cloudProduct.name);
 
       if (!localProduct) {
         // New product from cloud
         await productsService.addProduct(cloudProduct);
+        productsAdded++;
       } else if (cloudProduct.updated_at && localProduct.updated_at &&
                  new Date(cloudProduct.updated_at) > new Date(localProduct.updated_at)) {
         // Cloud product is newer - propagate all changes including deletion
         await productsService.updateProduct(localProduct.id!, cloudProduct);
+        productsUpdated++;
+      } else {
+        productsSkipped++;
       }
     }
 
+    console.log(`✅ Products merge complete: ${productsAdded} added, ${productsUpdated} updated, ${productsSkipped} skipped`);
+
     // Merge weights - add cloud weights that don't exist locally or are newer
     if (cloudData.weights) {
+      console.log(`⚖️ Merging ${cloudData.weights.length} weights from cloud...`);
+      let weightsAdded = 0;
+      let weightsUpdated = 0;
+      let weightsSkipped = 0;
+
       for (const cloudWeight of cloudData.weights) {
         const localWeight = localWeightsMap.get(cloudWeight.date);
 
         if (!localWeight) {
           // New weight from cloud
           await weightsService.addWeight(cloudWeight);
+          weightsAdded++;
         } else {
           // Determine which is newer: use deleted_at if deleted, otherwise created_at
           const cloudTimestamp = cloudWeight.deleted && cloudWeight.deleted_at
@@ -385,9 +403,14 @@ class SyncService {
           if (cloudTimestamp && localTimestamp && new Date(cloudTimestamp) > new Date(localTimestamp)) {
             // Cloud weight is newer - propagate all changes including deletion
             await weightsService.updateWeight(localWeight.id!, cloudWeight);
+            weightsUpdated++;
+          } else {
+            weightsSkipped++;
           }
         }
       }
+
+      console.log(`✅ Weights merge complete: ${weightsAdded} added, ${weightsUpdated} updated, ${weightsSkipped} skipped`);
     }
 
     // Merge settings - always take the newest timestamp
