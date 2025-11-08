@@ -83,7 +83,11 @@ class GarminImportService {
 
     console.log(`📋 Headers: ${headers.substring(0, 200)}...`);
 
-    if (headers.includes('active calories')) {
+    // Check for Sleep CSV first, before Heart Rate, because Sleep CSV contains "Resting Heart Rate" column
+    if (headers.includes('sleep score') || headers.includes('sleep') || headers.includes('avg duration') || headers.includes('body battery')) {
+      console.log('✅ Detected: Sleep CSV');
+      return this.parseSleepCSV(lines);
+    } else if (headers.includes('active calories')) {
       console.log('✅ Detected: Calories CSV');
       return this.parseCaloriesCSV(lines);
     } else if (headers.includes('intensity minutes')) {
@@ -101,9 +105,6 @@ class GarminImportService {
     } else if (headers.includes('heart rate') || headers.includes('resting hr')) {
       console.log('✅ Detected: Heart Rate CSV');
       return this.parseHeartRateCSV(lines);
-    } else if (headers.includes('sleep') || headers.includes('avg duration')) {
-      console.log('✅ Detected: Sleep CSV');
-      return this.parseSleepCSV(lines);
     }
 
     // Try generic parsing as fallback
