@@ -52,7 +52,14 @@ class EncryptionService {
     combined.set(iv, salt.length);
     combined.set(new Uint8Array(encrypted), salt.length + iv.length);
 
-    return btoa(String.fromCharCode(...combined));
+    // Convert to base64 in chunks to avoid stack overflow with large data
+    let binaryString = '';
+    const chunkSize = 8192; // Process 8KB at a time
+    for (let i = 0; i < combined.length; i += chunkSize) {
+      const chunk = combined.subarray(i, Math.min(i + chunkSize, combined.length));
+      binaryString += String.fromCharCode(...chunk);
+    }
+    return btoa(binaryString);
   }
 
   /**
