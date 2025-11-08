@@ -7,7 +7,7 @@ import { TabNavigation, useActiveTab } from '@/components/TabNavigation'
 import { JournalPage } from '@/components/journal/JournalPage'
 import { TrackingPage } from '@/components/tracking/TrackingPage'
 import { DashboardPage } from '@/components/dashboard/DashboardPage'
-import { AnalysePage } from '@/components/analyse/AnalysePage'
+import { AnalysePageWithTabs as AnalysePage } from '@/components/analyse/AnalysePageWithTabs'
 import { DataPage } from '@/components/data/DataPage'
 import { SettingsPage } from '@/components/settings/SettingsPage'
 import { registerServiceWorker, setupInstallPrompt } from '@/utils/pwa'
@@ -22,15 +22,42 @@ function App() {
 
   // Register PWA service worker and install prompt
   useEffect(() => {
-    // Register service worker
-    registerServiceWorker().then((registration) => {
-      if (registration) {
-        console.log('✅ PWA ready for offline use');
-      }
-    });
+    // Only register service worker in production (not during development)
+    if (import.meta.env.PROD) {
+      registerServiceWorker().then((registration) => {
+        if (registration) {
+          console.log('✅ PWA ready for offline use');
+        }
+      });
 
-    // Setup install prompt handler
-    setupInstallPrompt();
+      // Setup install prompt handler
+      setupInstallPrompt();
+    } else {
+      // Development mode: actively unregister any existing service workers
+      console.log('🔧 Development mode: Unregistering service workers...');
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((registration) => {
+            registration.unregister().then((success) => {
+              if (success) {
+                console.log('🗑️ Service worker unregistered successfully');
+              }
+            });
+          });
+        });
+
+        // Also clear any caches
+        if ('caches' in window) {
+          caches.keys().then((cacheNames) => {
+            cacheNames.forEach((cacheName) => {
+              caches.delete(cacheName);
+              console.log('🗑️ Cache deleted:', cacheName);
+            });
+          });
+        }
+      }
+    }
   }, []);
 
   if (error) {
