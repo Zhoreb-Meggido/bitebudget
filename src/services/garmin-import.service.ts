@@ -353,13 +353,24 @@ class GarminImportService {
     const bodyBatteryCol = headers.findIndex(h => h.toLowerCase().includes('body battery'));
     const durationCol = headers.findIndex(h => h.toLowerCase() === 'duration');
 
+    console.log('📊 Sleep CSV columns:', {
+      dateCol,
+      restingHRCol,
+      bodyBatteryCol,
+      durationCol,
+      headers: headers.slice(0, 10)
+    });
+
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(',');
       if (parts.length < 2) continue;
 
       // Parse date (already in YYYY-MM-DD format)
       const date = this.parseDate(parts[dateCol]);
-      if (!date) continue;
+      if (!date) {
+        console.warn('Could not parse date from:', parts[dateCol]);
+        continue;
+      }
 
       const data: ParsedGarminData = { date };
 
@@ -392,10 +403,22 @@ class GarminImportService {
 
       // Only add if we have some data
       if (data.sleepSeconds || data.heartRate || data.bodyBattery) {
+        if (i <= 3) { // Log first 3 rows for debugging
+          console.log(`Sleep row ${i}:`, {
+            date: data.date,
+            duration: parts[durationCol],
+            sleepSeconds: data.sleepSeconds,
+            bodyBattery: parts[bodyBatteryCol],
+            parsedBB: data.bodyBattery,
+            restingHR: parts[restingHRCol],
+            parsedHR: data.heartRate?.resting
+          });
+        }
         result.push(data);
       }
     }
 
+    console.log(`✅ Parsed ${result.length} sleep records`);
     return result;
   }
 
