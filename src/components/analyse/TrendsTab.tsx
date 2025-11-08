@@ -168,6 +168,10 @@ export function TrendsTab() {
   }, [filteredActivities, selectedMetrics]);
 
   const chartOptions = useMemo(() => {
+    // Detect mobile for responsive Y-axes
+    const isMobile = window.innerWidth < 768;
+    const isVerySmall = window.innerWidth < 640;
+
     // Build scales dynamically based on selected metrics
     const scales: any = {
       x: {
@@ -181,16 +185,19 @@ export function TrendsTab() {
     if (selectedMetrics.has('steps')) {
       scales['y-steps'] = {
         type: 'linear',
-        display: true,
+        display: !isVerySmall, // Hide on very small screens
         position: 'left',
         beginAtZero: true,
         title: {
-          display: true,
+          display: !isMobile, // Hide title on mobile
           text: 'Stappen',
           color: 'rgb(59, 130, 246)',
+          font: { size: isMobile ? 10 : 12 },
         },
         ticks: {
           color: 'rgb(59, 130, 246)',
+          font: { size: isMobile ? 9 : 11 },
+          maxTicksLimit: isMobile ? 4 : 6,
         },
         grid: {
           color: 'rgba(59, 130, 246, 0.1)',
@@ -201,16 +208,19 @@ export function TrendsTab() {
     if (selectedMetrics.has('calories')) {
       scales['y-calories'] = {
         type: 'linear',
-        display: true,
+        display: !isVerySmall,
         position: 'right',
         beginAtZero: true,
         title: {
-          display: true,
-          text: 'Calorieën',
+          display: !isMobile,
+          text: 'Cal',
           color: 'rgb(239, 68, 68)',
+          font: { size: isMobile ? 10 : 12 },
         },
         ticks: {
           color: 'rgb(239, 68, 68)',
+          font: { size: isMobile ? 9 : 11 },
+          maxTicksLimit: isMobile ? 4 : 6,
         },
         grid: {
           drawOnChartArea: false,
@@ -221,16 +231,19 @@ export function TrendsTab() {
     if (selectedMetrics.has('intensityMinutes')) {
       scales['y-minutes'] = {
         type: 'linear',
-        display: true,
-        position: selectedMetrics.has('calories') ? 'right' : 'right',
+        display: !isVerySmall,
+        position: 'right',
         beginAtZero: true,
         title: {
-          display: true,
-          text: 'Intensity Min',
+          display: !isMobile,
+          text: 'Int',
           color: 'rgb(147, 51, 234)',
+          font: { size: isMobile ? 10 : 12 },
         },
         ticks: {
           color: 'rgb(147, 51, 234)',
+          font: { size: isMobile ? 9 : 11 },
+          maxTicksLimit: isMobile ? 4 : 6,
         },
         grid: {
           drawOnChartArea: false,
@@ -241,17 +254,20 @@ export function TrendsTab() {
     if (selectedMetrics.has('restingHeartRate')) {
       scales['y-heartrate'] = {
         type: 'linear',
-        display: true,
+        display: !isVerySmall,
         position: 'right',
         min: 40,
         max: 100,
         title: {
-          display: true,
-          text: 'HR (bpm)',
+          display: !isMobile,
+          text: 'HR',
           color: 'rgb(236, 72, 153)',
+          font: { size: isMobile ? 10 : 12 },
         },
         ticks: {
           color: 'rgb(236, 72, 153)',
+          font: { size: isMobile ? 9 : 11 },
+          maxTicksLimit: isMobile ? 4 : 6,
         },
         grid: {
           drawOnChartArea: false,
@@ -262,17 +278,20 @@ export function TrendsTab() {
     if (selectedMetrics.has('stressLevel')) {
       scales['y-stress'] = {
         type: 'linear',
-        display: true,
+        display: !isVerySmall,
         position: 'right',
         min: 0,
         max: 100,
         title: {
-          display: true,
+          display: !isMobile,
           text: 'Stress',
           color: 'rgb(245, 158, 11)',
+          font: { size: isMobile ? 10 : 12 },
         },
         ticks: {
           color: 'rgb(245, 158, 11)',
+          font: { size: isMobile ? 9 : 11 },
+          maxTicksLimit: isMobile ? 3 : 5,
         },
         grid: {
           drawOnChartArea: false,
@@ -283,17 +302,20 @@ export function TrendsTab() {
     if (selectedMetrics.has('sleepDuration')) {
       scales['y-sleep'] = {
         type: 'linear',
-        display: true,
+        display: !isVerySmall,
         position: 'right',
         min: 0,
         max: 12,
         title: {
-          display: true,
-          text: 'Slaap (uur)',
+          display: !isMobile,
+          text: 'Slaap',
           color: 'rgb(34, 197, 94)',
+          font: { size: isMobile ? 10 : 12 },
         },
         ticks: {
           color: 'rgb(34, 197, 94)',
+          font: { size: isMobile ? 9 : 11 },
+          maxTicksLimit: isMobile ? 4 : 6,
         },
         grid: {
           drawOnChartArea: false,
@@ -304,16 +326,19 @@ export function TrendsTab() {
     if (selectedMetrics.has('distance')) {
       scales['y-distance'] = {
         type: 'linear',
-        display: true,
+        display: !isVerySmall,
         position: 'right',
         beginAtZero: true,
         title: {
-          display: true,
-          text: 'Afstand (km)',
+          display: !isMobile,
+          text: 'km',
           color: 'rgb(14, 165, 233)',
+          font: { size: isMobile ? 10 : 12 },
         },
         ticks: {
           color: 'rgb(14, 165, 233)',
+          font: { size: isMobile ? 9 : 11 },
+          maxTicksLimit: isMobile ? 4 : 6,
         },
         grid: {
           drawOnChartArea: false,
@@ -477,9 +502,15 @@ export function TrendsTab() {
               <p className="text-sm">Klik op de metric buttons hierboven</p>
             </div>
           ) : (
-            <div style={{ height: '400px' }}>
-              <Line data={chartData} options={chartOptions} />
-            </div>
+            <>
+              <div className="h-[400px] sm:h-[400px]">
+                <Line data={chartData} options={chartOptions} />
+              </div>
+              {/* Mobile hint */}
+              <div className="mt-4 text-xs text-gray-500 text-center sm:hidden">
+                💡 Tip: Tik op de grafiek voor details per datum
+              </div>
+            </>
           )}
         </div>
       </div>
