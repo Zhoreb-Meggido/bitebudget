@@ -10,8 +10,9 @@ import { weightsService } from './weights.service';
 import { settingsService } from './settings.service';
 import { portionsService } from './portions.service';
 import { templatesService } from './templates.service';
+import { activitiesService } from './activities.service';
 import { db } from './database.service';
-import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity } from '@/types';
 
 export interface SyncData {
   version: string;
@@ -22,6 +23,7 @@ export interface SyncData {
   settings: UserSettings;
   productPortions?: ProductPortion[];  // v1.3+
   mealTemplates?: MealTemplate[];      // v1.3+
+  dailyActivities?: DailyActivity[];   // v1.5+
 }
 
 class SyncService {
@@ -270,6 +272,7 @@ class SyncService {
     const settings = await settingsService.loadSettings();
     const productPortions = await portionsService.getAllPortionsIncludingDeleted();
     const mealTemplates = await templatesService.getAllTemplatesIncludingDeleted();
+    const dailyActivities = await activitiesService.getAllActivities();
 
     console.log('📤 Preparing export with:', {
       entries: entries.length,
@@ -277,10 +280,11 @@ class SyncService {
       weights: weights.length,
       productPortions: productPortions.length,
       mealTemplates: mealTemplates.length,
+      dailyActivities: dailyActivities.length,
     });
 
     return {
-      version: '1.3', // Updated version for portions & templates support
+      version: '1.5', // Updated version for Google Fit integration
       timestamp: new Date().toISOString(),
       entries,
       products,
@@ -288,6 +292,7 @@ class SyncService {
       settings,
       productPortions,
       mealTemplates,
+      dailyActivities,
     };
   }
 
@@ -302,6 +307,7 @@ class SyncService {
       weights: cloudData.weights?.length || 0,
       productPortions: cloudData.productPortions?.length || 0,
       mealTemplates: cloudData.mealTemplates?.length || 0,
+      dailyActivities: cloudData.dailyActivities?.length || 0,
     });
 
     // Get existing local data
@@ -488,6 +494,41 @@ class SyncService {
     } else {
       console.log('ℹ️ No templates in cloud backup (might be older version)');
     }
+
+    // Merge daily activities - add cloud activities that don't exist locally or are newer
+    if (cloudData.dailyActivities && cloudData.dailyActivities.length > 0) {
+      console.log(`🏃 Merging ${cloudData.dailyActivities.length} daily activities from cloud...`);
+      const localActivities = await activitiesService.getAllActivities();
+      const localActivitiesMap = new Map(localActivities.map(a => [a.date, a]));
+
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      for (const cloudActivity of cloudData.dailyActivities) {
+        try {
+          const localActivity = localActivitiesMap.get(cloudActivity.date);
+
+          if (!localActivity) {
+            // New activity from cloud
+            await db.dailyActivities.add(cloudActivity);
+            addedCount++;
+          } else if (cloudActivity.updated_at && localActivity.updated_at &&
+                     new Date(cloudActivity.updated_at) > new Date(localActivity.updated_at)) {
+            // Cloud activity is newer - use cloud data but keep local ID
+            const { id, ...cloudData } = cloudActivity;
+            await db.dailyActivities.update(localActivity.id!, cloudData);
+            updatedCount++;
+          }
+        } catch (err) {
+          console.error(`❌ Error processing activity ${cloudActivity.date}:`, err);
+          throw err;
+        }
+      }
+
+      console.log(`✅ Activities: ${addedCount} added, ${updatedCount} updated`);
+    } else {
+      console.log('ℹ️ No activities in cloud backup (might be older version)');
+    }
   }
 
   /**
@@ -595,6 +636,24 @@ class SyncService {
       }
       console.log(`✅ Imported ${templatesAdded} templates (${templatesFailed} failed)`);
     }
+
+    // Import daily activities if available (v1.5+)
+    if (data.dailyActivities) {
+      // Clear existing activities
+      await activitiesService.clearAllActivities();
+      let activitiesAdded = 0;
+      let activitiesFailed = 0;
+      for (const activity of data.dailyActivities) {
+        try {
+          await activitiesService.addOrUpdateActivity(activity);
+          activitiesAdded++;
+        } catch (err) {
+          console.warn('Failed to import activity:', activity.date, err);
+          activitiesFailed++;
+        }
+      }
+      console.log(`✅ Imported ${activitiesAdded} activities (${activitiesFailed} failed)`);
+    }
   }
 
   /**
@@ -647,6 +706,7 @@ class SyncService {
       weights: data.weights.length,
       productPortions: data.productPortions?.length || 0,
       mealTemplates: data.mealTemplates?.length || 0,
+      dailyActivities: data.dailyActivities?.length || 0,
     });
 
       // Encrypt

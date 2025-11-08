@@ -164,6 +164,44 @@ export interface Weight {
 }
 
 // ============================================
+// DAILY ACTIVITY (Google Fit / Fitness Integration)
+// ============================================
+
+export interface DailyActivity {
+  id?: string | number;
+  date: string;                    // yyyy-MM-dd formaat
+  totalCalories: number;           // Totaal verbruik (kcal)
+  activeCalories: number;          // Actieve calorieën (kcal)
+  restingCalories: number;         // BMR/rustcalorieën (kcal)
+  steps: number;                   // Aantal stappen
+  intensityMinutes?: number;       // Actieve minuten
+  distanceMeters?: number;         // Totale afstand in meters
+  floorsClimbed?: number;          // Verdiepingen
+  heartRateResting?: number;       // Rusthartslag (bpm)
+  heartRateMax?: number;           // Max hartslag (bpm)
+  stressLevel?: number;            // Stress (0-100)
+  bodyBattery?: number;            // Body Battery (0-100, Garmin-specific)
+  sleepSeconds?: number;           // Slaapduur in seconden
+  activities?: FitnessActivity[];  // Specifieke workouts/activiteiten
+  created_at: string;              // ISO timestamp
+  updated_at: string;              // ISO timestamp
+}
+
+export interface FitnessActivity {
+  activityId: string;              // Activity ID
+  activityName: string;            // "Running", "Cycling", etc.
+  startTime: string;               // ISO timestamp
+  duration: number;                // Duur in seconden
+  distance?: number;               // Afstand in meters
+  calories: number;                // Calorieën verbrand
+  averageHeartRate?: number;       // Gemiddelde hartslag (bpm)
+  maxHeartRate?: number;           // Max hartslag (bpm)
+}
+
+// Legacy export for backward compatibility
+export type GarminActivity = FitnessActivity;
+
+// ============================================
 // SETTINGS
 // ============================================
 
@@ -230,6 +268,7 @@ export interface BackupData {
   settings: UserSettings;
   productPortions?: ProductPortion[];  // v1.3+
   mealTemplates?: MealTemplate[];      // v1.3+
+  dailyActivities?: DailyActivity[];   // v1.5+ (Google Fit integration)
 }
 
 // ============================================
