@@ -10,11 +10,12 @@ import { getTimestamp, generateId } from '@/utils';
 
 class ActivitiesService {
   /**
-   * Laad alle activities
+   * Laad alle activities (exclusief soft-deleted items)
    */
   async getAllActivities(): Promise<DailyActivity[]> {
     try {
-      return await db.dailyActivities.orderBy('date').reverse().toArray();
+      const activities = await db.dailyActivities.orderBy('date').reverse().toArray();
+      return activities.filter(a => a.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading activities:', error);
       return [];
@@ -22,14 +23,27 @@ class ActivitiesService {
   }
 
   /**
-   * Laad activity voor specifieke datum
+   * Laad alle activities inclusief soft-deleted items (voor sync/export)
+   */
+  async getAllActivitiesIncludingDeleted(): Promise<DailyActivity[]> {
+    try {
+      return await db.dailyActivities.orderBy('date').reverse().toArray();
+    } catch (error) {
+      console.error('❌ Error loading activities including deleted:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Laad activity voor specifieke datum (exclusief soft-deleted items)
    */
   async getActivityByDate(date: string): Promise<DailyActivity | undefined> {
     try {
-      return await db.dailyActivities
+      const activities = await db.dailyActivities
         .where('date')
         .equals(date)
-        .first();
+        .toArray();
+      return activities.find(a => a.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading activity by date:', error);
       return undefined;
@@ -37,14 +51,15 @@ class ActivitiesService {
   }
 
   /**
-   * Laad activities voor een datumbereik
+   * Laad activities voor een datumbereik (exclusief soft-deleted items)
    */
   async getActivitiesBetweenDates(startDate: string, endDate: string): Promise<DailyActivity[]> {
     try {
-      return await db.dailyActivities
+      const activities = await db.dailyActivities
         .where('date')
         .between(startDate, endDate, true, true)
         .toArray();
+      return activities.filter(a => a.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading activities between dates:', error);
       return [];
@@ -117,12 +132,16 @@ class ActivitiesService {
   }
 
   /**
-   * Verwijder activity
+   * Verwijder activity (soft delete)
    */
   async deleteActivity(id: number | string): Promise<void> {
     try {
-      await db.dailyActivities.delete(id);
-      console.log('✅ Activity deleted:', id);
+      await db.dailyActivities.update(id, {
+        deleted: true,
+        deleted_at: getTimestamp(),
+        updated_at: getTimestamp(),
+      });
+      console.log('✅ Activity soft deleted:', id);
     } catch (error) {
       console.error('❌ Error deleting activity:', error);
       throw error;
