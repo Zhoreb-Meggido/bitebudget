@@ -14,6 +14,7 @@ export function ProductsPortionsTab() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyWithPortions, setShowOnlyWithPortions] = useState(false);
+  const [sortBy, setSortBy] = useState<'favorite' | 'name-asc' | 'name-desc' | 'calories' | 'protein'>('favorite');
 
   // Product modal state
   const [showProductModal, setShowProductModal] = useState(false);
@@ -183,18 +184,34 @@ export function ProductsPortionsTab() {
     }
   };
 
-  // Filter products based on search and portions filter
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
+  // Filter and sort products
+  const filteredProducts = products
+    .filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!matchesSearch) return false;
 
-    if (showOnlyWithPortions) {
-      const productPortions = allPortions.filter(p => p.productName === product.name);
-      return productPortions.length > 0;
-    }
+      if (showOnlyWithPortions) {
+        const productPortions = allPortions.filter(p => p.productName === product.name);
+        return productPortions.length > 0;
+      }
 
-    return true;
-  });
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'favorite') {
+        if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === 'name-asc') {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === 'name-desc') {
+        return b.name.localeCompare(a.name);
+      } else if (sortBy === 'calories') {
+        return b.calories - a.calories;
+      } else if (sortBy === 'protein') {
+        return b.protein - a.protein;
+      }
+      return 0;
+    });
 
   if (isLoading) {
     return <div className="text-center py-8 text-gray-500">Laden...</div>;
@@ -270,25 +287,41 @@ export function ProductsPortionsTab() {
       )}
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Zoek producten..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+      <div className="flex flex-col gap-3">
+        {/* Search bar + Sort + Toggle - stacked on mobile, side by side on desktop */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Zoek producten..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          >
+            <option value="favorite">Favorieten eerst</option>
+            <option value="name-asc">A-Z</option>
+            <option value="name-desc">Z-A</option>
+            <option value="calories">Calorieën (hoog-laag)</option>
+            <option value="protein">Eiwit (hoog-laag)</option>
+          </select>
+
+          <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 whitespace-nowrap">
+            <input
+              type="checkbox"
+              checked={showOnlyWithPortions}
+              onChange={(e) => setShowOnlyWithPortions(e.target.checked)}
+              className="rounded"
+            />
+            <span className="text-sm text-gray-700">Alleen met porties</span>
+          </label>
         </div>
-        <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-          <input
-            type="checkbox"
-            checked={showOnlyWithPortions}
-            onChange={(e) => setShowOnlyWithPortions(e.target.checked)}
-            className="rounded"
-          />
-          <span className="text-sm text-gray-700">Alleen met porties</span>
-        </label>
       </div>
 
       {/* Products Count */}
@@ -409,33 +442,42 @@ function ProductWithPortions({
           {product.carbohydrates !== undefined && `, ${product.carbohydrates}g koolhydraten`}
         </div>
 
-        {/* Source and Nutri-Score Badges */}
-        <div className="flex items-center gap-2 mt-2 flex-wrap">
-          {/* Source Badge */}
-          <span className={`text-xs px-2 py-0.5 rounded ${
-            product.source === 'barcode' ? 'bg-blue-100 text-blue-700' :
-            product.source === 'search' ? 'bg-purple-100 text-purple-700' :
-            'bg-gray-100 text-gray-700'
-          }`}>
-            {product.source === 'barcode' ? '📷 Barcode' : product.source === 'search' ? '🔍 Search' : '✏️ Manual'}
-          </span>
-          {/* Nutri-Score Badge */}
-          {product.nutri_score && (
-            <span className={`text-xs px-2 py-0.5 rounded font-bold ${
-              product.nutri_score === 'A' ? 'bg-green-500 text-white' :
-              product.nutri_score === 'B' ? 'bg-green-300 text-gray-800' :
-              product.nutri_score === 'C' ? 'bg-yellow-300 text-gray-800' :
-              product.nutri_score === 'D' ? 'bg-orange-400 text-white' :
-              'bg-red-500 text-white'
+        {/* Source and Nutri-Score Badges + Add Portion Button */}
+        <div className="flex items-center justify-between gap-2 mt-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Source Badge */}
+            <span className={`text-xs px-2 py-0.5 rounded ${
+              product.source === 'barcode' ? 'bg-blue-100 text-blue-700' :
+              product.source === 'search' ? 'bg-purple-100 text-purple-700' :
+              'bg-gray-100 text-gray-700'
             }`}>
-              Nutri-Score: {product.nutri_score}
+              {product.source === 'barcode' ? '📷 Barcode' : product.source === 'search' ? '🔍 Search' : '✏️ Manual'}
             </span>
-          )}
+            {/* Nutri-Score Badge */}
+            {product.nutri_score && (
+              <span className={`text-xs px-2 py-0.5 rounded font-bold ${
+                product.nutri_score === 'A' ? 'bg-green-500 text-white' :
+                product.nutri_score === 'B' ? 'bg-green-300 text-gray-800' :
+                product.nutri_score === 'C' ? 'bg-yellow-300 text-gray-800' :
+                product.nutri_score === 'D' ? 'bg-orange-400 text-white' :
+                'bg-red-500 text-white'
+              }`}>
+                Nutri-Score: {product.nutri_score}
+              </span>
+            )}
+          </div>
+          {/* Add Portion Button - Aligned right with edit/delete buttons */}
+          <button
+            onClick={() => onAddPortion(product.name)}
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap"
+          >
+            + Nieuwe portie
+          </button>
         </div>
       </div>
 
       {/* Portions Section */}
-      {productPortions.length > 0 ? (
+      {productPortions.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-300">
           <h4 className="text-sm font-semibold text-gray-700 mb-2">
             Porties ({productPortions.length}):
@@ -474,17 +516,7 @@ function ProductWithPortions({
             ))}
           </div>
         </div>
-      ) : null}
-
-      {/* Add Portion Button */}
-      <div className="mt-3 pt-3 border-t border-gray-300">
-        <button
-          onClick={() => onAddPortion(product.name)}
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-        >
-          + Nieuwe portie
-        </button>
-      </div>
+      )}
     </div>
   );
 }
