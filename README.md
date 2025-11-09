@@ -414,7 +414,31 @@ npm run build
 - [ ] Light/Dark theme toggle
 - [ ] Internationalization (i18n - Engels)
 - [ ] Device API integration (Garmin, Sacoma scale imports)
-- [ ] Meal templates en favorites
+- [x] Meal templates en favorites *(completed in v1.5.0)*
+
+### **Future Performance Optimizations (v2.x)**
+
+As data grows over time, these optimizations will maintain performance and manageability:
+
+**Current Metrics (7 weeks of data):**
+- Encrypted sync file: 178 KB
+- Daily growth rate: ~3.6 KB/day
+- 10-year projection: ~13 MB uncompressed
+
+**Planned Optimizations:**
+- [ ] **gzip Compression** - Compress sync data before upload/download
+  - Expected reduction: 60-80% file size
+  - Impact: 13 MB → 3-5 MB for 10 years of data
+  - Implementation: Web Compression Streams API
+
+- [ ] **Data Archiving** - Archive data older than 1 year
+  - Keep locally in IndexedDB (read-only access)
+  - Exclude from cloud sync to reduce file size
+  - On-demand loading for historical analysis
+
+- [ ] **Incremental Sync** - Only sync changed data (delta updates)
+  - Reduces bandwidth and sync time
+  - Faster conflict resolution
 
 ---
 

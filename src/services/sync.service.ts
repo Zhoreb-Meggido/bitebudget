@@ -317,7 +317,9 @@ class SyncService {
 
     // Create maps for faster lookup (using composite keys for entries/weights)
     const localEntriesMap = new Map(localEntries.map(e => [`${e.date}-${e.time}-${e.name}`, e]));
+    const localEntriesById = new Map(localEntries.map(e => [e.id, e]));
     const localProductsMap = new Map(localProducts.map(p => [p.name, p]));
+    const localProductsByEan = new Map(localProducts.filter(p => p.ean).map(p => [p.ean!, p]));
     const localWeightsMap = new Map(localWeights.map(w => [w.date, w]));
 
     // Merge entries - add cloud entries that don't exist locally or are newer
@@ -328,17 +330,36 @@ class SyncService {
 
     for (const cloudEntry of cloudData.entries) {
       const key = `${cloudEntry.date}-${cloudEntry.time}-${cloudEntry.name}`;
-      const localEntry = localEntriesMap.get(key);
+      let localEntry = localEntriesMap.get(key);
+      const existingById = localEntriesById.get(cloudEntry.id);
+
+      // Check if ID already exists with different data (ID conflict - e.g., time was changed)
+      if (existingById) {
+        const existingKey = `${existingById.date}-${existingById.time}-${existingById.name}`;
+        if (existingKey !== key) {
+          // ID conflict - same ID but different time/name
+          // This happens when user edits time/name after sync
+          console.log(`⚠️ ID conflict for entry ${cloudEntry.id}: "${existingKey}" vs "${key}"`);
+
+          // Use the existing entry by ID (not by key) for comparison
+          localEntry = existingById;
+        }
+        // Same ID, same key - will be handled by update logic below
+      }
 
       if (!localEntry) {
-        // New entry from cloud
-        console.log(`➕ Adding new entry from cloud: ${key}`);
-        try {
-          await entriesService.addEntry(cloudEntry);
-          entriesAdded++;
-        } catch (err) {
-          console.error(`❌ Failed to add entry ${key}:`, err);
+        // New entry from cloud - doesn't exist by key or ID
+        if (!existingById) {
+          console.log(`➕ Adding new entry from cloud: ${key}`);
+          try {
+            await entriesService.addEntry(cloudEntry);
+            entriesAdded++;
+          } catch (err) {
+            console.error(`❌ Failed to add entry ${key}:`, err);
+          }
         }
+        // If existingById exists but localEntry doesn't, it means the ID exists
+        // but points to a different entry - already handled above
       } else if (cloudEntry.updated_at && localEntry.updated_at &&
                  new Date(cloudEntry.updated_at) > new Date(localEntry.updated_at)) {
         // Cloud entry is newer - propagate all changes including deletion
@@ -359,12 +380,23 @@ class SyncService {
     let productsSkipped = 0;
 
     for (const cloudProduct of cloudData.products) {
-      const localProduct = localProductsMap.get(cloudProduct.name);
+      // Check for existing product by name OR by EAN (barcode)
+      let localProduct = localProductsMap.get(cloudProduct.name);
+
+      // If not found by name, check by EAN (barcode)
+      if (!localProduct && cloudProduct.ean) {
+        localProduct = localProductsByEan.get(cloudProduct.ean);
+      }
 
       if (!localProduct) {
-        // New product from cloud
-        await productsService.addProduct(cloudProduct);
-        productsAdded++;
+        // New product from cloud - doesn't exist by name or barcode
+        try {
+          await productsService.addProduct(cloudProduct);
+          productsAdded++;
+        } catch (err) {
+          console.error(`❌ Failed to add product ${cloudProduct.name}:`, err);
+          productsSkipped++;
+        }
       } else if (cloudProduct.updated_at && localProduct.updated_at &&
                  new Date(cloudProduct.updated_at) > new Date(localProduct.updated_at)) {
         // Cloud product is newer - propagate all changes including deletion
