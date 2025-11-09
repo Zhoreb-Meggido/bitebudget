@@ -10,11 +10,12 @@ import { getTimestamp, generateId } from '@/utils';
 
 class ProductsService {
   /**
-   * Laad alle producten
+   * Laad alle producten (exclusief soft-deleted items)
    */
   async getAllProducts(): Promise<Product[]> {
     try {
-      return await db.products.toArray();
+      const products = await db.products.toArray();
+      return products.filter(p => p.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading products:', error);
       return [];
@@ -22,11 +23,24 @@ class ProductsService {
   }
 
   /**
-   * Laad product by name
+   * Laad alle producten inclusief soft-deleted items (voor sync/export)
+   */
+  async getAllProductsIncludingDeleted(): Promise<Product[]> {
+    try {
+      return await db.products.toArray();
+    } catch (error) {
+      console.error('❌ Error loading products including deleted:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Laad product by name (exclusief soft-deleted items)
    */
   async getProductByName(name: string): Promise<Product | undefined> {
     try {
-      return await db.products.where('name').equalsIgnoreCase(name).first();
+      const products = await db.products.where('name').equalsIgnoreCase(name).toArray();
+      return products.find(p => p.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading product:', error);
       return undefined;
@@ -34,11 +48,12 @@ class ProductsService {
   }
 
   /**
-   * Laad product by EAN barcode
+   * Laad product by EAN barcode (exclusief soft-deleted items)
    */
   async getProductByEAN(ean: string): Promise<Product | undefined> {
     try {
-      return await db.products.where('ean').equals(ean).first();
+      const products = await db.products.where('ean').equals(ean).toArray();
+      return products.find(p => p.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading product by EAN:', error);
       return undefined;
@@ -46,11 +61,12 @@ class ProductsService {
   }
 
   /**
-   * Laad favoriete producten
+   * Laad favoriete producten (exclusief soft-deleted items)
    */
   async getFavoriteProducts(): Promise<Product[]> {
     try {
-      return await db.products.where('favorite').equals(true).toArray();
+      const products = await db.products.where('favorite').equals(true).toArray();
+      return products.filter(p => p.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading favorite products:', error);
       return [];

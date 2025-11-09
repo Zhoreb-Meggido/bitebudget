@@ -82,10 +82,16 @@ class GoogleDriveService {
     const token = this.getAccessToken();
     if (token) {
       try {
-        await fetch(`https://oauth2.googleapis.com/revoke?token=${token}`, {
+        const response = await fetch(`https://oauth2.googleapis.com/revoke?token=${token}`, {
           method: 'POST',
         });
+
+        // 400 errors are expected for expired/already-revoked tokens - ignore them
+        if (!response.ok && response.status !== 400) {
+          console.warn('Token revocation returned non-OK status:', response.status);
+        }
       } catch (error) {
+        // Network errors - log but continue cleanup
         console.error('Failed to revoke token:', error);
       }
     }
