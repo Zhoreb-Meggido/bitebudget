@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { useEntries } from '@/hooks';
+import { useEntries, useSettings } from '@/hooks';
 
-type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
+type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
 
 // Helper function to calculate ISO week number
 function getISOWeekNumber(date: Date): number {
@@ -44,6 +44,7 @@ interface WeekData {
 
 export function AnalysePage() {
   const { entries } = useEntries();
+  const { settings } = useSettings();
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('overall');
 
   // Aggregate entries per day
@@ -150,40 +151,58 @@ export function AnalysePage() {
 
     switch (metric) {
       case 'calories':
-        if (value < 1900) return 'bg-green-500';
-        if (value < 2100) return 'bg-yellow-500';
+        if (value < settings.caloriesRest) return 'bg-green-500';
+        if (value < settings.caloriesRest * 1.1) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'protein':
-        if (value >= 72) return 'bg-green-500';
-        if (value >= 36) return 'bg-yellow-500';
+        if (value >= settings.proteinSport) return 'bg-green-500';
+        if (value >= settings.proteinRest) return 'bg-yellow-500';
+        return 'bg-red-500';
+
+      case 'carbohydrates':
+        if (value < settings.carbohydratesMax * 0.8) return 'bg-green-500';
+        if (value <= settings.carbohydratesMax) return 'bg-yellow-500';
+        return 'bg-red-500';
+
+      case 'sugars':
+        if (value < settings.sugarsMax * 0.8) return 'bg-green-500';
+        if (value <= settings.sugarsMax) return 'bg-yellow-500';
+        return 'bg-red-500';
+
+      case 'fat':
+        if (value < settings.fatMax * 0.8) return 'bg-green-500';
+        if (value <= settings.fatMax) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'saturatedFat':
-        if (value < 20) return 'bg-green-500';
-        if (value < 25) return 'bg-yellow-500';
+        if (value < settings.saturatedFatMax) return 'bg-green-500';
+        if (value < settings.saturatedFatMax * 1.25) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'fiber':
-        if (value >= 35) return 'bg-green-500';
-        if (value >= 17.5) return 'bg-yellow-500';
+        if (value >= settings.fiberMin) return 'bg-green-500';
+        if (value >= settings.fiberMin * 0.5) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'sodium':
-        if (value < 2300) return 'bg-green-500';
-        if (value < 2800) return 'bg-yellow-500';
+        if (value < settings.sodiumMax) return 'bg-green-500';
+        if (value < settings.sodiumMax * 1.2) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'overall': {
         // Calculate percentage of targets met
         let score = 0;
-        if (dayData.calories < 1900) score++;
-        if (dayData.protein >= 36) score++;
-        if (dayData.saturatedFat < 20) score++;
-        if (dayData.fiber >= 17.5) score++;
-        if (dayData.sodium < 2300) score++;
+        if (dayData.calories < settings.caloriesRest) score++;
+        if (dayData.protein >= settings.proteinRest) score++;
+        if (dayData.carbohydrates <= settings.carbohydratesMax) score++;
+        if (dayData.sugars <= settings.sugarsMax) score++;
+        if (dayData.fat <= settings.fatMax) score++;
+        if (dayData.saturatedFat < settings.saturatedFatMax) score++;
+        if (dayData.fiber >= settings.fiberMin) score++;
+        if (dayData.sodium < settings.sodiumMax) score++;
 
-        const percentage = (score / 5) * 100;
+        const percentage = (score / 8) * 100;
         if (percentage >= 80) return 'bg-green-500';
         if (percentage >= 60) return 'bg-yellow-500';
         return 'bg-red-500';
@@ -269,6 +288,7 @@ export function AnalysePage() {
     protein: 'Eiwit',
     carbohydrates: 'Koolhydraten',
     sugars: 'Suikers',
+    fat: 'Vet',
     saturatedFat: 'Verzadigd Vet',
     fiber: 'Vezels',
     sodium: 'Natrium',
@@ -396,6 +416,7 @@ export function AnalysePage() {
             <option value="protein">Eiwit</option>
             <option value="carbohydrates">Koolhydraten</option>
             <option value="sugars">Suikers</option>
+            <option value="fat">Vet</option>
             <option value="saturatedFat">Verzadigd Vet</option>
             <option value="fiber">Vezels</option>
             <option value="sodium">Natrium</option>
