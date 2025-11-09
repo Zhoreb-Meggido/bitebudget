@@ -266,21 +266,29 @@ class SyncService {
    * Export all data for sync
    */
   async exportAllData(): Promise<SyncData> {
-    const entries = await entriesService.getAllEntries();
-    const products = await productsService.getAllProducts();
-    const weights = await weightsService.getAllWeights();
+    const entries = await entriesService.getAllEntriesIncludingDeleted();
+    const products = await productsService.getAllProductsIncludingDeleted();
+    const weights = await weightsService.getAllWeights(); // Already includes deleted
     const settings = await settingsService.loadSettings();
     const productPortions = await portionsService.getAllPortionsIncludingDeleted();
     const mealTemplates = await templatesService.getAllTemplatesIncludingDeleted();
-    const dailyActivities = await activitiesService.getAllActivities();
+    const dailyActivities = await activitiesService.getAllActivitiesIncludingDeleted();
+
+    // Count soft-deleted items
+    const entriesDeleted = entries.filter(e => e.deleted === true).length;
+    const productsDeleted = products.filter(p => p.deleted === true).length;
+    const weightsDeleted = weights.filter(w => w.deleted === true).length;
+    const portionsDeleted = productPortions.filter(p => p.deleted === true).length;
+    const templatesDeleted = mealTemplates.filter(t => t.deleted === true).length;
+    const activitiesDeleted = dailyActivities.filter(a => a.deleted === true).length;
 
     console.log('📤 Preparing export with:', {
-      entries: entries.length,
-      products: products.length,
-      weights: weights.length,
-      productPortions: productPortions.length,
-      mealTemplates: mealTemplates.length,
-      dailyActivities: dailyActivities.length,
+      entries: `${entries.length} (${entriesDeleted} deleted)`,
+      products: `${products.length} (${productsDeleted} deleted)`,
+      weights: `${weights.length} (${weightsDeleted} deleted)`,
+      productPortions: `${productPortions.length} (${portionsDeleted} deleted)`,
+      mealTemplates: `${mealTemplates.length} (${templatesDeleted} deleted)`,
+      dailyActivities: `${dailyActivities.length} (${activitiesDeleted} deleted)`,
     });
 
     return {
@@ -301,18 +309,27 @@ class SyncService {
    */
   async mergeData(cloudData: SyncData): Promise<void> {
     console.log('📥 Merging cloud data version:', cloudData.version);
+
+    // Count soft-deleted items in cloud data
+    const cloudEntriesDeleted = cloudData.entries?.filter(e => e.deleted === true).length || 0;
+    const cloudProductsDeleted = cloudData.products?.filter(p => p.deleted === true).length || 0;
+    const cloudWeightsDeleted = cloudData.weights?.filter(w => w.deleted === true).length || 0;
+    const cloudPortionsDeleted = cloudData.productPortions?.filter(p => p.deleted === true).length || 0;
+    const cloudTemplatesDeleted = cloudData.mealTemplates?.filter(t => t.deleted === true).length || 0;
+    const cloudActivitiesDeleted = cloudData.dailyActivities?.filter(a => a.deleted === true).length || 0;
+
     console.log('📊 Cloud data contains:', {
-      entries: cloudData.entries?.length || 0,
-      products: cloudData.products?.length || 0,
-      weights: cloudData.weights?.length || 0,
-      productPortions: cloudData.productPortions?.length || 0,
-      mealTemplates: cloudData.mealTemplates?.length || 0,
-      dailyActivities: cloudData.dailyActivities?.length || 0,
+      entries: `${cloudData.entries?.length || 0} (${cloudEntriesDeleted} deleted)`,
+      products: `${cloudData.products?.length || 0} (${cloudProductsDeleted} deleted)`,
+      weights: `${cloudData.weights?.length || 0} (${cloudWeightsDeleted} deleted)`,
+      productPortions: `${cloudData.productPortions?.length || 0} (${cloudPortionsDeleted} deleted)`,
+      mealTemplates: `${cloudData.mealTemplates?.length || 0} (${cloudTemplatesDeleted} deleted)`,
+      dailyActivities: `${cloudData.dailyActivities?.length || 0} (${cloudActivitiesDeleted} deleted)`,
     });
 
-    // Get existing local data
-    const localEntries = await entriesService.getAllEntries();
-    const localProducts = await productsService.getAllProducts();
+    // Get existing local data (including deleted for proper merge)
+    const localEntries = await entriesService.getAllEntriesIncludingDeleted();
+    const localProducts = await productsService.getAllProductsIncludingDeleted();
     const localWeights = await weightsService.getAllWeights();
 
     // Create maps for faster lookup (using composite keys for entries/weights)
@@ -537,7 +554,7 @@ class SyncService {
     // Merge daily activities - add cloud activities that don't exist locally or are newer
     if (cloudData.dailyActivities && cloudData.dailyActivities.length > 0) {
       console.log(`🏃 Merging ${cloudData.dailyActivities.length} daily activities from cloud...`);
-      const localActivities = await activitiesService.getAllActivities();
+      const localActivities = await activitiesService.getAllActivitiesIncludingDeleted();
       const localActivitiesMap = new Map(localActivities.map(a => [a.date, a]));
 
       let addedCount = 0;

@@ -185,6 +185,8 @@ export interface DailyActivity {
   activities?: FitnessActivity[];  // Specifieke workouts/activiteiten
   created_at: string;              // ISO timestamp
   updated_at: string;              // ISO timestamp
+  deleted?: boolean;               // Soft delete flag
+  deleted_at?: string;             // ISO timestamp when deleted
 }
 
 export interface FitnessActivity {

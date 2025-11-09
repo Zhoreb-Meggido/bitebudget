@@ -10,11 +10,12 @@ import { getTimestamp, generateId } from '@/utils';
 
 class EntriesService {
   /**
-   * Laad alle entries
+   * Laad alle entries (exclusief soft-deleted items)
    */
   async getAllEntries(): Promise<Entry[]> {
     try {
-      return await db.entries.toArray();
+      const entries = await db.entries.toArray();
+      return entries.filter(e => e.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading entries:', error);
       return [];
@@ -22,11 +23,24 @@ class EntriesService {
   }
 
   /**
-   * Laad entries voor specifieke datum
+   * Laad alle entries inclusief soft-deleted items (voor sync/export)
+   */
+  async getAllEntriesIncludingDeleted(): Promise<Entry[]> {
+    try {
+      return await db.entries.toArray();
+    } catch (error) {
+      console.error('❌ Error loading entries including deleted:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Laad entries voor specifieke datum (exclusief soft-deleted items)
    */
   async getEntriesByDate(date: string): Promise<Entry[]> {
     try {
-      return await db.entries.where('date').equals(date).toArray();
+      const entries = await db.entries.where('date').equals(date).toArray();
+      return entries.filter(e => e.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading entries for date:', error);
       return [];
@@ -34,14 +48,15 @@ class EntriesService {
   }
 
   /**
-   * Laad entries voor datum range
+   * Laad entries voor datum range (exclusief soft-deleted items)
    */
   async getEntriesByDateRange(startDate: string, endDate: string): Promise<Entry[]> {
     try {
-      return await db.entries
+      const entries = await db.entries
         .where('date')
         .between(startDate, endDate, true, true)
         .toArray();
+      return entries.filter(e => e.deleted !== true);
     } catch (error) {
       console.error('❌ Error loading entries for date range:', error);
       return [];

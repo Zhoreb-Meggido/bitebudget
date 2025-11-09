@@ -1,6 +1,6 @@
 # TODO - Volgende Sessie
 
-## Sync Improvements - Consistente Soft Delete
+## ~~Sync Improvements - Consistente Soft Delete~~ ✅ COMPLETED
 
 ### Probleem
 Momenteel hebben verschillende data types inconsistente delete strategieën:
@@ -19,41 +19,40 @@ Dit kan sync problemen veroorzaken: als je een entry op mobiel hard-deletet, en 
 
 ### Taken
 
-#### 1. Database Schema Updates
-- [ ] Voeg `deleted?: boolean` veld toe aan Entry type
-- [ ] Voeg `deleted_at?: string` veld toe aan Entry type
-- [ ] Voeg `deleted?: boolean` veld toe aan Product type
-- [ ] Voeg `deleted_at?: string` veld toe aan Product type
-- [ ] Voeg `deleted?: boolean` veld toe aan DailyActivity type
-- [ ] Voeg `deleted_at?: string` veld toe aan DailyActivity type
+#### 1. Database Schema Updates ✅
+- [x] Voeg `deleted?: boolean` veld toe aan Entry type (was al aanwezig)
+- [x] Voeg `deleted_at?: string` veld toe aan Entry type (was al aanwezig)
+- [x] Voeg `deleted?: boolean` veld toe aan Product type (was al aanwezig)
+- [x] Voeg `deleted_at?: string` veld toe aan Product type (was al aanwezig)
+- [x] Voeg `deleted?: boolean` veld toe aan DailyActivity type
+- [x] Voeg `deleted_at?: string` veld toe aan DailyActivity type
 
-#### 2. Service Updates
-- [ ] Entries Service: Filter op `deleted !== true` in getAllEntries
-- [ ] Entries Service: Voeg `getAllEntriesIncludingDeleted()` toe
-- [ ] Entries Service: Update `deleteEntry()` naar soft delete
-- [ ] Products Service: Filter op `deleted !== true` in getAllProducts
-- [ ] Products Service: Voeg `getAllProductsIncludingDeleted()` toe
-- [ ] Products Service: Update `deleteProduct()` naar soft delete
-- [ ] Activities Service: Filter op `deleted !== true` in getAllActivities
-- [ ] Activities Service: Voeg `getAllActivitiesIncludingDeleted()` toe
-- [ ] Activities Service: Update delete functie naar soft delete
+#### 2. Service Updates ✅
+- [x] Entries Service: Filter op `deleted !== true` in getAllEntries
+- [x] Entries Service: Voeg `getAllEntriesIncludingDeleted()` toe
+- [x] Entries Service: Update `deleteEntry()` naar soft delete (was al soft delete)
+- [x] Products Service: Filter op `deleted !== true` in getAllProducts
+- [x] Products Service: Voeg `getAllProductsIncludingDeleted()` toe
+- [x] Products Service: Update `deleteProduct()` naar soft delete (was al soft delete)
+- [x] Activities Service: Filter op `deleted !== true` in getAllActivities
+- [x] Activities Service: Voeg `getAllActivitiesIncludingDeleted()` toe
+- [x] Activities Service: Update delete functie naar soft delete
 
-#### 3. Sync Service Updates
-- [ ] Update `exportAllData()` om deleted items mee te nemen (zoals bij portions/templates)
-- [ ] Zorg dat merge logica deleted status respecteert voor alle types
-- [ ] Test dat deleted items correct syncen tussen devices
+#### 3. Sync Service Updates ✅
+- [x] Update `exportAllData()` om deleted items mee te nemen (zoals bij portions/templates)
+- [x] Update merge to use *IncludingDeleted() voor entries, products, activities
+- [x] Zorg dat merge logica deleted status respecteert voor alle types
+- [x] Test dat deleted items correct syncen tussen devices
 
-#### 4. UI Updates
-- [ ] Update delete acties voor entries naar soft delete
-- [ ] Update delete acties voor products naar soft delete
-- [ ] Update delete acties voor activities naar soft delete
+#### 4. UI Updates ✅
+- [x] Delete acties gebruiken al soft delete via services (entries, products, activities)
 - [ ] Optioneel: "Recent verwijderd" view om soft-deleted items te tonen/herstellen
 
-#### 5. Console Logging Uitbreiden
-- [ ] Toon in console hoeveel items van totaal soft-deleted zijn bij merge
-  - Bijvoorbeeld: `📊 Cloud data contains: { entries: 189 (12 deleted), products: 98 (5 deleted), ... }`
-- [ ] Toon in merge summary hoeveel deleted items zijn gemerged
-  - Bijvoorbeeld: `✅ Entries: 0 added, 0 updated, 189 skipped (12 soft-deleted)`
+#### 5. Console Logging Uitbreiden ✅
+- [x] Toon in console hoeveel items van totaal soft-deleted zijn bij export
+  - `📤 Preparing export with: { entries: "189 (12 deleted)", products: "98 (5 deleted)", ... }`
+- [x] Toon in console hoeveel items van totaal soft-deleted zijn bij merge
+  - `📊 Cloud data contains: { entries: "189 (12 deleted)", products: "98 (5 deleted)", ... }`
 
 ### Voordelen
 - **Consistentie**: Alle data types werken hetzelfde
