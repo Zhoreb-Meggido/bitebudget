@@ -1,5 +1,5 @@
 // Main entry point voor de Voedseljournaal app
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import './styles/main.css'
 import { useDatabase } from '@/hooks'
@@ -13,12 +13,14 @@ import { SettingsPage } from '@/components/settings/SettingsPage'
 import { registerServiceWorker, setupInstallPrompt } from '@/utils/pwa'
 import { AppFooter } from '@/components/AppFooter'
 import { AutoSyncWarningModal, useAutoSyncWarning } from '@/components/AutoSyncWarningModal'
+import { TokenExpiringModal } from '@/components/TokenExpiringModal'
 
 // App component met database initialisatie
 function App() {
   const { isInitialized, error } = useDatabase();
   const [activeTab, setActiveTab] = useActiveTab();
   const { shouldShowWarning, dismissWarning } = useAutoSyncWarning();
+  const [tokenExpiringMinutes, setTokenExpiringMinutes] = useState<number | null>(null);
 
   // Register PWA service worker and install prompt
   useEffect(() => {
@@ -58,6 +60,53 @@ function App() {
         }
       }
     }
+  }, []);
+
+  // Listen for token expiring event
+  useEffect(() => {
+    const handleTokenExpiring = (event: CustomEvent) => {
+      const { minutesRemaining } = event.detail;
+      setTokenExpiringMinutes(minutesRemaining);
+    };
+
+    const handleTokenRefreshed = () => {
+      setTokenExpiringMinutes(null);
+    };
+
+    window.addEventListener('google-drive-token-expiring', handleTokenExpiring as EventListener);
+    window.addEventListener('google-token-refreshed', handleTokenRefreshed);
+
+    return () => {
+      window.removeEventListener('google-drive-token-expiring', handleTokenExpiring as EventListener);
+      window.removeEventListener('google-token-refreshed', handleTokenRefreshed);
+    };
+  }, []);
+
+  // Auto-refresh token when user returns to the app
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        // User returned to the app - check if token needs refresh
+        const { googleDriveService } = await import('@/services/googledrive.service');
+
+        if (googleDriveService.isSignedIn() && googleDriveService.needsReauthentication(5)) {
+          console.log('👀 User returned - attempting token refresh...');
+
+          // Try to refresh (will show popup if needed)
+          const refreshed = await googleDriveService.manualRefresh();
+
+          if (refreshed) {
+            console.log('✅ Token automatically refreshed on user return');
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   if (error) {
@@ -100,6 +149,14 @@ function App() {
       {/* Auto-Sync Warning Modal */}
       {shouldShowWarning && (
         <AutoSyncWarningModal onClose={dismissWarning} />
+      )}
+
+      {/* Token Expiring Warning Modal */}
+      {tokenExpiringMinutes !== null && (
+        <TokenExpiringModal
+          minutesRemaining={tokenExpiringMinutes}
+          onClose={() => setTokenExpiringMinutes(null)}
+        />
       )}
     </div>
   );

@@ -39,9 +39,10 @@ export function ActivityTab() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div>
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="p-6 border-b border-gray-200">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-sm font-medium text-gray-500">Dagen</div>
           <div className="mt-2 text-3xl font-bold text-gray-900">{stats?.totalDays || 0}</div>
@@ -71,10 +72,11 @@ export function ActivityTab() {
           <div className="text-sm font-medium text-gray-500">Ø Slaap</div>
           <div className="mt-2 text-2xl font-bold text-indigo-600">{stats?.avgSleepHours || 0}u</div>
         </div>
+        </div>
       </div>
 
       {/* Recent Activity Table */}
-      <div className="bg-white rounded-lg shadow">
+      <div>
         <div className="p-6 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Recente Activiteit</h3>
         </div>

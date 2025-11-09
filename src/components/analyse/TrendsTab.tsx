@@ -387,9 +387,10 @@ export function TrendsTab() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div>
       {/* Quick Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="p-6 border-b border-gray-200">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
           <div className="text-sm text-blue-600 font-medium mb-1">Ø Stappen</div>
           <div className="text-2xl font-bold text-blue-900">{stats.avgSteps.toLocaleString()}</div>
@@ -437,10 +438,11 @@ export function TrendsTab() {
           <div className="text-2xl font-bold text-gray-900">{stats.daysWithData}</div>
           <div className="text-xs text-gray-600 mt-1">van {period}</div>
         </div>
+        </div>
       </div>
 
       {/* Chart Section */}
-      <div className="bg-white rounded-lg shadow">
+      <div>
         <div className="p-6 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-xl font-semibold text-gray-900">Activity Trends</h2>

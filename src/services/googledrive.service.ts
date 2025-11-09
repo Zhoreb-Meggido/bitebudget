@@ -20,6 +20,7 @@ class GoogleDriveService {
 
   private tokenClient: any = null;
   private accessToken: string | null = null;
+  private refreshInProgress: boolean = false;
 
   /**
    * Initialize Google Identity Services
@@ -101,16 +102,145 @@ class GoogleDriveService {
   }
 
   /**
+   * Check if token is expired or will expire soon
+   */
+  private isTokenExpired(bufferMinutes: number = 0): boolean {
+    const expiresAt = localStorage.getItem('google_token_expires_at');
+    if (!expiresAt) return true;
+
+    const expiryTime = parseInt(expiresAt);
+    const bufferMs = bufferMinutes * 60 * 1000;
+    return Date.now() + bufferMs > expiryTime;
+  }
+
+  /**
+   * Get time remaining until token expires (in minutes)
+   */
+  getTokenExpiryMinutes(): number {
+    const expiresAt = localStorage.getItem('google_token_expires_at');
+    if (!expiresAt) return 0;
+
+    const expiryTime = parseInt(expiresAt);
+    const remainingMs = expiryTime - Date.now();
+    return Math.floor(remainingMs / 60000); // Convert to minutes
+  }
+
+  /**
+   * Check if token needs user attention (expires within warning threshold)
+   */
+  needsReauthentication(warningMinutes: number = 10): boolean {
+    const remainingMinutes = this.getTokenExpiryMinutes();
+    return remainingMinutes <= warningMinutes && remainingMinutes > 0;
+  }
+
+  /**
+   * Manually refresh token (requires user interaction - shows consent screen)
+   * This is triggered by user action, so popup is allowed
+   */
+  async manualRefresh(): Promise<boolean> {
+    // Prevent concurrent refresh attempts
+    if (this.refreshInProgress) {
+      console.log('🔄 Token refresh already in progress, waiting...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return !this.isTokenExpired(0);
+    }
+
+    this.refreshInProgress = true;
+
+    try {
+      await this.initialize();
+
+      return new Promise((resolve) => {
+        try {
+          const client = (window as any).google.accounts.oauth2.initTokenClient({
+            client_id: this.CLIENT_ID,
+            scope: this.SCOPES,
+            callback: (response: GoogleTokenResponse) => {
+              if (response.access_token) {
+                console.log('✅ Token refreshed successfully');
+                this.accessToken = response.access_token;
+                localStorage.setItem('google_access_token', response.access_token);
+
+                const expiresAt = Date.now() + (response.expires_in * 1000);
+                localStorage.setItem('google_token_expires_at', expiresAt.toString());
+
+                this.refreshInProgress = false;
+
+                // Dispatch event to notify UI
+                window.dispatchEvent(new CustomEvent('google-token-refreshed'));
+
+                resolve(true);
+              } else {
+                console.log('❌ Token refresh failed: no access token');
+                this.refreshInProgress = false;
+                resolve(false);
+              }
+            },
+            error_callback: (error: any) => {
+              console.log('❌ Token refresh failed:', error);
+              this.refreshInProgress = false;
+              resolve(false);
+            },
+          });
+
+          client.requestAccessToken();
+        } catch (error) {
+          console.error('❌ Error during token refresh:', error);
+          this.refreshInProgress = false;
+          resolve(false);
+        }
+      });
+    } catch (error) {
+      console.error('❌ Failed to initialize for token refresh:', error);
+      this.refreshInProgress = false;
+      return false;
+    }
+  }
+
+  /**
+   * Ensure we have a valid token
+   */
+  async ensureValidToken(): Promise<boolean> {
+    const token = this.getAccessToken();
+    if (!token) {
+      console.log('⚠️ No token available, user needs to sign in');
+      return false;
+    }
+
+    // Check if token is expired
+    if (this.isTokenExpired(0)) {
+      console.log('⚠️ Token expired, user needs to re-authenticate');
+
+      // Dispatch event to notify UI
+      window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
+
+      return false;
+    }
+
+    // Check if token will expire soon (within 10 minutes)
+    // Only show warning modal if user is actively using the app (page is visible)
+    if (this.needsReauthentication(10) && document.visibilityState === 'visible') {
+      const remainingMinutes = this.getTokenExpiryMinutes();
+      console.log(`⚠️ Token expires in ${remainingMinutes} minutes`);
+
+      // Dispatch event to warn user (only if page is visible)
+      window.dispatchEvent(new CustomEvent('google-drive-token-expiring', {
+        detail: { minutesRemaining: remainingMinutes }
+      }));
+    }
+
+    return true;
+  }
+
+  /**
    * Check if user is signed in
    */
   isSignedIn(): boolean {
     const token = this.getAccessToken();
     if (!token) return false;
 
-    // Check if token is expired
-    const expiresAt = localStorage.getItem('google_token_expires_at');
-    if (expiresAt && Date.now() > parseInt(expiresAt)) {
-      this.signOut();
+    // Check if token is expired (no buffer)
+    if (this.isTokenExpired(0)) {
       return false;
     }
 
@@ -136,6 +266,9 @@ class GoogleDriveService {
    * Find or create BiteBudget folder
    */
   private async findOrCreateFolder(): Promise<string> {
+    if (!await this.ensureValidToken()) {
+      throw new Error('Not authenticated');
+    }
     const token = this.getAccessToken();
     if (!token) throw new Error('Not authenticated');
 
@@ -174,6 +307,9 @@ class GoogleDriveService {
    * Find existing backup file
    */
   private async findFile(folderId: string): Promise<string | null> {
+    if (!await this.ensureValidToken()) {
+      throw new Error('Not authenticated');
+    }
     const token = this.getAccessToken();
     if (!token) throw new Error('Not authenticated');
 
@@ -197,6 +333,9 @@ class GoogleDriveService {
    * Upload encrypted data to Google Drive
    */
   async uploadData(encryptedData: string): Promise<void> {
+    if (!await this.ensureValidToken()) {
+      throw new Error('Not authenticated');
+    }
     const token = this.getAccessToken();
     if (!token) throw new Error('Not authenticated');
 
@@ -234,6 +373,9 @@ class GoogleDriveService {
    * Download encrypted data from Google Drive
    */
   async downloadData(): Promise<string | null> {
+    if (!await this.ensureValidToken()) {
+      throw new Error('Not authenticated');
+    }
     const token = this.getAccessToken();
     if (!token) throw new Error('Not authenticated');
 
@@ -262,6 +404,9 @@ class GoogleDriveService {
    * Get last sync info
    */
   async getLastSyncInfo(): Promise<{ date: Date; size: number } | null> {
+    if (!await this.ensureValidToken()) {
+      throw new Error('Not authenticated');
+    }
     const token = this.getAccessToken();
     if (!token) throw new Error('Not authenticated');
 

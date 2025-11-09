@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
-import { useEntries } from '@/hooks';
+import { useEntries, useSettings, useWeights } from '@/hooks';
 
-type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
+type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
 
 // Helper function to calculate ISO week number
 function getISOWeekNumber(date: Date): number {
@@ -44,7 +44,19 @@ interface WeekData {
 
 export function NutritionTab() {
   const { entries } = useEntries();
+  const { settings } = useSettings();
+  const { weights } = useWeights();
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('overall');
+
+  // Get most recent weight for protein calculation
+  const currentWeight = useMemo(() => {
+    const validWeights = weights.filter(w => !w.deleted && w.weight > 0);
+    if (validWeights.length === 0) return settings.targetWeight;
+
+    // Sort by date descending and get the most recent
+    const sorted = [...validWeights].sort((a, b) => b.date.localeCompare(a.date));
+    return sorted[0].weight;
+  }, [weights, settings.targetWeight]);
 
   // Aggregate entries per day
   const dailyData = useMemo(() => {
@@ -154,39 +166,93 @@ export function NutritionTab() {
         if (value < 2100) return 'bg-yellow-500';
         return 'bg-red-500';
 
-      case 'protein':
-        if (value >= 72) return 'bg-green-500';
-        if (value >= 36) return 'bg-yellow-500';
+      case 'protein': {
+        // Calculate protein target based on current weight: 0.83g per kg
+        const proteinTarget = 0.83 * currentWeight;
+        const minThreshold = proteinTarget * 0.80; // 80% of target
+        const maxThreshold = proteinTarget * 1.20; // 120% of target
+
+        if (value < minThreshold) return 'bg-red-500';      // Below 80%
+        if (value <= maxThreshold) return 'bg-yellow-500';  // 80-120%
+        return 'bg-green-500';                               // Above 120%
+      }
+
+      case 'carbohydrates':
+        // Treat 0 as "no data" since tracking 0g carbs is virtually impossible
+        if (value === 0) return 'bg-gray-200';
+        if (value < settings.carbohydratesMax * 0.8) return 'bg-green-500';
+        if (value <= settings.carbohydratesMax) return 'bg-yellow-500';
+        return 'bg-red-500';
+
+      case 'sugars':
+        // Treat 0 as "no data" since tracking 0g sugars is virtually impossible
+        if (value === 0) return 'bg-gray-200';
+        if (value < settings.sugarsMax * 0.8) return 'bg-green-500';
+        if (value <= settings.sugarsMax) return 'bg-yellow-500';
+        return 'bg-red-500';
+
+      case 'fat':
+        // Treat 0 as "no data" since tracking 0g fat is virtually impossible
+        if (value === 0) return 'bg-gray-200';
+        if (value < settings.fatMax * 0.8) return 'bg-green-500';
+        if (value <= settings.fatMax) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'saturatedFat':
-        if (value < 20) return 'bg-green-500';
-        if (value < 25) return 'bg-yellow-500';
+        if (value < settings.saturatedFatMax) return 'bg-green-500';
+        if (value < settings.saturatedFatMax * 1.25) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'fiber':
-        if (value >= 35) return 'bg-green-500';
-        if (value >= 17.5) return 'bg-yellow-500';
+        // Green: ≥28g (realistic daily goal), Yellow: ≥20g (decent intake), Red: <20g
+        if (value >= 28) return 'bg-green-500';
+        if (value >= 20) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'sodium':
-        if (value < 2300) return 'bg-green-500';
-        if (value < 2800) return 'bg-yellow-500';
+        if (value < settings.sodiumMax) return 'bg-green-500';
+        if (value < settings.sodiumMax * 1.2) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'overall': {
         // Calculate percentage of targets met
+        // Only count metrics that have actual data (non-zero values)
         let score = 0;
-        if (dayData.calories < 1900) score++;
-        if (dayData.protein >= 36) score++;
-        if (dayData.saturatedFat < 20) score++;
-        if (dayData.fiber >= 17.5) score++;
-        if (dayData.sodium < 2300) score++;
+        let totalMetrics = 0;
 
-        const percentage = (score / 5) * 100;
-        if (percentage >= 80) return 'bg-green-500';
-        if (percentage >= 60) return 'bg-yellow-500';
-        return 'bg-red-500';
+        // Always count calories and protein (core metrics)
+        totalMetrics += 2;
+        if (dayData.calories < settings.caloriesRest) score++;
+
+        // Protein: check if at least 80% of target (0.83 * currentWeight)
+        const proteinTarget = 0.83 * currentWeight;
+        const proteinMin = proteinTarget * 0.80;
+        if (dayData.protein >= proteinMin) score++;
+
+        // Only count carbs/sugars/fat if tracked (non-zero)
+        if (dayData.carbohydrates > 0) {
+          totalMetrics++;
+          if (dayData.carbohydrates <= settings.carbohydratesMax) score++;
+        }
+        if (dayData.sugars > 0) {
+          totalMetrics++;
+          if (dayData.sugars <= settings.sugarsMax) score++;
+        }
+        if (dayData.fat > 0) {
+          totalMetrics++;
+          if (dayData.fat <= settings.fatMax) score++;
+        }
+
+        // Always count saturated fat, fiber, sodium (typically tracked)
+        totalMetrics += 3;
+        if (dayData.saturatedFat < settings.saturatedFatMax) score++;
+        if (dayData.fiber >= 28) score++;  // Realistic fiber goal (not settings.fiberMin which is 35)
+        if (dayData.sodium < settings.sodiumMax) score++;
+
+        const percentage = totalMetrics > 0 ? (score / totalMetrics) * 100 : 0;
+        if (percentage >= 75) return 'bg-green-500';  // 6/8 or better
+        if (percentage >= 50) return 'bg-yellow-500'; // 4/8 or 5/8
+        return 'bg-red-500';                           // 3/8 or worse
       }
 
       default:
@@ -269,6 +335,7 @@ export function NutritionTab() {
     protein: 'Eiwit',
     carbohydrates: 'Koolhydraten',
     sugars: 'Suikers',
+    fat: 'Vet',
     saturatedFat: 'Verzadigd Vet',
     fiber: 'Vezels',
     sodium: 'Natrium',
@@ -276,9 +343,9 @@ export function NutritionTab() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div>
       {/* Week Comparison */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="border-b border-gray-200">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Week Vergelijking</h2>
         </div>
@@ -377,7 +444,7 @@ export function NutritionTab() {
       </div>
 
       {/* Calendar Heatmap */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="border-b border-gray-200">
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">Kalender Overzicht</h2>
 
@@ -391,6 +458,7 @@ export function NutritionTab() {
             <option value="protein">Eiwit</option>
             <option value="carbohydrates">Koolhydraten</option>
             <option value="sugars">Suikers</option>
+            <option value="fat">Vet</option>
             <option value="saturatedFat">Verzadigd Vet</option>
             <option value="fiber">Vezels</option>
             <option value="sodium">Natrium</option>
@@ -426,14 +494,71 @@ export function NutritionTab() {
                     {week.map((day, dayIndex) => {
                       const dayDate = new Date(day.date);
                       const dayNum = dayDate.getDate();
-                      const value = day.data ? day.data[selectedMetric === 'overall' ? 'calories' : selectedMetric] : undefined;
+
+                      // For 'overall', calculate the actual score instead of just using calories
+                      let value: number | undefined;
+                      if (selectedMetric === 'overall') {
+                        // Use any value to trigger color calculation, the getColor function will calculate the actual score
+                        value = day.data ? 1 : undefined;
+                      } else {
+                        value = day.data ? day.data[selectedMetric] : undefined;
+                      }
                       const colorClass = getColor(selectedMetric, value, day.data);
+
+                      // Build tooltip with actual value
+                      let tooltipText = day.date;
+                      if (day.data) {
+                        if (selectedMetric === 'overall') {
+                          // For overall, show a summary (matching the getColor logic)
+                          let score = 0;
+                          let totalMetrics = 0;
+
+                          // Always count calories and protein
+                          totalMetrics += 2;
+                          if (day.data.calories < settings.caloriesRest) score++;
+
+                          // Protein: check if at least 80% of target
+                          const proteinTarget = 0.83 * currentWeight;
+                          const proteinMin = proteinTarget * 0.80;
+                          if (day.data.protein >= proteinMin) score++;
+
+                          // Only count carbs/sugars/fat if tracked (non-zero)
+                          if (day.data.carbohydrates > 0) {
+                            totalMetrics++;
+                            if (day.data.carbohydrates <= settings.carbohydratesMax) score++;
+                          }
+                          if (day.data.sugars > 0) {
+                            totalMetrics++;
+                            if (day.data.sugars <= settings.sugarsMax) score++;
+                          }
+                          if (day.data.fat > 0) {
+                            totalMetrics++;
+                            if (day.data.fat <= settings.fatMax) score++;
+                          }
+
+                          // Always count saturated fat, fiber, sodium
+                          totalMetrics += 3;
+                          if (day.data.saturatedFat < settings.saturatedFatMax) score++;
+                          if (day.data.fiber >= 28) score++;  // Realistic fiber goal
+                          if (day.data.sodium < settings.sodiumMax) score++;
+
+                          tooltipText = `${day.date}: ${score}/${totalMetrics} doelen behaald`;
+                        } else {
+                          // For specific metrics, show the value
+                          const val = day.data[selectedMetric];
+                          const unit = selectedMetric === 'calories' ? ' kcal' :
+                                       selectedMetric === 'sodium' ? ' mg' : ' g';
+                          tooltipText = `${day.date}: ${metricLabels[selectedMetric]} ${val}${unit}`;
+                        }
+                      } else {
+                        tooltipText = `${day.date}: Geen data`;
+                      }
 
                       return (
                         <div
                           key={dayIndex}
                           className={`w-10 h-10 rounded ${colorClass} flex items-center justify-center text-white text-xs font-medium hover:ring-2 hover:ring-purple-400 cursor-pointer`}
-                          title={`${day.date}: ${day.data ? metricLabels[selectedMetric] : 'Geen data'}`}
+                          title={tooltipText}
                         >
                           {dayNum}
                         </div>
@@ -468,7 +593,7 @@ export function NutritionTab() {
       </div>
 
       {/* Weekday Trends */}
-      <div className="bg-white rounded-lg shadow">
+      <div>
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Trends per Weekdag</h2>
           <p className="text-sm text-gray-600 mt-1">Gemiddelden gebaseerd op de laatste 60 dagen</p>
