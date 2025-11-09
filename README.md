@@ -1,10 +1,10 @@
-# BiteBudget (Voedseljournaal) v1.4.0
+# BiteBudget (Voedseljournaal) v1.5.0
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.4.0:** Data Management Page - Complete controle over je data!
+**🎉 Nieuw in v1.5.0:** Meal Templates, Garmin Integration & Smart Token Management!
 
 ---
 
@@ -335,7 +335,62 @@ npm run build
 
 ---
 
-## 🎨 v1.2.0 - Advanced PDF Reporting & Dashboard Improvements
+## 📋 Changelog
+
+### **v1.5.0 - Templates, Integrations & Smart Sync** (2025-01-09)
+
+#### **Meal Templates & Favorites** ⭐
+- ✅ **Template System** - Save frequently used meals as reusable templates
+- ✅ **Quick Add** - One-click meal logging from templates
+- ✅ **Favorites** - Mark templates as favorites for quick access
+- ✅ **Recent Templates** - Auto-track last 5 used templates
+- ✅ **Category Support** - Organize templates by meal type (breakfast, lunch, etc.)
+- ✅ **Usage Tracking** - Automatic tracking of template usage with timestamps
+- ✅ **Template Management** - Full CRUD operations in Data page Templates tab
+
+#### **Garmin Connect Integration** 📊
+- ✅ **CSV Import** - Import daily activities from Garmin Connect CSV exports
+- ✅ **Activity Tracking** - Track steps, distance, calories, and active minutes
+- ✅ **Data Validation** - Smart parsing with error handling
+- ✅ **Duplicate Detection** - Prevents importing same data twice
+- ✅ **Export Support** - Activities included in data export/import
+
+#### **Analyze Page Improvements** 📈
+- ✅ **Heatmap Calendar** - Visual nutrition tracking with color-coded goals
+  - Added carbohydrates, sugars, and fat metrics to dropdown
+  - 0g values show as gray (no data) instead of green
+  - Dynamic protein calculation based on current weight (0.83g/kg)
+  - Fiber threshold adjusted to 28g (more realistic than 35g)
+  - Overall score: 75% threshold (6/8 goals = green)
+- ✅ **Smart Scoring** - Protein zones: <80% red, 80-120% yellow, >120% green
+- ✅ **Tooltips** - Show actual metric values on hover
+- ✅ **Weight Integration** - Uses most recent weight from tracking
+
+#### **Smart Token Management** 🔐
+- ✅ **Proactive Warnings** - Modal appears 10 minutes before token expiry
+- ✅ **Auto-Refresh on Return** - Automatically refreshes token when returning to app
+- ✅ **Visibility-Aware** - Only shows warnings when app is actively used
+- ✅ **Page Visibility API** - Detects when user returns after idle period
+- ✅ **No Interruptions** - Handles multi-hour idle sessions gracefully
+- ✅ **Manual Refresh** - User-initiated refresh via modal button
+
+#### **Sync Service Fixes** 🔄
+- ✅ **Duplicate Barcode Fix** - Products now merged by name AND EAN
+- ✅ **Entry Conflict Resolution** - ID-based lookup prevents duplicate entries
+- ✅ **Time Edit Support** - Changing entry time after sync no longer creates duplicates
+- ✅ **Graceful Error Handling** - Try-catch for failed additions during merge
+
+#### **Code Cleanup** 🧹
+- ✅ **Removed Unused Files** - Deleted AnalysePage.tsx and ProductsModal.tsx
+- ✅ **Import Analysis** - Verified removal via grep-based dependency check
+
+#### **Documentation** 📝
+- ✅ **Future Optimizations** - Added section on gzip compression and data archiving
+- ✅ **Data Projections** - Documented 10-year growth estimates (13 MB uncompressed)
+
+---
+
+## 🎨 v1.4.0 - Data Management Complete (2025-01-06)
 
 ### **New Features**
 
@@ -874,6 +929,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** January 7, 2025
-**Status:** v1.4.0 - Data Management Complete
+**Last Updated:** January 9, 2025
+**Status:** v1.5.0 - Templates, Integrations & Smart Sync
 **Next:** Photo attachments & Recipe builder
