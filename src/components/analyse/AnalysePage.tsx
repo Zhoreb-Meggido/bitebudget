@@ -463,11 +463,37 @@ export function AnalysePage() {
                       }
                       const colorClass = getColor(selectedMetric, value, day.data);
 
+                      // Build tooltip with actual value
+                      let tooltipText = day.date;
+                      if (day.data) {
+                        if (selectedMetric === 'overall') {
+                          // For overall, show a summary
+                          let score = 0;
+                          if (day.data.calories < settings.caloriesRest) score++;
+                          if (day.data.protein >= settings.proteinRest) score++;
+                          if (day.data.carbohydrates <= settings.carbohydratesMax) score++;
+                          if (day.data.sugars <= settings.sugarsMax) score++;
+                          if (day.data.fat <= settings.fatMax) score++;
+                          if (day.data.saturatedFat < settings.saturatedFatMax) score++;
+                          if (day.data.fiber >= settings.fiberMin) score++;
+                          if (day.data.sodium < settings.sodiumMax) score++;
+                          tooltipText = `${day.date}: ${score}/8 doelen behaald`;
+                        } else {
+                          // For specific metrics, show the value
+                          const val = day.data[selectedMetric];
+                          const unit = selectedMetric === 'calories' ? ' kcal' :
+                                       selectedMetric === 'sodium' ? ' mg' : ' g';
+                          tooltipText = `${day.date}: ${metricLabels[selectedMetric]} ${val}${unit}`;
+                        }
+                      } else {
+                        tooltipText = `${day.date}: Geen data`;
+                      }
+
                       return (
                         <div
                           key={dayIndex}
                           className={`w-10 h-10 rounded ${colorClass} flex items-center justify-center text-white text-xs font-medium hover:ring-2 hover:ring-purple-400 cursor-pointer`}
-                          title={`${day.date}: ${day.data ? metricLabels[selectedMetric] : 'Geen data'}`}
+                          title={tooltipText}
                         >
                           {dayNum}
                         </div>
