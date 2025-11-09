@@ -108,15 +108,35 @@ class GoogleDriveService {
   }
 
   /**
-   * Refresh access token silently (without user interaction)
+   * Get time remaining until token expires (in minutes)
    */
-  private async refreshToken(): Promise<boolean> {
+  getTokenExpiryMinutes(): number {
+    const expiresAt = localStorage.getItem('google_token_expires_at');
+    if (!expiresAt) return 0;
+
+    const expiryTime = parseInt(expiresAt);
+    const remainingMs = expiryTime - Date.now();
+    return Math.floor(remainingMs / 60000); // Convert to minutes
+  }
+
+  /**
+   * Check if token needs user attention (expires within warning threshold)
+   */
+  needsReauthentication(warningMinutes: number = 10): boolean {
+    const remainingMinutes = this.getTokenExpiryMinutes();
+    return remainingMinutes <= warningMinutes && remainingMinutes > 0;
+  }
+
+  /**
+   * Manually refresh token (requires user interaction - shows consent screen)
+   * This is triggered by user action, so popup is allowed
+   */
+  async manualRefresh(): Promise<boolean> {
     // Prevent concurrent refresh attempts
     if (this.refreshInProgress) {
       console.log('🔄 Token refresh already in progress, waiting...');
-      // Wait for ongoing refresh to complete
       await new Promise(resolve => setTimeout(resolve, 2000));
-      return !this.isTokenExpired();
+      return !this.isTokenExpired(0);
     }
 
     this.refreshInProgress = true;
@@ -126,11 +146,9 @@ class GoogleDriveService {
 
       return new Promise((resolve) => {
         try {
-          // Use prompt: 'none' for silent refresh (no user interaction)
           const client = (window as any).google.accounts.oauth2.initTokenClient({
             client_id: this.CLIENT_ID,
             scope: this.SCOPES,
-            prompt: '', // Empty string allows silent refresh
             callback: (response: GoogleTokenResponse) => {
               if (response.access_token) {
                 console.log('✅ Token refreshed successfully');
@@ -141,6 +159,10 @@ class GoogleDriveService {
                 localStorage.setItem('google_token_expires_at', expiresAt.toString());
 
                 this.refreshInProgress = false;
+
+                // Dispatch event to notify UI
+                window.dispatchEvent(new CustomEvent('google-token-refreshed'));
+
                 resolve(true);
               } else {
                 console.log('❌ Token refresh failed: no access token');
@@ -170,7 +192,7 @@ class GoogleDriveService {
   }
 
   /**
-   * Ensure we have a valid token, refresh if needed
+   * Ensure we have a valid token
    */
   async ensureValidToken(): Promise<boolean> {
     const token = this.getAccessToken();
@@ -179,15 +201,26 @@ class GoogleDriveService {
       return false;
     }
 
-    // Check if token will expire within 5 minutes
-    if (this.isTokenExpired(5)) {
-      console.log('🔄 Token expired or expiring soon, attempting refresh...');
-      const refreshed = await this.refreshToken();
-      if (!refreshed) {
-        console.log('⚠️ Token refresh failed, user needs to re-authenticate');
-        this.signOut();
-        return false;
-      }
+    // Check if token is expired
+    if (this.isTokenExpired(0)) {
+      console.log('⚠️ Token expired, user needs to re-authenticate');
+
+      // Dispatch event to notify UI
+      window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
+
+      return false;
+    }
+
+    // Check if token will expire soon (within 10 minutes)
+    // Only show warning modal if user is actively using the app (page is visible)
+    if (this.needsReauthentication(10) && document.visibilityState === 'visible') {
+      const remainingMinutes = this.getTokenExpiryMinutes();
+      console.log(`⚠️ Token expires in ${remainingMinutes} minutes`);
+
+      // Dispatch event to warn user (only if page is visible)
+      window.dispatchEvent(new CustomEvent('google-drive-token-expiring', {
+        detail: { minutesRemaining: remainingMinutes }
+      }));
     }
 
     return true;
