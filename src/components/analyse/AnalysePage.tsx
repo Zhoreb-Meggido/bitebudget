@@ -453,7 +453,14 @@ export function AnalysePage() {
                     {week.map((day, dayIndex) => {
                       const dayDate = new Date(day.date);
                       const dayNum = dayDate.getDate();
-                      const value = day.data ? day.data[selectedMetric === 'overall' ? 'calories' : selectedMetric] : undefined;
+                      // For 'overall', calculate the actual score instead of just using calories
+                      let value: number | undefined;
+                      if (selectedMetric === 'overall') {
+                        // Use any value to trigger color calculation, the getColor function will calculate the actual score
+                        value = day.data ? 1 : undefined;
+                      } else {
+                        value = day.data ? day.data[selectedMetric] : undefined;
+                      }
                       const colorClass = getColor(selectedMetric, value, day.data);
 
                       return (
