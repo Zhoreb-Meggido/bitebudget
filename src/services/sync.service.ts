@@ -364,8 +364,8 @@ class SyncService {
         // Same ID, same key - will be handled by update logic below
       }
 
-      if (!localEntry) {
-        // New entry from cloud
+      // New entry from cloud - doesn't exist by key or ID
+      if (!localEntry && !existingById) {
         console.log(`➕ Adding new entry from cloud: ${key}`);
         try {
           await entriesService.addEntry(cloudEntry);
@@ -373,19 +373,12 @@ class SyncService {
         } catch (err) {
           console.error(`❌ Failed to add entry ${key}:`, err);
         }
-        // New entry from cloud - doesn't exist by key or ID
-        if (!existingById) {
-          console.log(`➕ Adding new entry from cloud: ${key}`);
-          try {
-            await entriesService.addEntry(cloudEntry);
-            entriesAdded++;
-          } catch (err) {
-            console.error(`❌ Failed to add entry ${key}:`, err);
-          }
-        }
-        // If existingById exists but localEntry doesn't, it means the ID exists
-        // but points to a different entry - already handled above
-      } else if (cloudEntry.updated_at && localEntry.updated_at &&
+      } else if (!localEntry && existingById) {
+        // ID exists but points to different entry - already handled by ID conflict logic above
+        // Skip this entry to avoid duplicates
+        console.log(`⚠️ Skipping cloud entry with ID conflict: ${key}`);
+        entriesSkipped++;
+      } else if (localEntry && cloudEntry.updated_at && localEntry.updated_at &&
                  new Date(cloudEntry.updated_at) > new Date(localEntry.updated_at)) {
         // Cloud entry is newer - propagate all changes including deletion
         console.log(`🔄 Updating entry (cloud is newer): ${key}`);
