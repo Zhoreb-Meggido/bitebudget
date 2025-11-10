@@ -1,9 +1,12 @@
 /**
  * Google Drive Service - OAuth + file upload/download
+ * Now with Authorization Code Flow and automatic token refresh via Supabase!
  */
 
-// BELANGRIJK: Vervang dit door je eigen Client ID
-const GOOGLE_CLIENT_ID = '413904583159-t6fgs0dn819dtla2oqdu8dni0sibtujo.apps.googleusercontent.com'; // Vervang met jouw Client ID
+import { supabaseService } from './supabase.service';
+import { settingsService } from './settings.service';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '413904583159-t6fgs0dn819dtla2oqdu8dni0sibtujo.apps.googleusercontent.com';
 
 interface GoogleTokenResponse {
   access_token: string;
@@ -17,17 +20,149 @@ class GoogleDriveService {
   private readonly SCOPES = 'https://www.googleapis.com/auth/drive.file';
   private readonly FOLDER_NAME = 'BiteBudget';
   private readonly FILE_NAME = 'bitebudget-data.enc';
+  private readonly REDIRECT_URI = `${window.location.origin}/oauth/google/callback`;
 
-  private tokenClient: any = null;
   private accessToken: string | null = null;
   private refreshInProgress: boolean = false;
+  private automaticRefreshInterval: number | null = null;
+
+  constructor() {
+    // Initialize Supabase
+    supabaseService.initialize();
+
+    // Start automatic refresh timer if enabled and token exists
+    if (this.isSignedIn()) {
+      this.startAutomaticRefreshTimer();
+    }
+  }
 
   /**
-   * Initialize Google Identity Services
+   * Sign in to Google using Authorization Code Flow
+   * This flow provides refresh tokens when using a backend (Supabase Edge Functions)
    */
-  async initialize(): Promise<void> {
+  async signIn(): Promise<void> {
+    // Check if user wants automatic refresh
+    const settings = await settingsService.loadSettings();
+    const useAutomaticRefresh = settings.autoRefreshOAuth !== false && supabaseService.isAvailable();
+
+    if (useAutomaticRefresh) {
+      // Use Authorization Code Flow (gets refresh token via Supabase)
+      await this.signInWithAuthorizationCodeFlow();
+    } else {
+      // Fallback to Implicit Flow (no refresh token, shows modal when expired)
+      await this.signInWithImplicitFlow();
+    }
+  }
+
+  /**
+   * Authorization Code Flow (RECOMMENDED - provides automatic refresh)
+   * Redirects user to Google consent screen, then exchanges code for tokens via Supabase
+   */
+  private async signInWithAuthorizationCodeFlow(): Promise<void> {
+    // Generate code verifier and challenge for PKCE (optional security enhancement)
+    const codeVerifier = this.generateCodeVerifier();
+    const codeChallenge = await this.generateCodeChallenge(codeVerifier);
+
+    // Store code verifier for callback
+    sessionStorage.setItem('google_code_verifier', codeVerifier);
+
+    // Build authorization URL
+    const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    authUrl.searchParams.set('client_id', this.CLIENT_ID);
+    authUrl.searchParams.set('redirect_uri', this.REDIRECT_URI);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope', this.SCOPES);
+    authUrl.searchParams.set('access_type', 'offline'); // Request refresh token
+    authUrl.searchParams.set('prompt', 'consent'); // Force consent to ensure refresh token
+    authUrl.searchParams.set('code_challenge', codeChallenge);
+    authUrl.searchParams.set('code_challenge_method', 'S256');
+
+    // Redirect to Google
+    window.location.href = authUrl.toString();
+  }
+
+  /**
+   * Handle OAuth callback (called after user authorizes)
+   */
+  async handleOAuthCallback(code: string): Promise<void> {
+    try {
+      console.log('📥 Handling OAuth callback...');
+
+      // Exchange authorization code for tokens via Supabase Edge Function
+      const { access_token, expires_in, expires_at } = await supabaseService.initGoogleOAuth(
+        code,
+        this.REDIRECT_URI
+      );
+
+      // Store access token and expiry
+      this.accessToken = access_token;
+      localStorage.setItem('google_access_token', access_token);
+      localStorage.setItem('google_token_expires_at', new Date(expires_at).getTime().toString());
+      localStorage.setItem('google_oauth_method', 'authorization_code'); // Mark as automatic refresh enabled
+
+      console.log('✅ OAuth initialization complete, automatic refresh enabled!');
+
+      // Start automatic refresh timer
+      this.startAutomaticRefreshTimer();
+
+      // Dispatch success event
+      window.dispatchEvent(new CustomEvent('google-oauth-success'));
+
+    } catch (error) {
+      console.error('❌ OAuth callback failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Implicit Flow (FALLBACK - no automatic refresh, requires manual re-auth)
+   */
+  private async signInWithImplicitFlow(): Promise<void> {
+    await this.initializeGIS();
+
     return new Promise((resolve, reject) => {
-      // Load Google Identity Services library
+      try {
+        const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
+          client_id: this.CLIENT_ID,
+          scope: this.SCOPES,
+          callback: (response: GoogleTokenResponse) => {
+            if (response.access_token) {
+              this.accessToken = response.access_token;
+              localStorage.setItem('google_access_token', response.access_token);
+
+              // Store expiry time
+              const expiresAt = Date.now() + (response.expires_in * 1000);
+              localStorage.setItem('google_token_expires_at', expiresAt.toString());
+              localStorage.setItem('google_oauth_method', 'implicit'); // Mark as manual refresh only
+
+              console.log('✅ Signed in with Implicit Flow (manual refresh mode)');
+              resolve();
+            } else {
+              reject(new Error('No access token received'));
+            }
+          },
+          error_callback: (error: any) => {
+            reject(new Error(`OAuth error: ${error.message || 'Unknown error'}`));
+          },
+        });
+
+        tokenClient.requestAccessToken();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Initialize Google Identity Services (for Implicit Flow fallback)
+   */
+  private async initializeGIS(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if ((window as any).google?.accounts) {
+        resolve();
+        return;
+      }
+
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
@@ -39,46 +174,156 @@ class GoogleDriveService {
   }
 
   /**
-   * Sign in to Google and get access token
+   * Start automatic refresh timer (refreshes token every 50 minutes)
    */
-  async signIn(): Promise<void> {
-    await this.initialize();
+  private startAutomaticRefreshTimer(): void {
+    // Only start if using authorization code flow
+    const method = localStorage.getItem('google_oauth_method');
+    if (method !== 'authorization_code' || !supabaseService.isAvailable()) {
+      return;
+    }
 
-    return new Promise((resolve, reject) => {
+    // Clear existing interval
+    if (this.automaticRefreshInterval) {
+      clearInterval(this.automaticRefreshInterval);
+    }
+
+    // Refresh every 50 minutes (tokens expire after 60 minutes)
+    this.automaticRefreshInterval = window.setInterval(async () => {
       try {
-        this.tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
-          client_id: this.CLIENT_ID,
-          scope: this.SCOPES,
-          callback: (response: GoogleTokenResponse) => {
-            if (response.access_token) {
-              this.accessToken = response.access_token;
-              localStorage.setItem('google_access_token', response.access_token);
-
-              // Store expiry time
-              const expiresAt = Date.now() + (response.expires_in * 1000);
-              localStorage.setItem('google_token_expires_at', expiresAt.toString());
-
-              resolve();
-            } else {
-              reject(new Error('No access token received'));
-            }
-          },
-          error_callback: (error: any) => {
-            reject(new Error(`OAuth error: ${error.message || 'Unknown error'}`));
-          },
-        });
-
-        this.tokenClient.requestAccessToken();
+        await this.automaticRefresh();
       } catch (error) {
-        reject(error);
+        console.error('Automatic refresh failed:', error);
       }
-    });
+    }, 50 * 60 * 1000); // 50 minutes
+
+    console.log('⏰ Automatic token refresh enabled (every 50 minutes)');
+  }
+
+  /**
+   * Automatically refresh token via Supabase Edge Function
+   */
+  private async automaticRefresh(): Promise<void> {
+    if (this.refreshInProgress) {
+      console.log('🔄 Refresh already in progress...');
+      return;
+    }
+
+    this.refreshInProgress = true;
+
+    try {
+      console.log('🔄 Automatically refreshing Google token...');
+
+      const { access_token, expires_at } = await supabaseService.refreshGoogleToken();
+
+      this.accessToken = access_token;
+      localStorage.setItem('google_access_token', access_token);
+      localStorage.setItem('google_token_expires_at', new Date(expires_at).getTime().toString());
+
+      console.log('✅ Token automatically refreshed!');
+
+      // Dispatch event to notify UI
+      window.dispatchEvent(new CustomEvent('google-token-refreshed'));
+
+    } catch (error) {
+      console.error('❌ Automatic refresh failed:', error);
+
+      // If automatic refresh fails, dispatch expiry warning
+      window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
+
+      throw error;
+    } finally {
+      this.refreshInProgress = false;
+    }
+  }
+
+  /**
+   * Manually refresh token (fallback for Implicit Flow or if automatic fails)
+   * Requires user interaction - shows consent screen
+   */
+  async manualRefresh(): Promise<boolean> {
+    // Prevent concurrent refresh attempts
+    if (this.refreshInProgress) {
+      console.log('🔄 Token refresh already in progress, waiting...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return !this.isTokenExpired(0);
+    }
+
+    this.refreshInProgress = true;
+
+    try {
+      // If we have Supabase and authorization code flow, try automatic refresh first
+      const method = localStorage.getItem('google_oauth_method');
+      if (method === 'authorization_code' && supabaseService.isAvailable()) {
+        try {
+          await this.automaticRefresh();
+          return true;
+        } catch (error) {
+          console.warn('Automatic refresh failed, falling back to manual:', error);
+          // Fall through to manual refresh
+        }
+      }
+
+      // Manual refresh via Implicit Flow
+      await this.initializeGIS();
+
+      return new Promise((resolve) => {
+        try {
+          const client = (window as any).google.accounts.oauth2.initTokenClient({
+            client_id: this.CLIENT_ID,
+            scope: this.SCOPES,
+            callback: (response: GoogleTokenResponse) => {
+              if (response.access_token) {
+                console.log('✅ Token refreshed manually');
+                this.accessToken = response.access_token;
+                localStorage.setItem('google_access_token', response.access_token);
+
+                const expiresAt = Date.now() + (response.expires_in * 1000);
+                localStorage.setItem('google_token_expires_at', expiresAt.toString());
+
+                this.refreshInProgress = false;
+
+                // Dispatch event to notify UI
+                window.dispatchEvent(new CustomEvent('google-token-refreshed'));
+
+                resolve(true);
+              } else {
+                console.log('❌ Manual refresh failed: no access token');
+                this.refreshInProgress = false;
+                resolve(false);
+              }
+            },
+            error_callback: (error: any) => {
+              console.log('❌ Manual refresh failed:', error);
+              this.refreshInProgress = false;
+              resolve(false);
+            },
+          });
+
+          client.requestAccessToken();
+        } catch (error) {
+          console.error('❌ Error during manual refresh:', error);
+          this.refreshInProgress = false;
+          resolve(false);
+        }
+      });
+    } catch (error) {
+      console.error('❌ Failed to initialize for manual refresh:', error);
+      this.refreshInProgress = false;
+      return false;
+    }
   }
 
   /**
    * Sign out and revoke token
    */
   async signOut(): Promise<void> {
+    // Clear automatic refresh timer
+    if (this.automaticRefreshInterval) {
+      clearInterval(this.automaticRefreshInterval);
+      this.automaticRefreshInterval = null;
+    }
+
     const token = this.getAccessToken();
     if (token) {
       try {
@@ -99,6 +344,7 @@ class GoogleDriveService {
     this.accessToken = null;
     localStorage.removeItem('google_access_token');
     localStorage.removeItem('google_token_expires_at');
+    localStorage.removeItem('google_oauth_method');
   }
 
   /**
@@ -134,71 +380,7 @@ class GoogleDriveService {
   }
 
   /**
-   * Manually refresh token (requires user interaction - shows consent screen)
-   * This is triggered by user action, so popup is allowed
-   */
-  async manualRefresh(): Promise<boolean> {
-    // Prevent concurrent refresh attempts
-    if (this.refreshInProgress) {
-      console.log('🔄 Token refresh already in progress, waiting...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      return !this.isTokenExpired(0);
-    }
-
-    this.refreshInProgress = true;
-
-    try {
-      await this.initialize();
-
-      return new Promise((resolve) => {
-        try {
-          const client = (window as any).google.accounts.oauth2.initTokenClient({
-            client_id: this.CLIENT_ID,
-            scope: this.SCOPES,
-            callback: (response: GoogleTokenResponse) => {
-              if (response.access_token) {
-                console.log('✅ Token refreshed successfully');
-                this.accessToken = response.access_token;
-                localStorage.setItem('google_access_token', response.access_token);
-
-                const expiresAt = Date.now() + (response.expires_in * 1000);
-                localStorage.setItem('google_token_expires_at', expiresAt.toString());
-
-                this.refreshInProgress = false;
-
-                // Dispatch event to notify UI
-                window.dispatchEvent(new CustomEvent('google-token-refreshed'));
-
-                resolve(true);
-              } else {
-                console.log('❌ Token refresh failed: no access token');
-                this.refreshInProgress = false;
-                resolve(false);
-              }
-            },
-            error_callback: (error: any) => {
-              console.log('❌ Token refresh failed:', error);
-              this.refreshInProgress = false;
-              resolve(false);
-            },
-          });
-
-          client.requestAccessToken();
-        } catch (error) {
-          console.error('❌ Error during token refresh:', error);
-          this.refreshInProgress = false;
-          resolve(false);
-        }
-      });
-    } catch (error) {
-      console.error('❌ Failed to initialize for token refresh:', error);
-      this.refreshInProgress = false;
-      return false;
-    }
-  }
-
-  /**
-   * Ensure we have a valid token
+   * Ensure we have a valid token (with automatic refresh if available)
    */
   async ensureValidToken(): Promise<boolean> {
     const token = this.getAccessToken();
@@ -209,21 +391,32 @@ class GoogleDriveService {
 
     // Check if token is expired
     if (this.isTokenExpired(0)) {
-      console.log('⚠️ Token expired, user needs to re-authenticate');
+      console.log('⚠️ Token expired');
+
+      // Try automatic refresh if available
+      const method = localStorage.getItem('google_oauth_method');
+      if (method === 'authorization_code' && supabaseService.isAvailable()) {
+        try {
+          await this.automaticRefresh();
+          return true;
+        } catch (error) {
+          console.error('Automatic refresh failed:', error);
+          // Fall through to dispatch expiry event
+        }
+      }
 
       // Dispatch event to notify UI
       window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
-
       return false;
     }
 
-    // Check if token will expire soon (within 10 minutes)
-    // Only show warning modal if user is actively using the app (page is visible)
-    if (this.needsReauthentication(10) && document.visibilityState === 'visible') {
+    // Check if token will expire soon (within 10 minutes) - only for manual refresh mode
+    const method = localStorage.getItem('google_oauth_method');
+    if (method === 'implicit' && this.needsReauthentication(10) && document.visibilityState === 'visible') {
       const remainingMinutes = this.getTokenExpiryMinutes();
-      console.log(`⚠️ Token expires in ${remainingMinutes} minutes`);
+      console.log(`⚠️ Token expires in ${remainingMinutes} minutes (manual refresh mode)`);
 
-      // Dispatch event to warn user (only if page is visible)
+      // Dispatch event to warn user (only if page is visible and not using automatic refresh)
       window.dispatchEvent(new CustomEvent('google-drive-token-expiring', {
         detail: { minutesRemaining: remainingMinutes }
       }));
@@ -248,6 +441,14 @@ class GoogleDriveService {
   }
 
   /**
+   * Check if automatic refresh is enabled
+   */
+  isAutomaticRefreshEnabled(): boolean {
+    const method = localStorage.getItem('google_oauth_method');
+    return method === 'authorization_code' && supabaseService.isAvailable();
+  }
+
+  /**
    * Get access token
    */
   private getAccessToken(): string | null {
@@ -260,6 +461,31 @@ class GoogleDriveService {
     }
 
     return null;
+  }
+
+  /**
+   * Generate PKCE code verifier
+   */
+  private generateCodeVerifier(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return btoa(String.fromCharCode(...array))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+  }
+
+  /**
+   * Generate PKCE code challenge from verifier
+   */
+  private async generateCodeChallenge(verifier: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode(...new Uint8Array(hash)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
   }
 
   /**

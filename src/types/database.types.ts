@@ -219,6 +219,7 @@ export interface UserSettings {
   fiberMin: number;
   sodiumMax: number;
   targetWeight: number;
+  autoRefreshOAuth?: boolean; // Enable automatic OAuth token refresh (default: true)
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {

@@ -1,0 +1,119 @@
+/**
+ * Garmin OAuth Initialization (OAuth 2.0 with PKCE)
+ * Exchanges authorization code for access token and refresh token
+ * Stores encrypted refresh token in database
+ */
+
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { encryptToken } from '../_shared/crypto.ts';
+import { corsHeaders, handleCorsPreFlight, jsonResponse, errorResponse } from '../_shared/cors.ts';
+
+interface RequestBody {
+  code: string;
+  codeVerifier: string; // PKCE code verifier
+  redirectUri: string;
+  userId: string; // Browser fingerprint or user identifier
+}
+
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return handleCorsPreFlight();
+  }
+
+  try {
+    // Parse request body
+    const { code, codeVerifier, redirectUri, userId }: RequestBody = await req.json();
+
+    if (!code || !codeVerifier || !redirectUri || !userId) {
+      return errorResponse('Missing required fields: code, codeVerifier, redirectUri, userId');
+    }
+
+    // Get Garmin OAuth credentials from environment
+    const consumerKey = Deno.env.get('GARMIN_CONSUMER_KEY');
+    const consumerSecret = Deno.env.get('GARMIN_CONSUMER_SECRET');
+
+    if (!consumerKey || !consumerSecret) {
+      console.error('Missing Garmin OAuth credentials');
+      return errorResponse('Server configuration error', 500);
+    }
+
+    // Create Basic Auth header for Garmin
+    const authHeader = btoa(`${consumerKey}:${consumerSecret}`);
+
+    // Exchange authorization code for tokens
+    console.log('Exchanging authorization code for Garmin tokens...');
+    const tokenResponse = await fetch('https://connectapi.garmin.com/oauth-service/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${authHeader}`,
+      },
+      body: new URLSearchParams({
+        code,
+        code_verifier: codeVerifier,
+        client_id: consumerKey,
+        grant_type: 'authorization_code',
+        redirect_uri: redirectUri,
+      }),
+    });
+
+    if (!tokenResponse.ok) {
+      const error = await tokenResponse.text();
+      console.error('Garmin token exchange failed:', error);
+      return errorResponse('Failed to exchange authorization code', 400);
+    }
+
+    const tokens = await tokenResponse.json();
+    const { access_token, refresh_token, expires_in } = tokens;
+
+    if (!refresh_token) {
+      console.error('No refresh token received from Garmin');
+      return errorResponse('No refresh token received', 400);
+    }
+
+    // Encrypt refresh token
+    console.log('Encrypting Garmin refresh token...');
+    const encryptedRefreshToken = await encryptToken(refresh_token);
+
+    // Calculate expiry time (Garmin tokens expire in ~3 months = 7776000 seconds)
+    const expiresAt = new Date(Date.now() + expires_in * 1000);
+
+    // Store in database
+    console.log('Storing Garmin tokens in database...');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Upsert (insert or update if exists)
+    const { error: dbError } = await supabase
+      .from('oauth_tokens')
+      .upsert({
+        user_id: userId,
+        garmin_refresh_token_encrypted: encryptedRefreshToken,
+        garmin_access_token_expires_at: expiresAt.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id'
+      });
+
+    if (dbError) {
+      console.error('Database error:', dbError);
+      return errorResponse('Failed to store tokens', 500);
+    }
+
+    console.log('✅ Garmin OAuth initialization successful for user:', userId);
+
+    // Return access token to client (NOT refresh token!)
+    return jsonResponse({
+      access_token,
+      expires_in,
+      expires_at: expiresAt.toISOString(),
+    });
+
+  } catch (error) {
+    console.error('Error in garmin-oauth-init:', error);
+    return errorResponse(error.message || 'Internal server error', 500);
+  }
+});

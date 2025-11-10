@@ -19,5 +19,8 @@ Thumbs.db
 .env
 .env.local
 
+# Supabase
+supabase/.temp/
+
 # personal documentation
 devdocs/
