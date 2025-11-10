@@ -79,15 +79,41 @@ class ProductsService {
    */
   async addProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product> {
     try {
-      // Check for duplicate EAN if present
+      // Check for duplicate by EAN if present
       if (product.ean) {
-        const existing = await db.products.where('ean').equals(product.ean).first();
-        if (existing) {
-          console.log('⚠️ Product with EAN already exists:', existing.name);
-          throw new Error(`Product met barcode ${product.ean} bestaat al: ${existing.name}`);
+        const existingByEan = await db.products.where('ean').equals(product.ean).first();
+        if (existingByEan && !existingByEan.deleted) {
+          console.log('⚠️ Product with EAN already exists:', existingByEan.name);
+          throw new Error(`Product met barcode ${product.ean} bestaat al: ${existingByEan.name}`);
         }
       }
 
+      // Check for duplicate by name (case-insensitive)
+      const allProducts = await this.getAllProducts();
+      const existingByName = allProducts.find(p =>
+        p.name.toLowerCase() === product.name.toLowerCase() && !p.deleted
+      );
+
+      if (existingByName) {
+        console.log(`⚠️ Product "${product.name}" already exists (ID: ${existingByName.id})`);
+        // Update existing product instead of adding duplicate
+        // Merge data: keep existing ID but update with new data if newer
+        const now = getTimestamp();
+        await this.updateProduct(existingByName.id!, {
+          ...product,
+          updated_at: now,
+          // Merge source: if different source, keep the newest
+          source: product.source || existingByName.source,
+        });
+        console.log(`✅ Updated existing product: ${product.name}`);
+
+        // Trigger auto-sync (debounced 30s)
+        syncService.triggerAutoSync();
+
+        return { ...existingByName, ...product, id: existingByName.id, updated_at: now };
+      }
+
+      // No duplicate found - add new product
       const now = getTimestamp();
       const newProduct: Product = {
         ...product,
@@ -116,8 +142,11 @@ class ProductsService {
   async updateProduct(id: number | string, updates: Partial<Product>): Promise<void> {
     try {
       const now = getTimestamp();
+      // Remove id and created_at from updates to prevent Dexie key conflicts
+      const { id: _id, created_at: _created, ...safeUpdates } = updates as Product;
+
       await db.products.update(id, {
-        ...updates,
+        ...safeUpdates,
         updated_at: now,
       });
       console.log('✅ Product updated:', id);

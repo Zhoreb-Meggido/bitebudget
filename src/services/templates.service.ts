@@ -117,8 +117,11 @@ class TemplatesService {
   async updateTemplate(id: number | string, updates: Partial<MealTemplate>): Promise<void> {
     try {
       const now = getTimestamp();
+      // Remove id and created_at from updates to prevent Dexie key conflicts
+      const { id: _id, created_at: _created, ...safeUpdates } = updates as MealTemplate;
+
       await db.mealTemplates.update(id, {
-        ...updates,
+        ...safeUpdates,
         updated_at: now,
       });
       console.log('✅ Template updated:', id);

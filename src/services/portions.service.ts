@@ -124,8 +124,11 @@ class PortionsService {
   async updatePortion(id: number | string, updates: Partial<ProductPortion>): Promise<void> {
     try {
       const now = getTimestamp();
+      // Remove id and created_at from updates to prevent Dexie key conflicts
+      const { id: _id, created_at: _created, ...safeUpdates } = updates as ProductPortion;
+
       await db.productPortions.update(id, {
-        ...updates,
+        ...safeUpdates,
         updated_at: now,
       });
       console.log('✅ Portion updated:', id);
