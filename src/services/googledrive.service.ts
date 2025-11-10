@@ -63,8 +63,8 @@ class GoogleDriveService {
     const codeVerifier = this.generateCodeVerifier();
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
 
-    // Store code verifier for callback
-    sessionStorage.setItem('google_code_verifier', codeVerifier);
+    // Store code verifier for callback (use localStorage to survive page reload)
+    localStorage.setItem('google_code_verifier', codeVerifier);
 
     // Build authorization URL
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
@@ -88,10 +88,10 @@ class GoogleDriveService {
     try {
       console.log('📥 Handling OAuth callback...');
 
-      // Retrieve code verifier from session storage (for PKCE)
-      const codeVerifier = sessionStorage.getItem('google_code_verifier');
+      // Retrieve code verifier from local storage (for PKCE)
+      const codeVerifier = localStorage.getItem('google_code_verifier');
       if (!codeVerifier) {
-        throw new Error('Code verifier not found in session storage');
+        throw new Error('Code verifier not found in local storage');
       }
 
       // Exchange authorization code for tokens via Supabase Edge Function
@@ -102,7 +102,7 @@ class GoogleDriveService {
       );
 
       // Clean up code verifier
-      sessionStorage.removeItem('google_code_verifier');
+      localStorage.removeItem('google_code_verifier');
 
       // Store access token and expiry
       this.accessToken = access_token;
