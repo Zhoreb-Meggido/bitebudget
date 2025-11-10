@@ -742,33 +742,39 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         {/* Footer - Sticky Action Buttons */}
         <div className="border-t bg-white px-4 py-3 rounded-b-xl flex-shrink-0">
           {tab === 'products' && (
-            <div className="space-y-2">
-              {/* Tijd input - compact */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Tijd:</label>
-                <input
-                  type="time"
-                  value={mealTime}
-                  onChange={(e) => setMealTime(e.target.value)}
-                  placeholder={getCurrentTime()}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[44px]"
-                />
-                <span className="text-xs text-gray-500 whitespace-nowrap">
-                  {mealTime === '' && '(nu)'}
-                </span>
+            <div className="flex flex-col gap-2">
+              {/* Desktop: tijd + buttons in rij, Mobile: alles verticaal */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                {/* Tijd input - compact on desktop */}
+                <div className="flex items-center gap-2 sm:w-auto">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Tijd:</label>
+                  <input
+                    type="time"
+                    value={mealTime}
+                    onChange={(e) => setMealTime(e.target.value)}
+                    placeholder={getCurrentTime()}
+                    className="flex-1 sm:w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[44px]"
+                  />
+                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                    {mealTime === '' && '(nu)'}
+                  </span>
+                </div>
+
+                {/* Primary action button */}
+                <button
+                  onClick={handleAddFromProducts}
+                  disabled={selectedProducts.length === 0}
+                  className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition min-h-[44px] sm:min-h-[44px] ${
+                    selectedProducts.length === 0
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'} {selectedProducts.length > 0 && `(${selectedProducts.length})`}
+                </button>
               </div>
 
-              <button
-                onClick={handleAddFromProducts}
-                disabled={selectedProducts.length === 0}
-                className={`w-full px-4 py-3 rounded-lg font-semibold transition min-h-[50px] ${
-                  selectedProducts.length === 0
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-green-600 text-white hover:bg-green-700'
-                }`}
-              >
-                {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'} {selectedProducts.length > 0 && `(${selectedProducts.length} ${selectedProducts.length === 1 ? 'product' : 'producten'})`}
-              </button>
+              {/* Template button - separate row, full width */}
               {selectedProducts.length > 0 && (
                 <button
                   onClick={() => setShowSaveTemplateModal(true)}
