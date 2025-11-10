@@ -7,6 +7,7 @@
 import { db } from './database.service';
 import type { Product } from '@/types';
 import { getTimestamp, generateId } from '@/utils';
+import { syncService } from './sync.service';
 
 class ProductsService {
   /**
@@ -98,6 +99,10 @@ class ProductsService {
 
       await db.products.add(newProduct);
       console.log('✅ Product added:', newProduct.name);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
+
       return newProduct;
     } catch (error) {
       console.error('❌ Error adding product:', error);
@@ -116,6 +121,9 @@ class ProductsService {
         updated_at: now,
       });
       console.log('✅ Product updated:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error updating product:', error);
       throw error;
@@ -148,6 +156,9 @@ class ProductsService {
         updated_at: getTimestamp(),
       });
       console.log('✅ Product soft deleted:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error deleting product:', error);
       throw error;

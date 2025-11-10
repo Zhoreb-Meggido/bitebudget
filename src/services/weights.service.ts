@@ -7,6 +7,7 @@
 import { db } from './database.service';
 import type { Weight } from '@/types';
 import { generateId, getTimestamp } from '@/utils/date.utils';
+import { syncService } from './sync.service';
 
 class WeightsService {
   /**
@@ -53,6 +54,10 @@ class WeightsService {
     };
 
     await db.weights.add(newWeight);
+
+    // Trigger auto-sync (debounced 30s)
+    syncService.triggerAutoSync();
+
     return id;
   }
 
@@ -61,6 +66,9 @@ class WeightsService {
    */
   async updateWeight(id: string, updates: Partial<Omit<Weight, 'id' | 'created_at'>>): Promise<void> {
     await db.weights.update(id, updates);
+
+    // Trigger auto-sync (debounced 30s)
+    syncService.triggerAutoSync();
   }
 
   /**
@@ -71,6 +79,9 @@ class WeightsService {
       deleted: true,
       deleted_at: getTimestamp(),
     });
+
+    // Trigger auto-sync (debounced 30s)
+    syncService.triggerAutoSync();
   }
 
   /**

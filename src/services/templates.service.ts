@@ -7,6 +7,7 @@
 import { db } from './database.service';
 import type { MealTemplate } from '@/types';
 import { getTimestamp, generateId } from '@/utils';
+import { syncService } from './sync.service';
 
 class TemplatesService {
   /**
@@ -99,6 +100,10 @@ class TemplatesService {
 
       await db.mealTemplates.add(newTemplate);
       console.log('✅ Template added:', newTemplate.name);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
+
       return newTemplate;
     } catch (error) {
       console.error('❌ Error adding template:', error);
@@ -117,6 +122,9 @@ class TemplatesService {
         updated_at: now,
       });
       console.log('✅ Template updated:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error updating template:', error);
       throw error;
@@ -134,6 +142,9 @@ class TemplatesService {
         updated_at: getTimestamp(),
       });
       console.log('✅ Template soft deleted:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error deleting template:', error);
       throw error;
@@ -156,6 +167,9 @@ class TemplatesService {
       });
 
       console.log('✅ Template favorite toggled:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error toggling favorite:', error);
       throw error;
@@ -179,6 +193,9 @@ class TemplatesService {
       });
 
       console.log('✅ Template usage tracked:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error tracking usage:', error);
       throw error;

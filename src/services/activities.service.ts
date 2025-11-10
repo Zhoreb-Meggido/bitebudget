@@ -7,6 +7,7 @@
 import { db } from './database.service';
 import type { DailyActivity } from '@/types';
 import { getTimestamp, generateId } from '@/utils';
+import { syncService } from './sync.service';
 
 class ActivitiesService {
   /**
@@ -88,6 +89,10 @@ class ActivitiesService {
         };
         await db.dailyActivities.update(existing.id!, updated);
         console.log('✅ Activity updated for date:', activity.date);
+
+        // Trigger auto-sync (debounced 30s)
+        syncService.triggerAutoSync();
+
         return updated;
       } else {
         // Add new
@@ -103,6 +108,10 @@ class ActivitiesService {
         console.log('Adding new activity:', { date: activity.date, id });
         await db.dailyActivities.add(newActivity);
         console.log('✅ Activity added for date:', activity.date);
+
+        // Trigger auto-sync (debounced 30s)
+        syncService.triggerAutoSync();
+
         return newActivity;
       }
     } catch (error: any) {
@@ -125,6 +134,9 @@ class ActivitiesService {
         updated_at: getTimestamp(),
       });
       console.log('✅ Activity updated:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error updating activity:', error);
       throw error;
@@ -142,6 +154,9 @@ class ActivitiesService {
         updated_at: getTimestamp(),
       });
       console.log('✅ Activity soft deleted:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error deleting activity:', error);
       throw error;
