@@ -2,7 +2,7 @@
  * AddMealModal - Modal voor maaltijd toevoegen (3 tabs: producten/handmatig/JSON)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { Product, Entry, MealTemplate, MealCategory, ProductPortion } from '@/types';
 import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from '@/utils';
 import { useTemplates, usePortions } from '@/hooks';
@@ -290,168 +290,112 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     return totals;
   };
 
-  const filteredProducts = products
-    .filter(p => productSearch === '' || p.name.toLowerCase().includes(productSearch.toLowerCase()))
-    .sort((a, b) => {
-      if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
-      return a.name.localeCompare(b.name);
-    });
+  // Sort products: selected first, then favorites, then alphabetical
+  // Memoized for performance
+  const sortedProducts = useMemo(() =>
+    products
+      .filter(p => productSearch === '' || p.name.toLowerCase().includes(productSearch.toLowerCase()))
+      .sort((a, b) => {
+        const aSelected = selectedProducts.includes(a.name);
+        const bSelected = selectedProducts.includes(b.name);
 
-  const filteredTemplates = templates
-    .filter(t => templateSearch === '' || t.name.toLowerCase().includes(templateSearch.toLowerCase()))
-    .sort((a, b) => a.name.localeCompare(b.name));
+        // 1. Selected items first
+        if (aSelected !== bSelected) return aSelected ? -1 : 1;
+
+        // 2. Then favorites
+        if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+
+        // 3. Then alphabetical
+        return a.name.localeCompare(b.name);
+      }),
+    [products, productSearch, selectedProducts]
+  );
+
+  const filteredTemplates = useMemo(() =>
+    templates
+      .filter(t => templateSearch === '' || t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [templates, templateSearch]
+  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] flex flex-col">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header - Fixed */}
-        <div className="bg-white border-b p-4 flex justify-between items-center rounded-t-xl flex-shrink-0">
-          <h3 className="text-xl font-bold text-gray-800">{isEditMode ? 'Maaltijd bewerken' : 'Maaltijd toevoegen'}</h3>
-          <button onClick={resetForm} className="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
+        <div className="bg-white border-b px-4 py-3 flex justify-between items-center rounded-t-xl flex-shrink-0">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-800">{isEditMode ? 'Maaltijd bewerken' : 'Maaltijd toevoegen'}</h3>
+          <button
+            onClick={resetForm}
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-700 text-2xl"
+            aria-label="Sluiten"
+          >✕</button>
         </div>
 
-        {/* Tabs - Fixed */}
-        <div className="flex-shrink-0 px-6 pt-4">
-          <div className="grid grid-cols-4 gap-2">
+        {/* Tabs - Compact */}
+        <div className="flex-shrink-0 px-4 pt-3">
+          <div className="grid grid-cols-4 gap-1.5">
             {(['products', 'templates', 'manual', 'json'] as Tab[]).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-3 py-2 rounded-lg font-medium transition text-sm ${tab === t ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                className={`px-2 py-1.5 rounded-lg font-medium transition text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 min-h-[44px] ${tab === t ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
               >
-                {t === 'products' ? '📦 Producten' : t === 'templates' ? '⭐ Templates' : t === 'manual' ? '✏️ Handmatig' : '📋 JSON'}
+                <span className="text-base sm:text-lg">{t === 'products' ? '📦' : t === 'templates' ? '⭐' : t === 'manual' ? '✏️' : '📋'}</span>
+                <span className="leading-tight">{t === 'products' ? 'Prod' : t === 'templates' ? 'Templ' : t === 'manual' ? 'Hand' : 'JSON'}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Products Tab - Fixed sections at top */}
+        {/* Products Tab - Unified List */}
         {tab === 'products' && (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            {/* Time input - Fixed */}
-            <div className="flex-shrink-0 px-6 pt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tijd (optioneel)</label>
-              <input type="time" value={mealTime} onChange={(e) => setMealTime(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
-            </div>
-
-            {/* Selected products - Fixed with max height, more space on desktop */}
-            {selectedProducts.length > 0 && (
-              <div className="flex-shrink-0 px-6 pt-3">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 max-h-[200px] sm:max-h-[300px] overflow-y-auto">
-                  <h4 className="text-xs font-semibold text-gray-600 mb-1 sticky top-0 bg-blue-50">Geselecteerd ({selectedProducts.length}):</h4>
-                  <div className="space-y-1">
-                    {selectedProducts.slice().reverse().map(name => {
-                      const product = products.find(p => p.name === name);
-                      const portions = productPortions[name] || [];
-                      const hasPortions = portions.length > 0;
-
-                      return (
-                        <div key={name} className="bg-white rounded-lg px-2 py-1 border border-blue-300">
-                          {/* Desktop: alles op 1 regel, Mobile: gestapeld */}
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-1">
-                            {/* Product naam */}
-                            <span className="flex-1 text-sm font-medium truncate">{product?.favorite && '⭐ '}{name}</span>
-
-                            {/* Portie selector en gram input */}
-                            <div className="flex items-center gap-1">
-                              {hasPortions && (
-                                <select
-                                  key={`${name}-${portions.length}`}
-                                  value="custom"
-                                  onChange={(e) => {
-                                    const portionId = e.target.value;
-                                    if (portionId === 'custom') return; // Keep manual input
-                                    if (portionId === 'new') {
-                                      setAddPortionForProduct(name);
-                                      setShowAddPortionModal(true);
-                                      return;
-                                    }
-                                    const portion = portions.find(p => p.id?.toString() === portionId);
-                                    if (portion) {
-                                      setProductGrams({...productGrams, [name]: portion.grams});
-                                    }
-                                  }}
-                                  className="w-32 sm:w-40 px-2 py-1 border rounded text-xs"
-                                >
-                                  <option value="custom">Handmatig</option>
-                                  {portions.map(p => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.portionName} ({p.grams}g)
-                                    </option>
-                                  ))}
-                                  <option value="new">+ Nieuwe portie</option>
-                                </select>
-                              )}
-                              <input
-                                type="number"
-                                value={productGrams[name] ?? ''}
-                                onChange={(e) => setProductGrams({...productGrams, [name]: parseInt(e.target.value) || 0})}
-                                onFocus={(e) => e.target.select()}
-                                placeholder="100"
-                                className="w-16 sm:w-20 px-2 py-1 border rounded text-center text-sm"
-                                min="1"
-                              />
-                              <span className="text-xs text-gray-500">g</span>
-
-                              {/* + Portie en Delete knop samen op 1 regel */}
-                              <div className="flex items-center gap-1">
-                                {!hasPortions && (
-                                  <button
-                                    onClick={() => {
-                                      setAddPortionForProduct(name);
-                                      setShowAddPortionModal(true);
-                                    }}
-                                    className="text-blue-600 hover:text-blue-800 text-xs underline whitespace-nowrap"
-                                  >
-                                    + Portie
-                                  </button>
-                                )}
-
-                                {/* Verwijder knop */}
-                                <button
-                                  onClick={() => {
-                                    setSelectedProducts(selectedProducts.filter(p => p !== name));
-                                    const newGrams = {...productGrams};
-                                    delete newGrams[name];
-                                    setProductGrams(newGrams);
-                                  }}
-                                  className="text-red-500 hover:text-red-700 font-bold text-lg flex-shrink-0"
-                                  aria-label="Verwijder product"
-                                >✕</button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Search bar - Fixed */}
-            <div className="flex-shrink-0 px-6 pt-3 pb-2">
+            <div className="flex-shrink-0 px-4 pt-3 pb-2">
               <input
                 type="text"
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
-                placeholder="Zoek product..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="🔍 Zoek product..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base"
               />
             </div>
 
-            {/* Products list - Scrollable */}
-            <div className="flex-1 min-h-0 overflow-hidden px-6 pb-4 flex flex-col">
-              <div className="flex-1 border border-gray-200 rounded-lg bg-gray-50 overflow-y-auto">
-                <div className="p-2 space-y-1">
-                  {filteredProducts.length === 0 ? (
-                    <p className="text-center text-gray-500 py-4 text-sm">Geen producten gevonden</p>
-                  ) : (
-                    filteredProducts.map(product => (
-                      <label key={product.id} className="flex items-center gap-2 p-2 hover:bg-white rounded cursor-pointer transition">
+            {/* Unified Products List - Selected items at top with inline editing */}
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-3">
+              {sortedProducts.length === 0 ? (
+                <p className="text-center text-gray-500 py-8 text-sm">Geen producten gevonden</p>
+              ) : (
+                sortedProducts.map((product, idx) => {
+                  const isSelected = selectedProducts.includes(product.name);
+                  const prevProduct = sortedProducts[idx - 1];
+                  const prevSelected = prevProduct && selectedProducts.includes(prevProduct.name);
+                  const showDivider = !isSelected && prevSelected;
+                  const portions = productPortions[product.name] || [];
+                  const hasPortions = portions.length > 0;
+
+                  return (
+                    <React.Fragment key={product.id}>
+                      {/* Divider between selected and unselected */}
+                      {showDivider && (
+                        <div className="flex items-center gap-2 my-3 px-2">
+                          <div className="flex-1 border-t-2 border-blue-300"></div>
+                          <span className="text-xs text-gray-500 font-medium">Alle producten</span>
+                          <div className="flex-1 border-t-2 border-blue-300"></div>
+                        </div>
+                      )}
+
+                      <label
+                        className={`flex items-start gap-2 p-2.5 rounded-lg cursor-pointer transition mb-1 ${
+                          isSelected
+                            ? 'bg-blue-50 border-2 border-blue-300'
+                            : 'hover:bg-gray-50 border-2 border-transparent'
+                        }`}
+                      >
+                        {/* Checkbox */}
                         <input
                           type="checkbox"
-                          checked={selectedProducts.includes(product.name)}
+                          checked={isSelected}
                           onChange={(e) => {
                             if (e.target.checked) {
                               setSelectedProducts([...selectedProducts, product.name]);
@@ -462,34 +406,124 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                               setSelectedProducts(selectedProducts.filter(p => p !== product.name));
                             }
                           }}
-                          className="w-4 h-4"
+                          className="w-5 h-5 mt-0.5 flex-shrink-0"
                         />
-                        <span className="flex-1 text-sm">
-                          {product.favorite && '⭐ '}
-                          {product.name}
-                          {product.brand && <span className="text-gray-500"> ({product.brand})</span>}
-                        </span>
-                        <span className="text-xs text-gray-500 flex-shrink-0">{product.calories} kcal</span>
+
+                        <div className="flex-1 min-w-0">
+                          {/* Product name */}
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="font-medium text-sm">
+                              {product.favorite && '⭐ '}
+                              {product.name}
+                              {product.brand && <span className="text-gray-500 text-xs"> ({product.brand})</span>}
+                            </span>
+                            {!isSelected && (
+                              <span className="text-xs text-gray-500 flex-shrink-0">{product.calories} kcal</span>
+                            )}
+                          </div>
+
+                          {/* Inline editing when selected */}
+                          {isSelected && (
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                              {/* Gram input */}
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  inputMode="decimal"
+                                  value={productGrams[product.name] ?? ''}
+                                  onChange={(e) => setProductGrams({...productGrams, [product.name]: parseInt(e.target.value) || 0})}
+                                  onFocus={(e) => e.target.select()}
+                                  onClick={(e) => e.stopPropagation()}
+                                  placeholder="100"
+                                  className="w-20 px-3 py-2 border rounded-lg text-center text-sm min-h-[44px]"
+                                  min="1"
+                                />
+                                <span className="text-sm text-gray-600 font-medium">g</span>
+                              </div>
+
+                              {/* Portion dropdown if available */}
+                              {hasPortions && (
+                                <select
+                                  value="custom"
+                                  onChange={(e) => {
+                                    const portionId = e.target.value;
+                                    if (portionId === 'custom') return;
+                                    if (portionId === 'new') {
+                                      setAddPortionForProduct(product.name);
+                                      setShowAddPortionModal(true);
+                                      return;
+                                    }
+                                    const portion = portions.find(p => p.id?.toString() === portionId);
+                                    if (portion) {
+                                      setProductGrams({...productGrams, [product.name]: portion.grams});
+                                    }
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="px-3 py-2 border rounded-lg text-xs min-h-[44px] bg-white"
+                                >
+                                  <option value="custom">Handmatig</option>
+                                  {portions.map(p => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.portionName} ({p.grams}g)
+                                    </option>
+                                  ))}
+                                  <option value="new">+ Nieuwe portie</option>
+                                </select>
+                              )}
+
+                              {/* Add portion button if no portions */}
+                              {!hasPortions && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setAddPortionForProduct(product.name);
+                                    setShowAddPortionModal(true);
+                                  }}
+                                  className="px-3 py-2 text-xs text-blue-600 hover:text-blue-800 underline whitespace-nowrap min-h-[44px] flex items-center"
+                                >
+                                  + Portie
+                                </button>
+                              )}
+
+                              {/* Remove button */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setSelectedProducts(selectedProducts.filter(p => p !== product.name));
+                                  const newGrams = {...productGrams};
+                                  delete newGrams[product.name];
+                                  setProductGrams(newGrams);
+                                }}
+                                className="ml-auto min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:text-red-700 text-xl font-bold"
+                                aria-label="Verwijder product"
+                              >✕</button>
+                            </div>
+                          )}
+                        </div>
                       </label>
-                    ))
-                  )}
-                </div>
-              </div>
+                    </React.Fragment>
+                  );
+                })
+              )}
             </div>
           </div>
         )}
 
         {/* Manual Tab */}
         {tab === 'manual' && (
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-4 pb-4">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-4">
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium mb-1">Tijd</label>
+                <label className="block text-sm font-medium mb-1">Tijd (optioneel)</label>
                 <input
                   type="time"
                   value={manualMeal.time}
                   onChange={(e) => setManualMeal({...manualMeal, time: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full px-4 py-2 border rounded-lg min-h-[44px]"
                 />
               </div>
               <div>
@@ -499,7 +533,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                   value={manualMeal.name}
                   onChange={(e) => setManualMeal({...manualMeal, name: e.target.value})}
                   placeholder="Bijv. Lunch"
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full px-4 py-2 border rounded-lg text-base min-h-[44px]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -510,12 +544,13 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                     </label>
                     <input
                       type="number"
+                      inputMode="decimal"
                       step={field === 'calories' || field === 'sodium' ? '1' : '0.1'}
                       value={manualMeal[field]}
                       onChange={(e) => setManualMeal({...manualMeal, [field]: e.target.value})}
                       onFocus={(e) => e.target.select()}
                       placeholder="0"
-                      className="w-full px-4 py-2 border rounded-lg"
+                      className="w-full px-3 py-2 border rounded-lg min-h-[44px] text-base"
                     />
                   </div>
                 ))}
@@ -540,18 +575,18 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         {tab === 'templates' && (
           <>
             {/* Search bar - Fixed */}
-            <div className="flex-shrink-0 px-6 pt-3 pb-2">
+            <div className="flex-shrink-0 px-4 pt-3 pb-2">
               <input
                 type="text"
                 value={templateSearch}
                 onChange={(e) => setTemplateSearch(e.target.value)}
-                placeholder="Zoek template..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="🔍 Zoek template..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base"
               />
             </div>
 
             {/* Templates list - Scrollable */}
-            <div className="flex-1 min-h-0 px-6 pb-4 overflow-y-auto">
+            <div className="flex-1 min-h-0 px-4 pb-4 overflow-y-auto">
               {/* Recent gebruikt */}
               {recentTemplates.length > 0 && (
                 <div className="mb-4">
@@ -561,30 +596,32 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                       const totals = calculateTemplateTotals(template);
                       return (
                         <div key={template.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:bg-blue-100 transition">
-                          <div className="flex items-start gap-3">
+                          <div className="flex items-start gap-2">
                             <button
                               onClick={() => handleLoadTemplate(template)}
-                              className="flex-1 text-left"
+                              className="flex-1 text-left min-h-[44px] flex items-center"
                             >
-                              <div className="font-semibold text-gray-800">{template.name}</div>
-                              <div className="text-xs text-gray-600 mt-1">
-                                {template.category} • {template.products.length} producten
-                              </div>
-                              <div className="text-xs text-blue-600 mt-1">
-                                {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                              <div>
+                                <div className="font-semibold text-gray-800">{template.name}</div>
+                                <div className="text-xs text-gray-600 mt-1">
+                                  {template.category} • {template.products.length} producten
+                                </div>
+                                <div className="text-xs text-blue-600 mt-1">
+                                  {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                                </div>
                               </div>
                             </button>
                             <div className="flex gap-1 flex-shrink-0">
                               <button
                                 onClick={() => toggleFavorite(template.id!)}
-                                className="text-lg hover:scale-110 transition"
+                                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-xl hover:scale-110 transition"
                                 aria-label="Toggle favorite"
                               >
                                 {template.isFavorite ? '⭐' : '☆'}
                               </button>
                               <button
                                 onClick={() => handleDeleteTemplate(template.id!)}
-                                className="text-red-500 hover:text-red-700 text-lg"
+                                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:text-red-700 text-xl"
                                 aria-label="Verwijder template"
                               >
                                 🗑️
@@ -607,30 +644,32 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                       const totals = calculateTemplateTotals(template);
                       return (
                         <div key={template.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:bg-yellow-100 transition">
-                          <div className="flex items-start gap-3">
+                          <div className="flex items-start gap-2">
                             <button
                               onClick={() => handleLoadTemplate(template)}
-                              className="flex-1 text-left"
+                              className="flex-1 text-left min-h-[44px] flex items-center"
                             >
-                              <div className="font-semibold text-gray-800">{template.name}</div>
-                              <div className="text-xs text-gray-600 mt-1">
-                                {template.category} • {template.products.length} producten
-                              </div>
-                              <div className="text-xs text-yellow-700 mt-1">
-                                {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                              <div>
+                                <div className="font-semibold text-gray-800">{template.name}</div>
+                                <div className="text-xs text-gray-600 mt-1">
+                                  {template.category} • {template.products.length} producten
+                                </div>
+                                <div className="text-xs text-yellow-700 mt-1">
+                                  {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                                </div>
                               </div>
                             </button>
                             <div className="flex gap-1 flex-shrink-0">
                               <button
                                 onClick={() => toggleFavorite(template.id!)}
-                                className="text-lg hover:scale-110 transition"
+                                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-xl hover:scale-110 transition"
                                 aria-label="Toggle favorite"
                               >
                                 ⭐
                               </button>
                               <button
                                 onClick={() => handleDeleteTemplate(template.id!)}
-                                className="text-red-500 hover:text-red-700 text-lg"
+                                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:text-red-700 text-xl"
                                 aria-label="Verwijder template"
                               >
                                 🗑️
@@ -658,30 +697,32 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                       const totals = calculateTemplateTotals(template);
                       return (
                         <div key={template.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition">
-                          <div className="flex items-start gap-3">
+                          <div className="flex items-start gap-2">
                             <button
                               onClick={() => handleLoadTemplate(template)}
-                              className="flex-1 text-left"
+                              className="flex-1 text-left min-h-[44px] flex items-center"
                             >
-                              <div className="font-semibold text-gray-800">{template.name}</div>
-                              <div className="text-xs text-gray-600 mt-1">
-                                {template.category} • {template.products.length} producten
-                              </div>
-                              <div className="text-xs text-gray-700 mt-1">
-                                {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                              <div>
+                                <div className="font-semibold text-gray-800">{template.name}</div>
+                                <div className="text-xs text-gray-600 mt-1">
+                                  {template.category} • {template.products.length} producten
+                                </div>
+                                <div className="text-xs text-gray-700 mt-1">
+                                  {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                                </div>
                               </div>
                             </button>
                             <div className="flex gap-1 flex-shrink-0">
                               <button
                                 onClick={() => toggleFavorite(template.id!)}
-                                className="text-lg hover:scale-110 transition"
+                                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-xl hover:scale-110 transition"
                                 aria-label="Toggle favorite"
                               >
                                 {template.isFavorite ? '⭐' : '☆'}
                               </button>
                               <button
                                 onClick={() => handleDeleteTemplate(template.id!)}
-                                className="text-red-500 hover:text-red-700 text-lg"
+                                className="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:text-red-700 text-xl"
                                 aria-label="Verwijder template"
                               >
                                 🗑️
@@ -699,13 +740,13 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         )}
 
         {/* Footer - Sticky Action Buttons */}
-        <div className="border-t bg-white p-4 rounded-b-xl flex-shrink-0">
+        <div className="border-t bg-white px-4 py-3 rounded-b-xl flex-shrink-0">
           {tab === 'products' && (
             <div className="space-y-2">
               <button
                 onClick={handleAddFromProducts}
                 disabled={selectedProducts.length === 0}
-                className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
+                className={`w-full px-4 py-3 rounded-lg font-semibold transition min-h-[50px] ${
                   selectedProducts.length === 0
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : 'bg-green-600 text-white hover:bg-green-700'
@@ -716,7 +757,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
               {selectedProducts.length > 0 && (
                 <button
                   onClick={() => setShowSaveTemplateModal(true)}
-                  className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition"
+                  className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition min-h-[44px]"
                 >
                   💾 Opslaan als template
                 </button>
@@ -726,7 +767,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
           {tab === 'manual' && (
             <button
               onClick={handleAddManually}
-              className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
+              className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 min-h-[50px]"
             >
               {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'}
             </button>
@@ -734,7 +775,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
           {tab === 'json' && (
             <button
               onClick={handleImportJson}
-              className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
+              className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 min-h-[50px]"
             >
               📥 Importeer JSON
             </button>
@@ -756,7 +797,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                   value={newTemplateName}
                   onChange={(e) => setNewTemplateName(e.target.value)}
                   placeholder="Bijv. Ontbijt standaard"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
                   autoFocus
                 />
               </div>
@@ -766,7 +807,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 <select
                   value={newTemplateCategory}
                   onChange={(e) => setNewTemplateCategory(e.target.value as MealCategory)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
                 >
                   <option value="ontbijt">Ontbijt</option>
                   <option value="lunch">Lunch</option>
@@ -794,13 +835,13 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                   setNewTemplateName('');
                   setNewTemplateCategory('anders');
                 }}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300"
+                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 min-h-[44px]"
               >
                 Annuleren
               </button>
               <button
                 onClick={handleSaveAsTemplate}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 min-h-[44px]"
               >
                 Opslaan
               </button>
@@ -887,7 +928,7 @@ function AddPortionForm({ productName, onSave, onCancel }: {
           value={portionName}
           onChange={(e) => setPortionName(e.target.value)}
           placeholder="Bijv. 1 snee, 1 kop"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
           autoFocus
         />
       </div>
@@ -897,10 +938,11 @@ function AddPortionForm({ productName, onSave, onCancel }: {
           <label className="block text-sm font-medium text-gray-700 mb-1">Hoeveelheid</label>
           <input
             type="number"
+            inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="1"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
             min="1"
           />
         </div>
@@ -909,7 +951,7 @@ function AddPortionForm({ productName, onSave, onCancel }: {
           <select
             value={unit}
             onChange={(e) => setUnit(e.target.value as typeof unit)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
           >
             <option value="g">gram (g)</option>
             <option value="ml">milliliter (ml)</option>
@@ -925,10 +967,11 @@ function AddPortionForm({ productName, onSave, onCancel }: {
           <label className="block text-sm font-medium text-gray-700 mb-1">Grammen per stuk</label>
           <input
             type="number"
+            inputMode="decimal"
             value={gramsPerUnit}
             onChange={(e) => setGramsPerUnit(e.target.value)}
             placeholder="Bijv. 35"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
             min="1"
           />
         </div>
@@ -943,13 +986,13 @@ function AddPortionForm({ productName, onSave, onCancel }: {
       <div className="flex gap-3">
         <button
           onClick={onCancel}
-          className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300"
+          className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 min-h-[44px]"
         >
           Annuleren
         </button>
         <button
           onClick={handleSave}
-          className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700"
+          className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 min-h-[44px]"
         >
           Opslaan
         </button>
