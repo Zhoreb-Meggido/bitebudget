@@ -23,8 +23,8 @@ type Tab = 'products' | 'manual' | 'json' | 'templates';
 export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDate, editEntry, onUpdateMeal, quickAddTemplate }: Props) {
   const [tab, setTab] = useState<Tab>('products');
   const [mealTime, setMealTime] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [productGrams, setProductGrams] = useState<Record<string, number>>({});
+  const [selectedProducts, setSelectedProducts] = useState<Array<number | string>>>([]); // Product IDs
+  const [productGrams, setProductGrams] = useState<Record<number | string, number>>({});
   const [productSearch, setProductSearch] = useState('');
   const [manualMeal, setManualMeal] = useState({
     time: '', name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: ''
@@ -40,39 +40,47 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
   // Portions state
   const { portions: allPortions, addPortion } = usePortions();
-  const [productPortions, setProductPortions] = useState<Record<string, ProductPortion[]>>({});
+  const [productPortions, setProductPortions] = useState<Record<number | string, ProductPortion[]>>({});
   const [showAddPortionModal, setShowAddPortionModal] = useState(false);
-  const [addPortionForProduct, setAddPortionForProduct] = useState<string>('');
+  const [addPortionForProduct, setAddPortionForProduct] = useState<string>(''); // Still use name for portions
 
   // Load portions for selected products
   useEffect(() => {
     const loadPortionsForProducts = async () => {
-      const portionsMap: Record<string, ProductPortion[]> = {};
-      for (const prodName of selectedProducts) {
-        const prodPortions = allPortions.filter(p => p.productName === prodName);
-        portionsMap[prodName] = prodPortions;
+      const portionsMap: Record<number | string, ProductPortion[]> = {};
+      for (const prodId of selectedProducts) {
+        const product = products.find(p => p.id === prodId);
+        if (product) {
+          const prodPortions = allPortions.filter(p => p.productName === product.name);
+          portionsMap[prodId] = prodPortions;
+        }
       }
       setProductPortions(portionsMap);
     };
     loadPortionsForProducts();
-  }, [selectedProducts, allPortions]);
+  }, [selectedProducts, allPortions, products]);
 
   // Load quick add template when provided
   useEffect(() => {
     if (quickAddTemplate && isOpen && !editEntry) {
-      // Load template products into products tab
-      const prodNames = quickAddTemplate.products.map(p => p.name);
-      const grams: Record<string, number> = {};
-      quickAddTemplate.products.forEach(p => {
-        grams[p.name] = p.grams;
+      // Load template products into products tab - convert names to IDs
+      const prodIds: Array<number | string> = [];
+      const grams: Record<number | string, number> = {};
+
+      quickAddTemplate.products.forEach(tp => {
+        const product = products.find(p => p.name === tp.name);
+        if (product && product.id) {
+          prodIds.push(product.id);
+          grams[product.id] = tp.grams;
+        }
       });
 
-      setSelectedProducts(prodNames);
+      setSelectedProducts(prodIds);
       setProductGrams(grams);
       setMealTime(getCurrentTime());
       setTab('products'); // Open on products tab for adjustments
     }
-  }, [quickAddTemplate, isOpen, editEntry]);
+  }, [quickAddTemplate, isOpen, editEntry, products]);
 
   // Load entry data when editing
   useEffect(() => {
@@ -81,12 +89,18 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       if (editEntry.products && Array.isArray(editEntry.products) && editEntry.products.length > 0) {
         setTab('products');
         setMealTime(editEntry.time);
-        const prodNames = editEntry.products.map(p => p.name);
-        const grams: Record<string, number> = {};
-        editEntry.products.forEach(p => {
-          grams[p.name] = p.grams;
+
+        // Convert product names to IDs
+        const prodIds: Array<number | string> = [];
+        const grams: Record<number | string, number> = {};
+        editEntry.products.forEach(ep => {
+          const product = products.find(p => p.name === ep.name);
+          if (product && product.id) {
+            prodIds.push(product.id);
+            grams[product.id] = ep.grams;
+          }
         });
-        setSelectedProducts(prodNames);
+        setSelectedProducts(prodIds);
         setProductGrams(grams);
       } else {
         // Use manual tab for entries without products
@@ -114,7 +128,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       setManualMeal({ time: '', name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: '' });
       setMealJson('');
     }
-  }, [editEntry, isOpen]);
+  }, [editEntry, isOpen, products]);
 
   // Sort products: selected first, then favorites, then alphabetical
   // Memoized for performance
@@ -122,8 +136,8 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     products
       .filter(p => productSearch === '' || p.name.toLowerCase().includes(productSearch.toLowerCase()))
       .sort((a, b) => {
-        const aSelected = selectedProducts.includes(a.name);
-        const bSelected = selectedProducts.includes(b.name);
+        const aSelected = a.id && selectedProducts.includes(a.id);
+        const bSelected = b.id && selectedProducts.includes(b.id);
 
         // 1. Selected items first
         if (aSelected !== bSelected) return aSelected ? -1 : 1;
@@ -166,10 +180,10 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     let totals = { calories: 0, protein: 0, carbohydrates: 0, sugars: 0, fat: 0, saturatedFat: 0, fiber: 0, sodium: 0 };
     const productDetails: Array<{ name: string; grams: number }> = [];
 
-    selectedProducts.forEach(prodName => {
-      const product = products.find(p => p.name === prodName);
+    selectedProducts.forEach(prodId => {
+      const product = products.find(p => p.id === prodId);
       if (!product) return;
-      const grams = productGrams[prodName] || 100;
+      const grams = productGrams[prodId] || 100;
       const nutrition = calculateProductNutrition(product, grams);
 
       totals.calories += nutrition.calories;
@@ -181,7 +195,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       totals.fiber += nutrition.fiber;
       totals.sodium += nutrition.sodium;
 
-      productDetails.push({ name: prodName, grams });
+      productDetails.push({ name: product.name, grams });
     });
 
     const name = productDetails.map(p => `${p.name} (${p.grams}g)`).join(' + ');
@@ -248,14 +262,18 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
   // Template handlers
   const handleLoadTemplate = async (template: MealTemplate) => {
-    // Load template products into products tab
-    const prodNames = template.products.map(p => p.name);
-    const grams: Record<string, number> = {};
-    template.products.forEach(p => {
-      grams[p.name] = p.grams;
+    // Load template products into products tab - convert names to IDs
+    const prodIds: Array<number | string> = [];
+    const grams: Record<number | string, number> = {};
+    template.products.forEach(tp => {
+      const product = products.find(p => p.name === tp.name);
+      if (product && product.id) {
+        prodIds.push(product.id);
+        grams[product.id] = tp.grams;
+      }
     });
 
-    setSelectedProducts(prodNames);
+    setSelectedProducts(prodIds);
     setProductGrams(grams);
     setMealTime(getCurrentTime());
 
@@ -278,9 +296,11 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     }
 
     const productDetails: Array<{ name: string; grams: number }> = [];
-    selectedProducts.forEach(prodName => {
-      const grams = productGrams[prodName] || 100;
-      productDetails.push({ name: prodName, grams });
+    selectedProducts.forEach(prodId => {
+      const product = products.find(p => p.id === prodId);
+      if (!product) return;
+      const grams = productGrams[prodId] || 100;
+      productDetails.push({ name: product.name, grams });
     });
 
     await addTemplate({
@@ -367,11 +387,12 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 <p className="text-center text-gray-500 py-8 text-sm">Geen producten gevonden</p>
               ) : (
                 sortedProducts.map((product, idx) => {
-                  const isSelected = selectedProducts.includes(product.name);
+                  if (!product.id) return null; // Skip products without ID
+                  const isSelected = selectedProducts.includes(product.id);
                   const prevProduct = sortedProducts[idx - 1];
-                  const prevSelected = prevProduct && selectedProducts.includes(prevProduct.name);
+                  const prevSelected = prevProduct && prevProduct.id && selectedProducts.includes(prevProduct.id);
                   const showDivider = !isSelected && prevSelected;
-                  const portions = productPortions[product.name] || [];
+                  const portions = productPortions[product.id] || [];
                   const hasPortions = portions.length > 0;
 
                   return (
@@ -398,12 +419,12 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                           checked={isSelected}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setSelectedProducts([...selectedProducts, product.name]);
-                              if (!productGrams[product.name]) {
-                                setProductGrams({...productGrams, [product.name]: 100});
+                              setSelectedProducts([...selectedProducts, product.id!]);
+                              if (!productGrams[product.id!]) {
+                                setProductGrams({...productGrams, [product.id!]: 100});
                               }
                             } else {
-                              setSelectedProducts(selectedProducts.filter(p => p !== product.name));
+                              setSelectedProducts(selectedProducts.filter(p => p !== product.id));
                             }
                           }}
                           className="w-5 h-5 mt-0.5 flex-shrink-0"
@@ -424,83 +445,88 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
                           {/* Inline editing when selected */}
                           {isSelected && (
-                            <div className="flex flex-wrap items-center gap-2 mt-2">
-                              {/* Gram input */}
-                              <div className="flex items-center gap-1">
-                                <input
-                                  type="number"
-                                  inputMode="decimal"
-                                  value={productGrams[product.name] ?? ''}
-                                  onChange={(e) => setProductGrams({...productGrams, [product.name]: parseInt(e.target.value) || 0})}
-                                  onFocus={(e) => e.target.select()}
-                                  onClick={(e) => e.stopPropagation()}
-                                  placeholder="100"
-                                  className="w-20 px-3 py-2 border rounded-lg text-center text-sm min-h-[44px]"
-                                  min="1"
-                                />
-                                <span className="text-sm text-gray-600 font-medium">g</span>
-                              </div>
+                            <div className="space-y-2 mt-2">
+                              {/* First row: gram input + portion selector */}
+                              <div className="flex flex-wrap items-center gap-2">
+                                {/* Gram input */}
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="number"
+                                    inputMode="decimal"
+                                    value={productGrams[product.id!] ?? ''}
+                                    onChange={(e) => setProductGrams({...productGrams, [product.id!]: parseInt(e.target.value) || 0})}
+                                    onFocus={(e) => e.target.select()}
+                                    onClick={(e) => e.stopPropagation()}
+                                    placeholder="100"
+                                    className="w-20 px-3 py-2 border rounded-lg text-center text-sm min-h-[44px]"
+                                    min="1"
+                                  />
+                                  <span className="text-sm text-gray-600 font-medium">g</span>
+                                </div>
 
-                              {/* Portion dropdown if available */}
-                              {hasPortions && (
-                                <select
-                                  value="custom"
-                                  onChange={(e) => {
-                                    const portionId = e.target.value;
-                                    if (portionId === 'custom') return;
-                                    if (portionId === 'new') {
+                                {/* Portion dropdown if available */}
+                                {hasPortions && (
+                                  <select
+                                    value="custom"
+                                    onChange={(e) => {
+                                      const portionId = e.target.value;
+                                      if (portionId === 'custom') return;
+                                      if (portionId === 'new') {
+                                        setAddPortionForProduct(product.name);
+                                        setShowAddPortionModal(true);
+                                        return;
+                                      }
+                                      const portion = portions.find(p => p.id?.toString() === portionId);
+                                      if (portion) {
+                                        setProductGrams({...productGrams, [product.id!]: portion.grams});
+                                      }
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="px-3 py-2 border rounded-lg text-xs min-h-[44px] bg-white"
+                                  >
+                                    <option value="custom">Handmatig</option>
+                                    {portions.map(p => (
+                                      <option key={p.id} value={p.id}>
+                                        {p.portionName} ({p.grams}g)
+                                      </option>
+                                    ))}
+                                    <option value="new">+ Nieuwe portie</option>
+                                  </select>
+                                )}
+
+                                {/* Add portion button if no portions */}
+                                {!hasPortions && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
                                       setAddPortionForProduct(product.name);
                                       setShowAddPortionModal(true);
-                                      return;
-                                    }
-                                    const portion = portions.find(p => p.id?.toString() === portionId);
-                                    if (portion) {
-                                      setProductGrams({...productGrams, [product.name]: portion.grams});
-                                    }
-                                  }}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="px-3 py-2 border rounded-lg text-xs min-h-[44px] bg-white"
-                                >
-                                  <option value="custom">Handmatig</option>
-                                  {portions.map(p => (
-                                    <option key={p.id} value={p.id}>
-                                      {p.portionName} ({p.grams}g)
-                                    </option>
-                                  ))}
-                                  <option value="new">+ Nieuwe portie</option>
-                                </select>
-                              )}
+                                    }}
+                                    className="px-3 py-2 text-xs text-blue-600 hover:text-blue-800 underline whitespace-nowrap min-h-[44px] flex items-center"
+                                  >
+                                    + Portie
+                                  </button>
+                                )}
+                              </div>
 
-                              {/* Add portion button if no portions */}
-                              {!hasPortions && (
+                              {/* Second row: delete button always on its own row for mobile */}
+                              <div className="flex">
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    setAddPortionForProduct(product.name);
-                                    setShowAddPortionModal(true);
+                                    setSelectedProducts(selectedProducts.filter(p => p !== product.id));
+                                    const newGrams = {...productGrams};
+                                    delete newGrams[product.id!];
+                                    setProductGrams(newGrams);
                                   }}
-                                  className="px-3 py-2 text-xs text-blue-600 hover:text-blue-800 underline whitespace-nowrap min-h-[44px] flex items-center"
-                                >
-                                  + Portie
-                                </button>
-                              )}
-
-                              {/* Remove button */}
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setSelectedProducts(selectedProducts.filter(p => p !== product.name));
-                                  const newGrams = {...productGrams};
-                                  delete newGrams[product.name];
-                                  setProductGrams(newGrams);
-                                }}
-                                className="ml-auto min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:text-red-700 text-xl font-bold"
-                                aria-label="Verwijder product"
-                              >✕</button>
+                                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:text-red-700 text-xl font-bold"
+                                  aria-label="Verwijder product"
+                                >✕ Verwijder</button>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -842,9 +868,13 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-sm text-gray-700 mb-1">Geselecteerde producten:</p>
                 <ul className="text-xs text-gray-600 space-y-1">
-                  {selectedProducts.map(name => (
-                    <li key={name}>• {name} ({productGrams[name] || 100}g)</li>
-                  ))}
+                  {selectedProducts.map(prodId => {
+                    const product = products.find(p => p.id === prodId);
+                    if (!product) return null;
+                    return (
+                      <li key={prodId}>• {product.name} ({productGrams[prodId] || 100}g)</li>
+                    );
+                  })}
                 </ul>
               </div>
             </div>
