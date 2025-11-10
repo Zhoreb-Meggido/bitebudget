@@ -116,6 +116,34 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
     }
   }, [editEntry, isOpen]);
 
+  // Sort products: selected first, then favorites, then alphabetical
+  // Memoized for performance
+  const sortedProducts = useMemo(() =>
+    products
+      .filter(p => productSearch === '' || p.name.toLowerCase().includes(productSearch.toLowerCase()))
+      .sort((a, b) => {
+        const aSelected = selectedProducts.includes(a.name);
+        const bSelected = selectedProducts.includes(b.name);
+
+        // 1. Selected items first
+        if (aSelected !== bSelected) return aSelected ? -1 : 1;
+
+        // 2. Then favorites
+        if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+
+        // 3. Then alphabetical
+        return a.name.localeCompare(b.name);
+      }),
+    [products, productSearch, selectedProducts]
+  );
+
+  const filteredTemplates = useMemo(() =>
+    templates
+      .filter(t => templateSearch === '' || t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+    [templates, templateSearch]
+  );
+
   if (!isOpen) return null;
 
   const isEditMode = !!editEntry;
@@ -289,34 +317,6 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
     return totals;
   };
-
-  // Sort products: selected first, then favorites, then alphabetical
-  // Memoized for performance
-  const sortedProducts = useMemo(() =>
-    products
-      .filter(p => productSearch === '' || p.name.toLowerCase().includes(productSearch.toLowerCase()))
-      .sort((a, b) => {
-        const aSelected = selectedProducts.includes(a.name);
-        const bSelected = selectedProducts.includes(b.name);
-
-        // 1. Selected items first
-        if (aSelected !== bSelected) return aSelected ? -1 : 1;
-
-        // 2. Then favorites
-        if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
-
-        // 3. Then alphabetical
-        return a.name.localeCompare(b.name);
-      }),
-    [products, productSearch, selectedProducts]
-  );
-
-  const filteredTemplates = useMemo(() =>
-    templates
-      .filter(t => templateSearch === '' || t.name.toLowerCase().includes(templateSearch.toLowerCase()))
-      .sort((a, b) => a.name.localeCompare(b.name)),
-    [templates, templateSearch]
-  );
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
