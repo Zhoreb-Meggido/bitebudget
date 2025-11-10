@@ -7,6 +7,7 @@
 import { db } from './database.service';
 import type { Entry } from '@/types';
 import { getTimestamp, generateId } from '@/utils';
+import { syncService } from './sync.service';
 
 class EntriesService {
   /**
@@ -78,6 +79,10 @@ class EntriesService {
 
       await db.entries.add(newEntry);
       console.log('✅ Entry added:', newEntry.name);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
+
       return newEntry;
     } catch (error) {
       console.error('❌ Error adding entry:', error);
@@ -96,6 +101,9 @@ class EntriesService {
         updated_at: now,
       });
       console.log('✅ Entry updated:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error updating entry:', error);
       throw error;
@@ -113,6 +121,9 @@ class EntriesService {
         updated_at: getTimestamp(),
       });
       console.log('✅ Entry soft deleted:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error deleting entry:', error);
       throw error;

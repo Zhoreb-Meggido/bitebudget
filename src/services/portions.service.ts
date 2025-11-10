@@ -8,6 +8,7 @@ import { db } from './database.service';
 import type { ProductPortion } from '@/types';
 import { getTimestamp, generateId } from '@/utils';
 import { ALL_DEFAULT_PORTIONS } from '@/data/defaultPortions';
+import { syncService } from './sync.service';
 
 class PortionsService {
   private initialized = false;
@@ -106,6 +107,10 @@ class PortionsService {
 
       await db.productPortions.add(newPortion);
       console.log('✅ Portion added:', newPortion.portionName);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
+
       return newPortion;
     } catch (error) {
       console.error('❌ Error adding portion:', error);
@@ -124,6 +129,9 @@ class PortionsService {
         updated_at: now,
       });
       console.log('✅ Portion updated:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error updating portion:', error);
       throw error;
@@ -141,6 +149,9 @@ class PortionsService {
         updated_at: getTimestamp(),
       });
       console.log('✅ Portion soft deleted:', id);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error deleting portion:', error);
       throw error;
@@ -195,6 +206,9 @@ class PortionsService {
       });
 
       console.log('✅ Default portion set for:', productName);
+
+      // Trigger auto-sync (debounced 30s)
+      syncService.triggerAutoSync();
     } catch (error) {
       console.error('❌ Error setting default portion:', error);
       throw error;

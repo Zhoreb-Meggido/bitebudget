@@ -48,18 +48,18 @@ export function TabNavigation({ activeTab, onTabChange }: Props) {
         throw new Error('Geen wachtwoord gevonden');
       }
 
-      const hasNewData = await syncService.pullIfNewer(password);
+      // Bidirectional sync: pull cloud changes + push local changes
+      // syncToCloud with forceUpload=false does pull first, then push
+      await syncService.syncToCloud(password, false);
       setSyncStatus('success');
 
-      if (hasNewData) {
-        // Dispatch event to refresh all components
-        window.dispatchEvent(new CustomEvent('sync-data-updated'));
-      }
+      // Dispatch event to refresh all components
+      window.dispatchEvent(new CustomEvent('data-synced'));
 
       // Clear success message after 2 seconds
       setTimeout(() => setSyncStatus('idle'), 2000);
     } catch (error) {
-      console.error('Manual refresh failed:', error);
+      console.error('Manual sync failed:', error);
       setSyncStatus('error');
 
       // Clear error message after 3 seconds
