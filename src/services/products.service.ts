@@ -142,8 +142,11 @@ class ProductsService {
   async updateProduct(id: number | string, updates: Partial<Product>): Promise<void> {
     try {
       const now = getTimestamp();
+      // Remove id and created_at from updates to prevent Dexie key conflicts
+      const { id: _id, created_at: _created, ...safeUpdates } = updates as Product;
+
       await db.products.update(id, {
-        ...updates,
+        ...safeUpdates,
         updated_at: now,
       });
       console.log('✅ Product updated:', id);

@@ -96,8 +96,11 @@ class EntriesService {
   async updateEntry(id: number | string, updates: Partial<Entry>): Promise<void> {
     try {
       const now = getTimestamp();
+      // Remove id and created_at from updates to prevent Dexie key conflicts
+      const { id: _id, created_at: _created, ...safeUpdates } = updates as Entry;
+
       await db.entries.update(id, {
-        ...updates,
+        ...safeUpdates,
         updated_at: now,
       });
       console.log('✅ Entry updated:', id);

@@ -129,8 +129,11 @@ class ActivitiesService {
    */
   async updateActivity(id: number | string, updates: Partial<DailyActivity>): Promise<void> {
     try {
+      // Remove id and created_at from updates to prevent Dexie key conflicts
+      const { id: _id, created_at: _created, ...safeUpdates } = updates as DailyActivity;
+
       await db.dailyActivities.update(id, {
-        ...updates,
+        ...safeUpdates,
         updated_at: getTimestamp(),
       });
       console.log('✅ Activity updated:', id);
