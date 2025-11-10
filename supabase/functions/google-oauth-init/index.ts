@@ -2,7 +2,11 @@
  * Google OAuth Initialization
  * Exchanges authorization code for access token and refresh token
  * Stores encrypted refresh token in database
+ *
+ * VERSION: 1.1.0 (with PKCE code_verifier support)
  */
+
+const FUNCTION_VERSION = '1.1.0';
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -23,8 +27,18 @@ serve(async (req) => {
   }
 
   try {
+    console.log(`🚀 google-oauth-init v${FUNCTION_VERSION} starting...`);
+
     // Parse request body
     const { code, redirectUri, codeVerifier, userId }: RequestBody = await req.json();
+
+    console.log('📦 Received request:', {
+      hasCode: !!code,
+      hasRedirectUri: !!redirectUri,
+      hasCodeVerifier: !!codeVerifier,
+      codeVerifierLength: codeVerifier?.length,
+      hasUserId: !!userId,
+    });
 
     if (!code || !redirectUri || !codeVerifier || !userId) {
       return errorResponse('Missing required fields: code, redirectUri, codeVerifier, userId');
@@ -40,7 +54,15 @@ serve(async (req) => {
     }
 
     // Exchange authorization code for tokens
-    console.log('Exchanging authorization code for tokens...');
+    console.log('🔄 Exchanging authorization code for tokens with PKCE...');
+    console.log('📤 Sending to Google:', {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      redirectUri,
+      codeVerifierLength: codeVerifier.length,
+      grantType: 'authorization_code',
+    });
+
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
