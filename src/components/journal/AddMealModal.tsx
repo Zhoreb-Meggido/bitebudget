@@ -23,7 +23,7 @@ type Tab = 'products' | 'manual' | 'json' | 'templates';
 export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDate, editEntry, onUpdateMeal, quickAddTemplate }: Props) {
   const [tab, setTab] = useState<Tab>('products');
   const [mealTime, setMealTime] = useState('');
-  const [selectedProducts, setSelectedProducts] = useState<Array<number | string>>>([]); // Product IDs
+  const [selectedProducts, setSelectedProducts] = useState<Array<number | string>>([]); // Product IDs
   const [productGrams, setProductGrams] = useState<Record<number | string, number>>({});
   const [productSearch, setProductSearch] = useState('');
   const [manualMeal, setManualMeal] = useState({
