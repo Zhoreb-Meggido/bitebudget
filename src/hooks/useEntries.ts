@@ -31,7 +31,7 @@ export function useEntries() {
     return () => {
       window.removeEventListener('data-synced', handleSync);
     };
-  }, [loadEntries]);
+  }, []); // Empty deps - loadEntries is stable via useCallback
 
   const addEntry = useCallback(async (entry: Omit<Entry, 'id' | 'created_at' | 'updated_at'>) => {
     const newEntry = await entriesService.addEntry(entry);

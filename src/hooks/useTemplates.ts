@@ -38,7 +38,7 @@ export function useTemplates() {
     return () => {
       window.removeEventListener('data-synced', handleSync);
     };
-  }, [loadTemplates]);
+  }, []); // Empty deps - loadTemplates is stable via useCallback
 
   const addTemplate = useCallback(async (template: Omit<MealTemplate, 'id' | 'created_at' | 'updated_at'>) => {
     const newTemplate = await templatesService.addTemplate(template);

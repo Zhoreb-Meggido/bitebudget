@@ -30,7 +30,7 @@ export function useActivities() {
     return () => {
       window.removeEventListener('data-synced', handleSync);
     };
-  }, [loadActivities]);
+  }, []); // Empty deps - loadActivities is stable via useCallback
 
   const getActivityByDate = useCallback((date: string) => {
     return activities.find(a => a.date === date);

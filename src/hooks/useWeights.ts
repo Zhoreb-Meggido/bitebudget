@@ -42,7 +42,7 @@ export function useWeights() {
     return () => {
       window.removeEventListener('data-synced', handleSync);
     };
-  }, [loadWeights]);
+  }, []); // Empty deps - loadWeights is stable via useCallback
 
   // Voeg nieuw gewicht toe
   const addWeight = useCallback(async (weight: Omit<Weight, 'id' | 'created_at'>) => {
