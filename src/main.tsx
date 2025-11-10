@@ -21,6 +21,41 @@ function App() {
   const [activeTab, setActiveTab] = useActiveTab();
   const { shouldShowWarning, dismissWarning } = useAutoSyncWarning();
   const [tokenExpiringMinutes, setTokenExpiringMinutes] = useState<number | null>(null);
+  const [oauthProcessing, setOauthProcessing] = useState(false);
+
+  // Handle OAuth callback (Google Drive Authorization Code Flow)
+  useEffect(() => {
+    const handleOAuthCallback = async () => {
+      // Check if this is an OAuth callback
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+
+      if (code) {
+        setOauthProcessing(true);
+        console.log('📥 OAuth callback detected, exchanging code for tokens...');
+
+        try {
+          const { googleDriveService } = await import('@/services/googledrive.service');
+          await googleDriveService.handleOAuthCallback(code);
+
+          // Clean URL and redirect to settings
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setActiveTab('instellingen');
+
+          console.log('✅ OAuth setup complete!');
+        } catch (error) {
+          console.error('❌ OAuth callback failed:', error);
+          alert('Google Drive connectie mislukt. Probeer het opnieuw.');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } finally {
+          setOauthProcessing(false);
+        }
+      }
+    };
+
+    handleOAuthCallback();
+  }, [setActiveTab]);
 
   // Register PWA service worker and install prompt
   useEffect(() => {
@@ -122,12 +157,14 @@ function App() {
     );
   }
 
-  if (!isInitialized) {
+  if (!isInitialized || oauthProcessing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Database wordt geïnitialiseerd...</p>
+          <p className="text-gray-600">
+            {oauthProcessing ? 'Google Drive wordt verbonden...' : 'Database wordt geïnitialiseerd...'}
+          </p>
         </div>
       </div>
     );

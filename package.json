@@ -10,6 +10,7 @@
     "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.81.0",
     "chart.js": "^4.5.1",
     "chartjs-plugin-annotation": "^3.0.1",
     "dexie": "^3.2.4",
