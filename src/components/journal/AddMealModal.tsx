@@ -743,6 +743,21 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         <div className="border-t bg-white px-4 py-3 rounded-b-xl flex-shrink-0">
           {tab === 'products' && (
             <div className="space-y-2">
+              {/* Tijd input - compact */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Tijd:</label>
+                <input
+                  type="time"
+                  value={mealTime}
+                  onChange={(e) => setMealTime(e.target.value)}
+                  placeholder={getCurrentTime()}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[44px]"
+                />
+                <span className="text-xs text-gray-500 whitespace-nowrap">
+                  {mealTime === '' && '(nu)'}
+                </span>
+              </div>
+
               <button
                 onClick={handleAddFromProducts}
                 disabled={selectedProducts.length === 0}
