@@ -12,6 +12,7 @@ import { corsHeaders, handleCorsPreFlight, jsonResponse, errorResponse } from '.
 interface RequestBody {
   code: string;
   redirectUri: string;
+  codeVerifier: string; // PKCE code verifier
   userId: string; // Browser fingerprint or user identifier
 }
 
@@ -23,10 +24,10 @@ serve(async (req) => {
 
   try {
     // Parse request body
-    const { code, redirectUri, userId }: RequestBody = await req.json();
+    const { code, redirectUri, codeVerifier, userId }: RequestBody = await req.json();
 
-    if (!code || !redirectUri || !userId) {
-      return errorResponse('Missing required fields: code, redirectUri, userId');
+    if (!code || !redirectUri || !codeVerifier || !userId) {
+      return errorResponse('Missing required fields: code, redirectUri, codeVerifier, userId');
     }
 
     // Get Google OAuth credentials from environment
@@ -50,6 +51,7 @@ serve(async (req) => {
         client_id: clientId,
         client_secret: clientSecret,
         redirect_uri: redirectUri,
+        code_verifier: codeVerifier, // PKCE code verifier
         grant_type: 'authorization_code',
       }),
     });

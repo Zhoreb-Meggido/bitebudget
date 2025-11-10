@@ -88,11 +88,21 @@ class GoogleDriveService {
     try {
       console.log('📥 Handling OAuth callback...');
 
+      // Retrieve code verifier from session storage (for PKCE)
+      const codeVerifier = sessionStorage.getItem('google_code_verifier');
+      if (!codeVerifier) {
+        throw new Error('Code verifier not found in session storage');
+      }
+
       // Exchange authorization code for tokens via Supabase Edge Function
       const { access_token, expires_in, expires_at } = await supabaseService.initGoogleOAuth(
         code,
-        this.REDIRECT_URI
+        this.REDIRECT_URI,
+        codeVerifier
       );
+
+      // Clean up code verifier
+      sessionStorage.removeItem('google_code_verifier');
 
       // Store access token and expiry
       this.accessToken = access_token;

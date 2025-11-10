@@ -127,12 +127,13 @@ class SupabaseService {
   /**
    * Initialize Google OAuth (exchange authorization code for tokens)
    */
-  async initGoogleOAuth(code: string, redirectUri: string): Promise<{ access_token: string; expires_in: number; expires_at: string }> {
+  async initGoogleOAuth(code: string, redirectUri: string, codeVerifier: string): Promise<{ access_token: string; expires_in: number; expires_at: string }> {
     const userId = await this.getUserId();
 
     return await this.callFunction('google-oauth-init', {
       code,
       redirectUri,
+      codeVerifier,
       userId,
     });
   }
