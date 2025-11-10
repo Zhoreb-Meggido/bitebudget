@@ -743,17 +743,17 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         <div className="border-t bg-white px-4 py-3 rounded-b-xl flex-shrink-0">
           {tab === 'products' && (
             <div className="flex flex-col gap-2">
-              {/* Desktop: tijd + buttons in rij, Mobile: alles verticaal */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              {/* Mobile: vertical stack, Desktop (lg+): horizontal row with all 3 items */}
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
                 {/* Tijd input - compact on desktop */}
-                <div className="flex items-center gap-2 sm:w-auto">
+                <div className="flex items-center gap-2 lg:w-auto">
                   <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Tijd:</label>
                   <input
                     type="time"
                     value={mealTime}
                     onChange={(e) => setMealTime(e.target.value)}
                     placeholder={getCurrentTime()}
-                    className="flex-1 sm:w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[44px]"
+                    className="flex-1 lg:w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[44px]"
                   />
                   <span className="text-xs text-gray-500 whitespace-nowrap">
                     {mealTime === '' && '(nu)'}
@@ -764,7 +764,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 <button
                   onClick={handleAddFromProducts}
                   disabled={selectedProducts.length === 0}
-                  className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition min-h-[44px] sm:min-h-[44px] ${
+                  className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition min-h-[44px] ${
                     selectedProducts.length === 0
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-green-600 text-white hover:bg-green-700'
@@ -772,17 +772,17 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 >
                   {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'} {selectedProducts.length > 0 && `(${selectedProducts.length})`}
                 </button>
-              </div>
 
-              {/* Template button - separate row, full width */}
-              {selectedProducts.length > 0 && (
-                <button
-                  onClick={() => setShowSaveTemplateModal(true)}
-                  className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition min-h-[44px]"
-                >
-                  💾 Opslaan als template
-                </button>
-              )}
+                {/* Template button - same row on desktop (lg+), separate on mobile */}
+                {selectedProducts.length > 0 && (
+                  <button
+                    onClick={() => setShowSaveTemplateModal(true)}
+                    className="lg:flex-1 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition min-h-[44px]"
+                  >
+                    💾 <span className="hidden lg:inline">Opslaan als </span>Template
+                  </button>
+                )}
+              </div>
             </div>
           )}
           {tab === 'manual' && (
