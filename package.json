@@ -1,7 +1,7 @@
 {
   "name": "bitebudget",
-  "version": "1.5.0",
-  "description": "BiteBudget - Progressive Web App voor food tracking met OpenFoodFacts integratie, porties en templates",
+  "version": "1.6.0",
+  "description": "BiteBudget - Progressive Web App voor food tracking met OpenFoodFacts integratie, porties, templates en automatische OAuth token refresh",
   "type": "module",
   "scripts": {
     "dev": "vite",

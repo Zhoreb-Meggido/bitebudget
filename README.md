@@ -1,10 +1,10 @@
-# BiteBudget (Voedseljournaal) v1.5.0
+# BiteBudget (Voedseljournaal) v1.6.0
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.5.0:** Meal Templates, Garmin Integration & Smart Token Management!
+**🎉 Nieuw in v1.6.0:** Automatic OAuth Token Refresh - Geen handmatige popups meer!
 
 ---
 
@@ -337,6 +337,48 @@ npm run build
 
 ## 📋 Changelog
 
+### **v1.6.0 - Automatic OAuth Token Refresh** (2025-01-10)
+
+#### **Automatic Token Refresh via Supabase** 🔄
+- ✅ **Authorization Code Flow** - Upgraded from Implicit Flow to get refresh tokens
+- ✅ **Supabase Edge Functions** - Server-side OAuth token management
+- ✅ **Automatic Refresh** - Tokens automatically renewed every 50 minutes
+- ✅ **Zero User Interaction** - No more manual "token expired" popups!
+- ✅ **Android PWA Compatible** - Works perfectly in Android WebView
+- ✅ **Encrypted Storage** - Refresh tokens stored encrypted (AES-256-GCM)
+- ✅ **Fallback Support** - Falls back to manual refresh if Supabase unavailable
+
+#### **Garmin OAuth Infrastructure** 📊
+- ✅ **OAuth 2.0 PKCE** - Authorization Code Flow for Garmin Connect
+- ✅ **Edge Functions Ready** - garmin-oauth-init and garmin-oauth-refresh deployed
+- ✅ **3-Month Tokens** - Garmin tokens valid for 90 days (vs 1 hour for Google)
+- ✅ **Future-Ready** - Infrastructure prepared for automatic Garmin data sync
+
+#### **Backend Integration** 🔧
+- ✅ **Supabase Client** - @supabase/supabase-js@2.81.0 integration
+- ✅ **Database Migration** - oauth_tokens table with RLS security
+- ✅ **Browser Fingerprinting** - User identification without login
+- ✅ **CORS Support** - Cross-origin request handling
+- ✅ **Environment Config** - .env.example with all required variables
+
+#### **Technical Improvements** 🚀
+- ✅ **OAuth Callback Handler** - Seamless authorization code exchange in main.tsx
+- ✅ **Dual OAuth Flows** - Automatic (Authorization Code) + Manual (Implicit) fallback
+- ✅ **Settings Integration** - autoRefreshOAuth option in UserSettings
+- ✅ **Supabase Config** - config.toml for Edge Functions deployment
+- ✅ **Documentation** - Complete setup guide in OAUTH_SETUP.md
+
+#### **Setup Requirements** ⚙️
+To enable automatic refresh:
+1. Create Supabase project (free tier sufficient)
+2. Deploy Edge Functions (`npx supabase functions deploy`)
+3. Set environment secrets (encryption key, Google OAuth credentials)
+4. Configure .env file with Supabase URL and keys
+
+**Impact:** Google Drive sync now works seamlessly without interruptions - perfect for long sessions and Android PWA users!
+
+---
+
 ### **v1.5.0 - Templates, Integrations & Smart Sync** (2025-01-09)
 
 #### **Meal Templates & Favorites** ⭐
@@ -566,7 +608,7 @@ public/
 
 ## 🔧 Tech Stack
 
-### Current (v1.1.0)
+### Current (v1.6.0)
 - **React 18** + **TypeScript 5**
 - **Vite 5** - Build tool
 - **Tailwind CSS 3** - Styling
@@ -574,6 +616,7 @@ public/
 - **Chart.js 4.5** + **react-chartjs-2** - Visualizations
 - **jsPDF 2.5** + **jspdf-autotable** - PDF generation
 - **html5-qrcode** - Barcode scanning
+- **Supabase 2.81** - Backend for OAuth token management
 - **Google Identity Services** - OAuth 2.0
 - **Web Crypto API** - End-to-end encryption
 
@@ -929,6 +972,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** January 9, 2025
-**Status:** v1.5.0 - Templates, Integrations & Smart Sync
-**Next:** Photo attachments & Recipe builder
+**Last Updated:** January 10, 2025
+**Status:** v1.6.0 - Automatic OAuth Token Refresh
+**Next:** Automatic Garmin data sync & Recipe builder
