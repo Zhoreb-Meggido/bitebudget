@@ -28,10 +28,13 @@ export function usePortions(productName?: string) {
     setIsLoading(false);
   }, [productName]);
 
+  // Initial load when productName changes
   useEffect(() => {
     loadPortions();
+  }, [loadPortions]);
 
-    // Listen for sync events to refresh data
+  // Sync listener - only set up once
+  useEffect(() => {
     const handleSync = () => {
       console.log('🔄 usePortions: Reloading after sync');
       loadPortions();
@@ -41,7 +44,7 @@ export function usePortions(productName?: string) {
     return () => {
       window.removeEventListener('data-synced', handleSync);
     };
-  }, [loadPortions]);
+  }, []); // Empty deps - listener set up once, loadPortions is stable
 
   const addPortion = useCallback(async (portion: Omit<ProductPortion, 'id' | 'created_at' | 'updated_at'>) => {
     const newPortion = await portionsService.addPortion(portion);

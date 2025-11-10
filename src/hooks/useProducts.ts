@@ -31,7 +31,7 @@ export function useProducts() {
     return () => {
       window.removeEventListener('data-synced', handleSync);
     };
-  }, [loadProducts]);
+  }, []); // Empty deps - loadProducts is stable via useCallback
 
   const addProduct = useCallback(async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
     const newProduct = await productsService.addProduct(product);
