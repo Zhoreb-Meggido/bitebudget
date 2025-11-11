@@ -253,6 +253,7 @@ export function GarminImportSection() {
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Stappen</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Int.min</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">HR rust</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">HR max</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Slaap</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Body Batt</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">HRV</th>
@@ -268,6 +269,7 @@ export function GarminImportSection() {
                         <td className="px-3 py-2 text-sm text-gray-900">{day.steps || '-'}</td>
                         <td className="px-3 py-2 text-sm text-gray-900">{day.intensityMinutes || '-'}</td>
                         <td className="px-3 py-2 text-sm text-gray-900">{day.heartRate?.resting || '-'}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900">{day.heartRate?.max || '-'}</td>
                         <td className="px-3 py-2 text-sm text-gray-900">{formatSleepDuration(day.sleepSeconds)}</td>
                         <td className="px-3 py-2 text-sm text-gray-900">{day.bodyBattery || '-'}</td>
                         <td className="px-3 py-2 text-sm text-gray-900">{day.hrvOvernight || '-'}</td>
