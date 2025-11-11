@@ -181,6 +181,7 @@ export function TrackingPage() {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
