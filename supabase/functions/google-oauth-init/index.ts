@@ -79,9 +79,28 @@ serve(async (req) => {
     });
 
     if (!tokenResponse.ok) {
-      const error = await tokenResponse.text();
-      console.error('Token exchange failed:', error);
-      return errorResponse('Failed to exchange authorization code', 400);
+      const errorText = await tokenResponse.text();
+      console.error('❌ Token exchange failed:', {
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        error: errorText,
+        redirectUri, // Log redirect URI for debugging
+      });
+
+      // Try to parse error as JSON for better error message
+      let errorMessage = 'Token exchange failed';
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error === 'invalid_grant') {
+          errorMessage = `Token exchange failed: ${errorJson.error} - ${errorJson.error_description || 'Bad Request'}. This usually means: 1) Redirect URI mismatch (check Google Cloud Console), 2) Authorization code expired/already used, or 3) Code verifier mismatch (PKCE).`;
+        } else {
+          errorMessage = `Token exchange failed: ${errorJson.error} - ${errorJson.error_description || 'Unknown error'}`;
+        }
+      } catch (e) {
+        errorMessage = `Token exchange failed: ${errorText}`;
+      }
+
+      return errorResponse(errorMessage, 400);
     }
 
     const tokens = await tokenResponse.json();
