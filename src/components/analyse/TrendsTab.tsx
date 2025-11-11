@@ -33,14 +33,14 @@ interface MetricConfig {
 
 const METRICS: MetricConfig[] = [
   { key: 'steps', label: 'Stappen', color: 'rgb(59, 130, 246)', unit: '' },
-  { key: 'calories', label: 'Calorie Verbruik', color: 'rgb(239, 68, 68)', unit: 'kcal' },
-  { key: 'intensityMinutes', label: 'Intensity Minutes', color: 'rgb(147, 51, 234)', unit: 'min' },
-  { key: 'restingHeartRate', label: 'Rustpols', color: 'rgb(14, 165, 233)', unit: 'bpm' },
-  { key: 'maxHeartRate', label: 'Max Hartslag', color: 'rgb(220, 38, 38)', unit: 'bpm' },
-  { key: 'stressLevel', label: 'Stress Level', color: 'rgb(245, 158, 11)', unit: '' },
-  { key: 'sleepDuration', label: 'Slaap Duur', color: 'rgb(34, 197, 94)', unit: 'uur' },
-  { key: 'hrvOvernight', label: 'HRV Overnight', color: 'rgb(14, 165, 233)', unit: 'ms' },
-  { key: 'hrv7DayAvg', label: 'HRV 7d Gem', color: 'rgb(6, 182, 212)', unit: 'ms' },
+  { key: 'calories', label: 'Calorieën', color: 'rgb(239, 68, 68)', unit: 'kcal' },
+  { key: 'intensityMinutes', label: 'Intensiteit', color: 'rgb(147, 51, 234)', unit: 'min' },
+  { key: 'restingHeartRate', label: 'HR Rust', color: 'rgb(14, 165, 233)', unit: 'bpm' },
+  { key: 'maxHeartRate', label: 'HR Max', color: 'rgb(220, 38, 38)', unit: 'bpm' },
+  { key: 'stressLevel', label: 'Stress', color: 'rgb(245, 158, 11)', unit: '' },
+  { key: 'sleepDuration', label: 'Slaap', color: 'rgb(34, 197, 94)', unit: 'uur' },
+  { key: 'hrvOvernight', label: 'HRV', color: 'rgb(14, 165, 233)', unit: 'ms' },
+  { key: 'hrv7DayAvg', label: 'HRV 7d', color: 'rgb(6, 182, 212)', unit: 'ms' },
 ];
 
 // Correlation calculation helper
