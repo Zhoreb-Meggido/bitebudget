@@ -22,7 +22,7 @@ ChartJS.register(
   Legend
 );
 
-type MetricKey = 'steps' | 'calories' | 'intensityMinutes' | 'restingHeartRate' | 'stressLevel' | 'sleepDuration' | 'hrvOvernight' | 'hrv7DayAvg';
+type MetricKey = 'steps' | 'calories' | 'intensityMinutes' | 'restingHeartRate' | 'maxHeartRate' | 'stressLevel' | 'sleepDuration' | 'hrvOvernight' | 'hrv7DayAvg';
 
 interface MetricConfig {
   key: MetricKey;
@@ -36,6 +36,7 @@ const METRICS: MetricConfig[] = [
   { key: 'calories', label: 'Calorie Verbruik', color: 'rgb(239, 68, 68)', unit: 'kcal' },
   { key: 'intensityMinutes', label: 'Intensity Minutes', color: 'rgb(147, 51, 234)', unit: 'min' },
   { key: 'restingHeartRate', label: 'Rustpols', color: 'rgb(236, 72, 153)', unit: 'bpm' },
+  { key: 'maxHeartRate', label: 'Max Hartslag', color: 'rgb(219, 39, 119)', unit: 'bpm' },
   { key: 'stressLevel', label: 'Stress Level', color: 'rgb(245, 158, 11)', unit: '' },
   { key: 'sleepDuration', label: 'Slaap Duur', color: 'rgb(34, 197, 94)', unit: 'uur' },
   { key: 'hrvOvernight', label: 'HRV Overnight', color: 'rgb(14, 165, 233)', unit: 'ms' },
@@ -158,8 +159,12 @@ export function TrendsTab() {
             yAxisID = 'y-minutes';
             break;
           case 'restingHeartRate':
-            data = filteredActivities.map(a => a.restingHeartRate || 0);
+            data = filteredActivities.map(a => a.heartRateResting || 0);
             yAxisID = 'y-heartrate';
+            break;
+          case 'maxHeartRate':
+            data = filteredActivities.map(a => a.heartRateMax || 0);
+            yAxisID = 'y-heartrate-max';
             break;
           case 'stressLevel':
             data = filteredActivities.map(a => a.stressLevel || 0);
@@ -289,12 +294,36 @@ export function TrendsTab() {
         max: 100,
         title: {
           display: !isMobile,
-          text: 'HR',
+          text: 'HR Rust',
           color: 'rgb(236, 72, 153)',
           font: { size: isMobile ? 10 : 12 },
         },
         ticks: {
           color: 'rgb(236, 72, 153)',
+          font: { size: isMobile ? 9 : 11 },
+          maxTicksLimit: isMobile ? 4 : 6,
+        },
+        grid: {
+          drawOnChartArea: false,
+        },
+      };
+    }
+
+    if (selectedMetrics.has('maxHeartRate')) {
+      scales['y-heartrate-max'] = {
+        type: 'linear',
+        display: !isVerySmall,
+        position: 'right',
+        min: 100,
+        max: 220,
+        title: {
+          display: !isMobile,
+          text: 'HR Max',
+          color: 'rgb(219, 39, 119)',
+          font: { size: isMobile ? 10 : 12 },
+        },
+        ticks: {
+          color: 'rgb(219, 39, 119)',
           font: { size: isMobile ? 9 : 11 },
           maxTicksLimit: isMobile ? 4 : 6,
         },
@@ -425,7 +454,9 @@ export function TrendsTab() {
       case 'intensityMinutes':
         return activity.intensityMinutes || 0;
       case 'restingHeartRate':
-        return activity.restingHeartRate || 0;
+        return activity.heartRateResting || 0;
+      case 'maxHeartRate':
+        return activity.heartRateMax || 0;
       case 'stressLevel':
         return activity.stressLevel || 0;
       case 'sleepDuration':
