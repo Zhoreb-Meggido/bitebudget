@@ -120,35 +120,45 @@ export function ActivityTab() {
         const steps = activity.steps || 0;
         if (steps >= 10000) return 'bg-green-500';
         if (steps >= 7000) return 'bg-yellow-500';
-        if (steps > 0) return 'bg-red-500';
+        if (steps >= 5000) return 'bg-orange-400';
+        if (steps > 0) return 'bg-red-400';
         return 'bg-gray-200';
       }
       case 'calories': {
         const cal = activity.totalCalories || 0;
         if (cal >= 2500) return 'bg-green-500';
         if (cal >= 2000) return 'bg-yellow-500';
-        if (cal > 0) return 'bg-red-500';
+        if (cal >= 1500) return 'bg-orange-400';
+        if (cal > 0) return 'bg-red-400';
         return 'bg-gray-200';
       }
       case 'intensityMinutes': {
-        const mins = activity.intensityMinutes || 0;
+        // Intensity minutes can be 0 (valid: no intensive activity that day)
+        // Only show gray if the whole activity record is missing
+        if (activity.intensityMinutes === undefined || activity.intensityMinutes === null) {
+          return 'bg-gray-200';
+        }
+        const mins = activity.intensityMinutes;
         if (mins >= 30) return 'bg-green-500';
         if (mins >= 15) return 'bg-yellow-500';
-        if (mins > 0) return 'bg-red-500';
-        return 'bg-gray-200';
+        if (mins >= 5) return 'bg-orange-400';
+        // 0 or very low is still valid data, just not great
+        return 'bg-red-400';
       }
       case 'sleep': {
         const hours = (activity.sleepSeconds || 0) / 3600;
         if (hours >= 7) return 'bg-green-500';
         if (hours >= 6) return 'bg-yellow-500';
-        if (hours > 0) return 'bg-red-500';
+        if (hours >= 5) return 'bg-orange-400';
+        if (hours > 0) return 'bg-red-400';
         return 'bg-gray-200';
       }
       case 'bodyBattery': {
         const bb = activity.bodyBattery || 0;
         if (bb >= 75) return 'bg-green-500';
         if (bb >= 50) return 'bg-yellow-500';
-        if (bb > 0) return 'bg-red-500';
+        if (bb >= 25) return 'bg-orange-400';
+        if (bb > 0) return 'bg-red-400';
         return 'bg-gray-200';
       }
       case 'stress': {
@@ -156,7 +166,8 @@ export function ActivityTab() {
         if (stress === 0) return 'bg-gray-200';
         if (stress <= 30) return 'bg-green-500';
         if (stress <= 50) return 'bg-yellow-500';
-        return 'bg-red-500';
+        if (stress <= 70) return 'bg-orange-400';
+        return 'bg-red-400';
       }
       default:
         return 'bg-gray-200';
@@ -190,34 +201,34 @@ export function ActivityTab() {
       {/* Stats Cards */}
       <div className="p-6 border-b border-gray-200">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm font-medium text-gray-500">Dagen</div>
-          <div className="mt-2 text-2xl font-bold text-gray-900">{stats?.totalDays || 0}</div>
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+          <div className="text-sm text-gray-600 font-medium mb-1">Dagen</div>
+          <div className="text-2xl font-bold text-gray-900">{stats?.totalDays || 0}</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm font-medium text-gray-500">Ø Stappen</div>
-          <div className="mt-2 text-xl font-bold text-blue-600">{stats?.avgSteps.toLocaleString() || 0}</div>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+          <div className="text-sm text-blue-600 font-medium mb-1">Ø Stappen</div>
+          <div className="text-2xl font-bold text-blue-900">{stats?.avgSteps.toLocaleString() || 0}</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm font-medium text-gray-500">Ø Cal</div>
-          <div className="mt-2 text-xl font-bold text-orange-600">{stats?.avgCalories || 0}</div>
+        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
+          <div className="text-sm text-orange-600 font-medium mb-1">Ø Cal</div>
+          <div className="text-2xl font-bold text-orange-900">{stats?.avgCalories || 0}</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm font-medium text-gray-500">Ø Actief</div>
-          <div className="mt-2 text-xl font-bold text-green-600">{stats?.avgActiveCalories || 0}</div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+          <div className="text-sm text-green-600 font-medium mb-1">Ø Actief</div>
+          <div className="text-2xl font-bold text-green-900">{stats?.avgActiveCalories || 0}</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm font-medium text-gray-500">Ø Int.min</div>
-          <div className="mt-2 text-xl font-bold text-purple-600">{stats?.avgIntensityMinutes || 0}</div>
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+          <div className="text-sm text-purple-600 font-medium mb-1">Ø Int.min</div>
+          <div className="text-2xl font-bold text-purple-900">{stats?.avgIntensityMinutes || 0}</div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <div className="text-sm font-medium text-gray-500">Ø Slaap</div>
-          <div className="mt-2 text-xl font-bold text-indigo-600">{stats?.avgSleepHours || 0}u</div>
+        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-lg p-4 border border-indigo-200">
+          <div className="text-sm text-indigo-600 font-medium mb-1">Ø Slaap</div>
+          <div className="text-2xl font-bold text-indigo-900">{stats?.avgSleepHours || 0}u</div>
         </div>
         </div>
       </div>
@@ -283,7 +294,8 @@ export function ActivityTab() {
                             value = `${day.activity.totalCalories || 0} kcal`;
                             break;
                           case 'intensityMinutes':
-                            value = `${day.activity.intensityMinutes || 0} min`;
+                            const mins = day.activity.intensityMinutes ?? 0;
+                            value = `${mins} min`;
                             break;
                           case 'sleep':
                             const hours = Math.round((day.activity.sleepSeconds || 0) / 3600);
@@ -316,18 +328,22 @@ export function ActivityTab() {
               })}
 
               {/* Legend */}
-              <div className="mt-6 flex gap-6 text-xs text-gray-600">
+              <div className="mt-6 flex flex-wrap gap-4 text-xs text-gray-600">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-green-500 rounded"></div>
-                  <span>Excellent</span>
+                  <span>Uitstekend</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-                  <span>Gemiddeld</span>
+                  <span>Goed</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-500 rounded"></div>
-                  <span>Onder doel</span>
+                  <div className="w-4 h-4 bg-orange-400 rounded"></div>
+                  <span>Matig</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-red-400 rounded"></div>
+                  <span>Kan beter</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-200 rounded"></div>
