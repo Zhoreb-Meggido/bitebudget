@@ -383,7 +383,9 @@ class SyncService {
                  new Date(cloudEntry.updated_at) > new Date(localEntry.updated_at)) {
         // Cloud entry is newer - propagate all changes including deletion
         console.log(`🔄 Updating entry (cloud is newer): ${key}`);
-        await entriesService.updateEntry(localEntry.id!, cloudEntry);
+        // Use db.entries.update directly to preserve cloud timestamp (don't create new one)
+        const { id, ...cloudData } = cloudEntry;
+        await db.entries.update(localEntry.id!, cloudData);
         entriesUpdated++;
       } else {
         entriesSkipped++;
@@ -420,7 +422,9 @@ class SyncService {
       } else if (cloudProduct.updated_at && localProduct.updated_at &&
                  new Date(cloudProduct.updated_at) > new Date(localProduct.updated_at)) {
         // Cloud product is newer - propagate all changes including deletion
-        await productsService.updateProduct(localProduct.id!, cloudProduct);
+        // Use db.products.update directly to preserve cloud timestamp (don't create new one)
+        const { id, ...cloudData } = cloudProduct;
+        await db.products.update(localProduct.id!, cloudData);
         productsUpdated++;
       } else {
         productsSkipped++;
@@ -455,7 +459,9 @@ class SyncService {
 
           if (cloudTimestamp && localTimestamp && new Date(cloudTimestamp) > new Date(localTimestamp)) {
             // Cloud weight is newer - propagate all changes including deletion
-            await weightsService.updateWeight(localWeight.id!, cloudWeight);
+            // Use db.weights.update directly to preserve cloud timestamp (don't create new one)
+            const { id, ...cloudData } = cloudWeight;
+            await db.weights.update(localWeight.id!, cloudData);
             weightsUpdated++;
           } else {
             weightsSkipped++;
