@@ -2,7 +2,11 @@
  * Google OAuth Initialization
  * Exchanges authorization code for access token and refresh token
  * Stores encrypted refresh token in database
+ *
+ * VERSION: 1.1.0 (with PKCE code_verifier support)
  */
+
+const FUNCTION_VERSION = '1.1.0';
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -12,6 +16,7 @@ import { corsHeaders, handleCorsPreFlight, jsonResponse, errorResponse } from '.
 interface RequestBody {
   code: string;
   redirectUri: string;
+  codeVerifier: string; // PKCE code verifier
   userId: string; // Browser fingerprint or user identifier
 }
 
@@ -22,11 +27,21 @@ serve(async (req) => {
   }
 
   try {
-    // Parse request body
-    const { code, redirectUri, userId }: RequestBody = await req.json();
+    console.log(`🚀 google-oauth-init v${FUNCTION_VERSION} starting...`);
 
-    if (!code || !redirectUri || !userId) {
-      return errorResponse('Missing required fields: code, redirectUri, userId');
+    // Parse request body
+    const { code, redirectUri, codeVerifier, userId }: RequestBody = await req.json();
+
+    console.log('📦 Received request:', {
+      hasCode: !!code,
+      hasRedirectUri: !!redirectUri,
+      hasCodeVerifier: !!codeVerifier,
+      codeVerifierLength: codeVerifier?.length,
+      hasUserId: !!userId,
+    });
+
+    if (!code || !redirectUri || !codeVerifier || !userId) {
+      return errorResponse('Missing required fields: code, redirectUri, codeVerifier, userId');
     }
 
     // Get Google OAuth credentials from environment
@@ -39,7 +54,15 @@ serve(async (req) => {
     }
 
     // Exchange authorization code for tokens
-    console.log('Exchanging authorization code for tokens...');
+    console.log('🔄 Exchanging authorization code for tokens with PKCE...');
+    console.log('📤 Sending to Google:', {
+      hasClientId: !!clientId,
+      hasClientSecret: !!clientSecret,
+      redirectUri,
+      codeVerifierLength: codeVerifier.length,
+      grantType: 'authorization_code',
+    });
+
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -50,6 +73,7 @@ serve(async (req) => {
         client_id: clientId,
         client_secret: clientSecret,
         redirect_uri: redirectUri,
+        code_verifier: codeVerifier, // PKCE code verifier
         grant_type: 'authorization_code',
       }),
     });

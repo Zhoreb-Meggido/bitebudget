@@ -39,10 +39,8 @@ enabled = false
 
 [edge_runtime]
 enabled = true
-port = 54327
 
 # Edge Functions configuration
 [functions]
 # This is the directory where your Edge Functions are stored
 # Each function should be in its own subdirectory
-enabled = true
