@@ -96,11 +96,13 @@ supabase link --project-ref YOUR_PROJECT_ID
 3. Application type: **Web application**
 4. Naam: `BiteBudget Web`
 5. **Authorized redirect URIs** → Add URI:
-   - Development: `http://localhost:5173/oauth/google/callback`
-   - Production: `https://jouw-domein.com/oauth/google/callback`
+   - Development: `http://localhost:3000/oauth/google/callback`
+   - Production (GitHub Pages): `https://jouw-gebruikersnaam.github.io/bitebudget/oauth/google/callback`
+   - Production (Custom domain): `https://jouw-domein.com/oauth/google/callback`
 
-   ⚠️ **Belangrijk:** Als je de app via GitHub Pages publiceert, gebruik dan:
-   - `https://jouw-gebruikersnaam.github.io/bitebudget/oauth/google/callback`
+   ⚠️ **Belangrijk voor GitHub Pages:**
+   - Zorg dat de redirect URI `/bitebudget/oauth/google/callback` bevat (met de repository naam!)
+   - Voorbeeld: `https://zhoreb-meggido.github.io/bitebudget/oauth/google/callback`
 
 6. Klik **Create**
 7. **Noteer:**
@@ -282,12 +284,24 @@ Moet bevatten:
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_GOOGLE_CLIENT_ID`
 
-### "OAuth callback failed"
+### "OAuth callback failed" of 404 Not Found op callback URL
 
 **Mogelijke oorzaken:**
-1. **Redirect URI niet correct:** Check Google Cloud Console → Credentials → Authorized redirect URIs
+1. **Redirect URI niet correct in Google Cloud Console:**
+   - Ga naar Google Cloud Console → Credentials → OAuth 2.0 Client IDs
+   - Edit je client
+   - Check dat "Authorized redirect URIs" exact matcht met je deployed URL
+   - Voor GitHub Pages: `https://jouw-gebruikersnaam.github.io/bitebudget/oauth/google/callback`
+   - Vergeet niet de `/bitebudget/` in het pad!
+
 2. **Secrets niet gezet:** Run `supabase secrets list` om te checken
+
 3. **Edge Function niet gedeployed:** Run `supabase functions list`
+
+4. **Code change vereist rebuild:**
+   - Als je recent de code hebt geüpdatet (zoals het toevoegen van de base path)
+   - Rebuild en redeploy je app
+   - De redirect URI wordt nu dynamisch gegenereerd met `import.meta.env.BASE_URL`
 
 ### "No refresh token received"
 
