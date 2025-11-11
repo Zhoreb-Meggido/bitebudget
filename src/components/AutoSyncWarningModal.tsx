@@ -141,11 +141,20 @@ export function useAutoSyncWarning() {
       }
     };
 
+    // Listen for successful OAuth events to auto-close modal
+    const handleOAuthSuccess = () => {
+      setShouldShowWarning(false);
+    };
+
     window.addEventListener('google-drive-token-expired', handleTokenExpiry);
+    window.addEventListener('google-oauth-success', handleOAuthSuccess);
+    window.addEventListener('google-drive-reconnected', handleOAuthSuccess);
 
     return () => {
       clearTimeout(timer);
       window.removeEventListener('google-drive-token-expired', handleTokenExpiry);
+      window.removeEventListener('google-oauth-success', handleOAuthSuccess);
+      window.removeEventListener('google-drive-reconnected', handleOAuthSuccess);
     };
   }, []);
 
