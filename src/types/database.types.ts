@@ -182,6 +182,8 @@ export interface DailyActivity {
   stressLevel?: number;            // Stress (0-100)
   bodyBattery?: number;            // Body Battery (0-100, Garmin-specific)
   sleepSeconds?: number;           // Slaapduur in seconden
+  hrvOvernight?: number;           // HRV Overnight meting (ms)
+  hrv7DayAvg?: number;             // HRV 7-day average (ms)
   activities?: FitnessActivity[];  // Specifieke workouts/activiteiten
   created_at: string;              // ISO timestamp
   updated_at: string;              // ISO timestamp

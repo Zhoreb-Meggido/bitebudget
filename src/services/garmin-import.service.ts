@@ -25,6 +25,8 @@ export interface ParsedGarminData {
   };
   sleepSeconds?: number;
   bodyBattery?: number;
+  hrvOvernight?: number;
+  hrv7DayAvg?: number;
 }
 
 export interface ImportResult {
@@ -87,6 +89,9 @@ class GarminImportService {
     if (headers.includes('sleep score') || headers.includes('sleep') || headers.includes('avg duration') || headers.includes('body battery')) {
       console.log('✅ Detected: Sleep CSV');
       return this.parseSleepCSV(lines);
+    } else if (headers.includes('overnight hrv') || headers.includes('7d avg')) {
+      console.log('✅ Detected: HRV CSV');
+      return this.parseHRVCSV(lines);
     } else if (headers.includes('active calories')) {
       console.log('✅ Detected: Calories CSV');
       return this.parseCaloriesCSV(lines);
@@ -286,25 +291,75 @@ class GarminImportService {
   }
 
   /**
-   * Parse Heart Rate CSV
+   * Parse Heart Rate CSV/TSV
+   * Format 1 (CSV - Resting only): ,Resting Heart Rate
+   *                                10/15/2025,54
+   * Format 2 (CSV - With max):     ,Resting HR,Max HR
+   *                                10/15/2025,54,180
+   * Format 3 (TSV - Copy/paste from Garmin site):
+   *                                Nov 11	55 bpm	94 bpm
    */
   private parseHeartRateCSV(lines: string[]): ParsedGarminData[] {
     const result: ParsedGarminData[] = [];
 
+    // Detect if this is tab-separated (copy-pasted from Garmin site)
+    const isTabSeparated = lines.some(line => line.includes('\t'));
+
     for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(',');
-      if (parts.length < 3) continue;
+      const parts = isTabSeparated ? lines[i].split('\t') : lines[i].split(',');
+      if (parts.length < 2) continue; // Need at least date + resting HR
 
       const date = this.parseDate(parts[0]);
       if (!date) continue;
 
-      result.push({
-        date,
-        heartRate: {
-          resting: parseFloat(parts[1]) || 0,
-          max: parseFloat(parts[2]) || 0,
-        },
-      });
+      // Parse HR values - remove "bpm" suffix if present
+      const restingHR = parseFloat(parts[1].replace(/\s*bpm\s*/i, '')) || 0;
+      const maxHR = parts.length >= 3 ? (parseFloat(parts[2].replace(/\s*bpm\s*/i, '')) || 0) : 0;
+
+      if (restingHR > 0) { // Only add if we have valid resting HR
+        result.push({
+          date,
+          heartRate: {
+            resting: restingHR,
+            max: maxHR,
+          },
+        });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Parse HRV CSV (Heart Rate Variability)
+   * Format (CSV): Date,Overnight HRV,Baseline,7d Avg
+   *               Nov 11,42ms,35ms - 51ms,34ms
+   * Format (TSV): Nov 11	42ms	35ms - 51ms	34ms
+   */
+  private parseHRVCSV(lines: string[]): ParsedGarminData[] {
+    const result: ParsedGarminData[] = [];
+
+    // Detect if this is tab-separated (copy-pasted from Garmin site)
+    const isTabSeparated = lines.some(line => line.includes('\t'));
+
+    for (let i = 1; i < lines.length; i++) {
+      const parts = isTabSeparated ? lines[i].split('\t') : lines[i].split(',');
+      if (parts.length < 2) continue; // Need at least date + overnight HRV
+
+      const date = this.parseDate(parts[0]);
+      if (!date) continue;
+
+      // Parse HRV values - remove "ms" suffix if present
+      const overnight = parseFloat(parts[1].replace(/\s*ms\s*/i, '')) || 0;
+      const avg7d = parts.length >= 4 ? (parseFloat(parts[3].replace(/\s*ms\s*/i, '')) || 0) : 0;
+
+      if (overnight > 0) { // Only add if we have valid overnight HRV
+        result.push({
+          date,
+          hrvOvernight: overnight,
+          hrv7DayAvg: avg7d > 0 ? avg7d : undefined,
+        });
+      }
     }
 
     return result;
@@ -532,7 +587,7 @@ class GarminImportService {
 
   /**
    * Parse date from various formats
-   * Supports: MM/DD/YYYY, YYYY-MM-DD, etc.
+   * Supports: MM/DD/YYYY, YYYY-MM-DD, "Nov 11" (from copy-paste), etc.
    */
   private parseDate(dateStr: string): string | null {
     if (!dateStr || dateStr.trim() === '') return null;
@@ -549,6 +604,25 @@ class GarminImportService {
       // Try YYYY-MM-DD format (already correct)
       if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return dateStr;
+      }
+
+      // Try "Nov 11" format (from Garmin website copy-paste)
+      const monthDayMatch = dateStr.match(/^([A-Za-z]+)\s+(\d+)$/);
+      if (monthDayMatch) {
+        const monthName = monthDayMatch[1];
+        const day = monthDayMatch[2];
+
+        // Determine year (current year, or previous if month is in future)
+        const currentDate = new Date();
+        let year = currentDate.getFullYear();
+        const monthIndex = this.getMonthIndex(monthName);
+
+        // If the month hasn't occurred yet this year, use previous year
+        if (monthIndex > currentDate.getMonth()) {
+          year--;
+        }
+
+        return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
 
       // Try parsing as Date object
@@ -581,7 +655,9 @@ class GarminImportService {
           dayData.distance ||
           dayData.heartRate ||
           dayData.sleepSeconds ||
-          dayData.bodyBattery;
+          dayData.bodyBattery ||
+          dayData.hrvOvernight ||
+          dayData.hrv7DayAvg;
 
         if (!hasData) {
           continue; // Skip empty days
@@ -626,6 +702,12 @@ class GarminImportService {
         }
         if (dayData.bodyBattery !== undefined) {
           activity.bodyBattery = dayData.bodyBattery;
+        }
+        if (dayData.hrvOvernight !== undefined) {
+          activity.hrvOvernight = dayData.hrvOvernight;
+        }
+        if (dayData.hrv7DayAvg !== undefined) {
+          activity.hrv7DayAvg = dayData.hrv7DayAvg;
         }
 
         await activitiesService.addOrUpdateActivity(activity as Omit<DailyActivity, 'id' | 'created_at' | 'updated_at'>);
