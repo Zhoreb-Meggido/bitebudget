@@ -368,7 +368,8 @@ class SyncService {
       if (!localEntry && !existingById) {
         console.log(`➕ Adding new entry from cloud: ${key}`);
         try {
-          await entriesService.addEntry(cloudEntry);
+          // Use db.entries.add directly to preserve cloud ID (don't generate new ID)
+          await db.entries.add(cloudEntry);
           entriesAdded++;
         } catch (err) {
           console.error(`❌ Failed to add entry ${key}:`, err);
@@ -409,7 +410,8 @@ class SyncService {
       if (!localProduct) {
         // New product from cloud - doesn't exist by name or barcode
         try {
-          await productsService.addProduct(cloudProduct);
+          // Use db.products.add directly to preserve cloud ID (don't generate new ID)
+          await db.products.add(cloudProduct);
           productsAdded++;
         } catch (err) {
           console.error(`❌ Failed to add product ${cloudProduct.name}:`, err);
@@ -439,7 +441,8 @@ class SyncService {
 
         if (!localWeight) {
           // New weight from cloud
-          await weightsService.addWeight(cloudWeight);
+          // Use db.weights.add directly to preserve cloud ID (don't generate new ID)
+          await db.weights.add(cloudWeight);
           weightsAdded++;
         } else {
           // Determine which is newer: use deleted_at if deleted, otherwise created_at
