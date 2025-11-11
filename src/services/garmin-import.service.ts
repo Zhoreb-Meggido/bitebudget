@@ -287,24 +287,33 @@ class GarminImportService {
 
   /**
    * Parse Heart Rate CSV
+   * Format 1 (Resting only): ,Resting Heart Rate
+   *                          10/15/2025,54
+   * Format 2 (With max):     ,Resting HR,Max HR
+   *                          10/15/2025,54,180
    */
   private parseHeartRateCSV(lines: string[]): ParsedGarminData[] {
     const result: ParsedGarminData[] = [];
 
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(',');
-      if (parts.length < 3) continue;
+      if (parts.length < 2) continue; // Need at least date + resting HR
 
       const date = this.parseDate(parts[0]);
       if (!date) continue;
 
-      result.push({
-        date,
-        heartRate: {
-          resting: parseFloat(parts[1]) || 0,
-          max: parseFloat(parts[2]) || 0,
-        },
-      });
+      const restingHR = parseFloat(parts[1]) || 0;
+      const maxHR = parts.length >= 3 ? (parseFloat(parts[2]) || 0) : 0;
+
+      if (restingHR > 0) { // Only add if we have valid resting HR
+        result.push({
+          date,
+          heartRate: {
+            resting: restingHR,
+            max: maxHR,
+          },
+        });
+      }
     }
 
     return result;

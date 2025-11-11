@@ -179,7 +179,7 @@ export function GarminImportSection() {
                 Je kunt meerdere CSV bestanden tegelijk uploaden
               </p>
               <p className="text-xs text-gray-500 mt-2">
-                Ondersteund: Calories, Steps, Stress, Intensity, Heart Rate, Sleep
+                Ondersteund: Calories, Steps, Stress, Intensity Minutes, Resting Heart Rate, Sleep (inclusief Body Battery)
               </p>
             </label>
           </div>
@@ -295,10 +295,15 @@ export function GarminImportSection() {
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h3 className="font-medium text-blue-900 mb-2">💡 Tips voor Garmin Export</h3>
           <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Download CSV exports vanuit Garmin Connect website (Reports sectie)</li>
-            <li>• Upload meerdere CSV bestanden tegelijk (Calories, Steps, Sleep, etc.)</li>
-            <li>• Data wordt automatisch samengevoegd per datum</li>
-            <li>• Voor beste resultaten: download 4-weken sleep data (bevat Body Battery)</li>
+            <li>• Ga naar Garmin Connect website → Performance Stats → Reports</li>
+            <li>• Download deze CSV exports (meerdere tegelijk):</li>
+            <li className="ml-4">- Calories (kies dagelijks/maandelijks, NIET wekelijks)</li>
+            <li className="ml-4">- Steps</li>
+            <li className="ml-4">- Resting Heart Rate</li>
+            <li className="ml-4">- Stress</li>
+            <li className="ml-4">- Intensity Minutes</li>
+            <li className="ml-4">- Sleep Score (4 weken format bevat ook Body Battery)</li>
+            <li>• Upload alle bestanden tegelijk - data wordt samengevoegd per datum</li>
           </ul>
         </div>
       </div>
