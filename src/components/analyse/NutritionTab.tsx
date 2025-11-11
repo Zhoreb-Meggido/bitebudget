@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useEntries, useSettings, useWeights } from '@/hooks';
+import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
 
 type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
 
@@ -134,7 +135,7 @@ export function NutritionTab() {
           sodium: acc.sodium + day.sodium,
         }), { calories: 0, protein: 0, carbohydrates: 0, sugars: 0, saturatedFat: 0, fiber: 0, sodium: 0 });
 
-        const daysUnderCalories = days.filter(d => d.calories < 1900).length;
+        const daysUnderCalories = days.filter(d => d.calories < settings.caloriesRest).length;
 
         return {
           weekStart,
@@ -162,15 +163,15 @@ export function NutritionTab() {
 
     switch (metric) {
       case 'calories':
-        if (value < 1900) return 'bg-green-500';
-        if (value < 2100) return 'bg-yellow-500';
+        if (value < settings.caloriesRest) return 'bg-green-500';
+        if (value < NUTRITION_CONSTANTS.CALORIE_YELLOW_THRESHOLD) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'protein': {
-        // Calculate protein target based on current weight: 0.83g per kg
-        const proteinTarget = 0.83 * currentWeight;
-        const minThreshold = proteinTarget * 0.80; // 80% of target
-        const maxThreshold = proteinTarget * 1.20; // 120% of target
+        // Calculate protein target based on current weight (Voedingscentrum recommendation)
+        const proteinTarget = NUTRITION_CONSTANTS.PROTEIN_PER_KG_MIN * currentWeight;
+        const minThreshold = proteinTarget * NUTRITION_CONSTANTS.PROTEIN_MIN_THRESHOLD;
+        const maxThreshold = proteinTarget * NUTRITION_CONSTANTS.PROTEIN_MAX_THRESHOLD;
 
         if (value < minThreshold) return 'bg-red-500';      // Below 80%
         if (value <= maxThreshold) return 'bg-yellow-500';  // 80-120%
@@ -204,9 +205,9 @@ export function NutritionTab() {
         return 'bg-red-500';
 
       case 'fiber':
-        // Green: ≥28g (realistic daily goal), Yellow: ≥20g (decent intake), Red: <20g
-        if (value >= 28) return 'bg-green-500';
-        if (value >= 20) return 'bg-yellow-500';
+        // Green: sufficient intake, Yellow: minimum acceptable, Red: below minimum
+        if (value >= NUTRITION_CONSTANTS.FIBER_SUFFICIENT) return 'bg-green-500';
+        if (value >= NUTRITION_CONSTANTS.FIBER_MINIMUM) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'sodium':
@@ -224,9 +225,9 @@ export function NutritionTab() {
         totalMetrics += 2;
         if (dayData.calories < settings.caloriesRest) score++;
 
-        // Protein: check if at least 80% of target (0.83 * currentWeight)
-        const proteinTarget = 0.83 * currentWeight;
-        const proteinMin = proteinTarget * 0.80;
+        // Protein: check if at least 80% of target (Voedingscentrum recommendation)
+        const proteinTarget = NUTRITION_CONSTANTS.PROTEIN_PER_KG_MIN * currentWeight;
+        const proteinMin = proteinTarget * NUTRITION_CONSTANTS.PROTEIN_MIN_THRESHOLD;
         if (dayData.protein >= proteinMin) score++;
 
         // Only count carbs/sugars/fat if tracked (non-zero)
@@ -246,7 +247,7 @@ export function NutritionTab() {
         // Always count saturated fat, fiber, sodium (typically tracked)
         totalMetrics += 3;
         if (dayData.saturatedFat < settings.saturatedFatMax) score++;
-        if (dayData.fiber >= 28) score++;  // Realistic fiber goal (not settings.fiberMin which is 35)
+        if (dayData.fiber >= NUTRITION_CONSTANTS.FIBER_SUFFICIENT) score++;  // Sufficient intake (not personal goal which may be higher)
         if (dayData.sodium < settings.sodiumMax) score++;
 
         const percentage = totalMetrics > 0 ? (score / totalMetrics) * 100 : 0;
@@ -518,8 +519,8 @@ export function NutritionTab() {
                           if (day.data.calories < settings.caloriesRest) score++;
 
                           // Protein: check if at least 80% of target
-                          const proteinTarget = 0.83 * currentWeight;
-                          const proteinMin = proteinTarget * 0.80;
+                          const proteinTarget = NUTRITION_CONSTANTS.PROTEIN_PER_KG_MIN * currentWeight;
+                          const proteinMin = proteinTarget * NUTRITION_CONSTANTS.PROTEIN_MIN_THRESHOLD;
                           if (day.data.protein >= proteinMin) score++;
 
                           // Only count carbs/sugars/fat if tracked (non-zero)
@@ -539,7 +540,7 @@ export function NutritionTab() {
                           // Always count saturated fat, fiber, sodium
                           totalMetrics += 3;
                           if (day.data.saturatedFat < settings.saturatedFatMax) score++;
-                          if (day.data.fiber >= 28) score++;  // Realistic fiber goal
+                          if (day.data.fiber >= NUTRITION_CONSTANTS.FIBER_SUFFICIENT) score++;  // Sufficient intake
                           if (day.data.sodium < settings.sodiumMax) score++;
 
                           tooltipText = `${day.date}: ${score}/${totalMetrics} doelen behaald`;
