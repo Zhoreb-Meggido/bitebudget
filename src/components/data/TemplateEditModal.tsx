@@ -300,7 +300,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(index)}
-                          className="mt-6 px-2 py-1 text-red-600 hover:bg-red-50 rounded"
+                          className="mt-6 text-red-600 hover:bg-red-50 rounded text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
                           title="Verwijder product"
                         >
                           🗑️
