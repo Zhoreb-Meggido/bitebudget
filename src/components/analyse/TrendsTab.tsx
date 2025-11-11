@@ -22,7 +22,7 @@ ChartJS.register(
   Legend
 );
 
-type MetricKey = 'steps' | 'calories' | 'intensityMinutes' | 'restingHeartRate' | 'stressLevel' | 'sleepDuration' | 'distance';
+type MetricKey = 'steps' | 'calories' | 'intensityMinutes' | 'restingHeartRate' | 'stressLevel' | 'sleepDuration' | 'hrvOvernight' | 'hrv7DayAvg';
 
 interface MetricConfig {
   key: MetricKey;
@@ -38,7 +38,8 @@ const METRICS: MetricConfig[] = [
   { key: 'restingHeartRate', label: 'Rustpols', color: 'rgb(236, 72, 153)', unit: 'bpm' },
   { key: 'stressLevel', label: 'Stress Level', color: 'rgb(245, 158, 11)', unit: '' },
   { key: 'sleepDuration', label: 'Slaap Duur', color: 'rgb(34, 197, 94)', unit: 'uur' },
-  { key: 'distance', label: 'Afstand', color: 'rgb(14, 165, 233)', unit: 'km' },
+  { key: 'hrvOvernight', label: 'HRV Overnight', color: 'rgb(14, 165, 233)', unit: 'ms' },
+  { key: 'hrv7DayAvg', label: 'HRV 7d Gem', color: 'rgb(6, 182, 212)', unit: 'ms' },
 ];
 
 export function TrendsTab() {
@@ -69,7 +70,8 @@ export function TrendsTab() {
         avgRestingHR: 0,
         avgStress: 0,
         avgSleep: 0,
-        totalDistance: 0,
+        avgHrvOvernight: 0,
+        avgHrv7Day: 0,
         daysWithData: 0,
       };
     }
@@ -78,10 +80,11 @@ export function TrendsTab() {
       steps: acc.steps + (day.steps || 0),
       calories: acc.calories + (day.totalCalories || 0),
       intensityMinutes: acc.intensityMinutes + (day.intensityMinutes || 0),
-      restingHR: acc.restingHR + (day.restingHeartRate || 0),
+      restingHR: acc.restingHR + (day.heartRateResting || 0),
       stress: acc.stress + (day.stressLevel || 0),
       sleep: acc.sleep + (day.sleepSeconds || 0),
-      distance: acc.distance + (day.distance || 0),
+      hrvOvernight: acc.hrvOvernight + (day.hrvOvernight || 0),
+      hrv7Day: acc.hrv7Day + (day.hrv7DayAvg || 0),
     }), {
       steps: 0,
       calories: 0,
@@ -89,7 +92,8 @@ export function TrendsTab() {
       restingHR: 0,
       stress: 0,
       sleep: 0,
-      distance: 0,
+      hrvOvernight: 0,
+      hrv7Day: 0,
     });
 
     const count = filteredActivities.length;
@@ -101,7 +105,8 @@ export function TrendsTab() {
       avgRestingHR: Math.round(sum.restingHR / count),
       avgStress: Math.round(sum.stress / count),
       avgSleep: (sum.sleep / count / 3600).toFixed(1), // Convert seconds to hours
-      totalDistance: (sum.distance / 1000).toFixed(1), // Convert meters to km
+      avgHrvOvernight: Math.round(sum.hrvOvernight / count),
+      avgHrv7Day: Math.round(sum.hrv7Day / count),
       daysWithData: count,
     };
   }, [filteredActivities]);
@@ -144,9 +149,13 @@ export function TrendsTab() {
             data = filteredActivities.map(a => (a.sleepSeconds || 0) / 3600); // Convert to hours
             yAxisID = 'y-sleep';
             break;
-          case 'distance':
-            data = filteredActivities.map(a => (a.distance || 0) / 1000); // Convert to km
-            yAxisID = 'y-distance';
+          case 'hrvOvernight':
+            data = filteredActivities.map(a => a.hrvOvernight || 0);
+            yAxisID = 'y-hrv';
+            break;
+          case 'hrv7DayAvg':
+            data = filteredActivities.map(a => a.hrv7DayAvg || 0);
+            yAxisID = 'y-hrv';
             break;
           default:
             data = [];
@@ -323,15 +332,15 @@ export function TrendsTab() {
       };
     }
 
-    if (selectedMetrics.has('distance')) {
-      scales['y-distance'] = {
+    if (selectedMetrics.has('hrvOvernight') || selectedMetrics.has('hrv7DayAvg')) {
+      scales['y-hrv'] = {
         type: 'linear',
         display: !isVerySmall,
         position: 'right',
         beginAtZero: true,
         title: {
           display: !isMobile,
-          text: 'km',
+          text: 'HRV (ms)',
           color: 'rgb(14, 165, 233)',
           font: { size: isMobile ? 10 : 12 },
         },
@@ -428,9 +437,9 @@ export function TrendsTab() {
         </div>
 
         <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-lg p-4 border border-sky-200">
-          <div className="text-sm text-sky-600 font-medium mb-1">Totaal Afstand</div>
-          <div className="text-2xl font-bold text-sky-900">{stats.totalDistance}</div>
-          <div className="text-xs text-sky-600 mt-1">km</div>
+          <div className="text-sm text-sky-600 font-medium mb-1">Ø HRV</div>
+          <div className="text-2xl font-bold text-sky-900">{stats.avgHrvOvernight || '-'}</div>
+          <div className="text-xs text-sky-600 mt-1">ms (overnight)</div>
         </div>
 
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
