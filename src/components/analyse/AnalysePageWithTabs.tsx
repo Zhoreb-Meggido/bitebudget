@@ -3,6 +3,7 @@ import { NutritionTab } from './NutritionTab';
 import { ActivityTab } from './ActivityTab';
 import { BalanceTab } from './BalanceTab';
 import { TrendsTab } from './TrendsTab';
+import { useSwipeTabs } from '../../hooks';
 
 type TabType = 'nutrition' | 'activity' | 'balance' | 'trends';
 
@@ -15,6 +16,14 @@ export function AnalysePageWithTabs() {
     { id: 'balance' as TabType, label: 'Balance', icon: '⚖️' },
     { id: 'trends' as TabType, label: 'Trends', icon: '📊' },
   ];
+
+  // Enable swipe gestures for tab navigation
+  const tabIds = tabs.map(t => t.id);
+  const swipeHandlers = useSwipeTabs({
+    tabs: tabIds,
+    activeTab,
+    setActiveTab,
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -47,11 +56,13 @@ export function AnalysePageWithTabs() {
           </nav>
         </div>
 
-        {/* Tab Content - No inner padding */}
-        {activeTab === 'nutrition' && <NutritionTab />}
-        {activeTab === 'activity' && <ActivityTab />}
-        {activeTab === 'balance' && <BalanceTab />}
-        {activeTab === 'trends' && <TrendsTab />}
+        {/* Tab Content - No inner padding, swipe-enabled */}
+        <div {...swipeHandlers}>
+          {activeTab === 'nutrition' && <NutritionTab />}
+          {activeTab === 'activity' && <ActivityTab />}
+          {activeTab === 'balance' && <BalanceTab />}
+          {activeTab === 'trends' && <TrendsTab />}
+        </div>
       </div>
     </div>
   );

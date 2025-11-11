@@ -2,11 +2,20 @@ import { useState } from 'react';
 import { ImportExportTab } from './ImportExportTab';
 import { ProductsPortionsTab } from './ProductsPortionsTab';
 import { TemplatesTab } from './TemplatesTab';
+import { useSwipeTabs } from '../../hooks';
 
 type DataTab = 'products' | 'templates' | 'import-export';
 
 export function DataPage() {
   const [activeTab, setActiveTab] = useState<DataTab>('products');
+
+  // Enable swipe gestures for tab navigation
+  const tabs: DataTab[] = ['products', 'templates', 'import-export'];
+  const swipeHandlers = useSwipeTabs({
+    tabs,
+    activeTab,
+    setActiveTab,
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -55,8 +64,8 @@ export function DataPage() {
           </nav>
         </div>
 
-        {/* Tab Content */}
-        <div className="p-4 sm:p-6">
+        {/* Tab Content - swipe-enabled */}
+        <div className="p-4 sm:p-6" {...swipeHandlers}>
           {activeTab === 'products' && <ProductsPortionsTab />}
           {activeTab === 'templates' && <TemplatesTab />}
           {activeTab === 'import-export' && <ImportExportTab />}

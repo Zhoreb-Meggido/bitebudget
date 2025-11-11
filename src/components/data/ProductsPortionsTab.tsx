@@ -443,9 +443,11 @@ function ProductWithPortions({
         </div>
 
         {/* Nutrition Info */}
-        <div className="text-sm text-gray-600">
-          📊 Per 100{product.calories > 0 ? 'g' : 'ml'}: {product.calories} kcal, {product.protein}g eiwit, {product.fat}g vet
-          {product.carbohydrates !== undefined && `, ${product.carbohydrates}g koolhydraten`}
+        <div className="text-sm text-gray-600 overflow-x-auto">
+          <div className="whitespace-nowrap">
+            📊 Per 100{product.calories > 0 ? 'g' : 'ml'}: {product.calories} kcal, {product.protein}g eiwit, {product.fat}g vet
+            {product.carbohydrates !== undefined && `, ${product.carbohydrates}g koolhydraten`}
+          </div>
         </div>
 
         {/* Source and Nutri-Score Badges + Add Portion Button */}

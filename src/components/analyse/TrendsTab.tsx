@@ -680,8 +680,8 @@ export function TrendsTab() {
           </div>
         ) : (
           <>
-            <div className="p-6 pb-2">
-              <div className="h-[400px] sm:h-[400px]">
+            <div className="p-6 pb-2 overflow-x-auto">
+              <div className="h-[400px] sm:h-[400px] min-w-[320px]">
                 <Line data={chartData} options={chartOptions} />
               </div>
             </div>
