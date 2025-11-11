@@ -117,8 +117,14 @@ class SupabaseService {
     });
 
     if (error) {
-      console.error(`Error calling ${functionName}:`, error);
+      console.error(`❌ Error calling ${functionName}:`, error);
       throw error;
+    }
+
+    // Check if data contains an error (Edge Function returned error response)
+    if (data && typeof data === 'object' && 'error' in data) {
+      console.error(`❌ ${functionName} returned error:`, data);
+      throw new Error(data.error || 'Unknown error from Edge Function');
     }
 
     return data;

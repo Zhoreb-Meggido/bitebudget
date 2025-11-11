@@ -95,6 +95,9 @@ class GoogleDriveService {
         throw new Error('Code verifier not found in local storage');
       }
 
+      console.log('🔄 Exchanging authorization code for tokens...');
+      console.log('📍 Redirect URI:', this.REDIRECT_URI);
+
       // Exchange authorization code for tokens via Supabase Edge Function
       const { access_token, expires_in, expires_at } = await supabaseService.initGoogleOAuth(
         code,
@@ -121,6 +124,9 @@ class GoogleDriveService {
 
     } catch (error) {
       console.error('❌ OAuth callback failed:', error);
+      console.error('💡 Tip: If you see "invalid_grant" error, make sure your redirect URI is configured in Google Cloud Console:');
+      console.error('   Development: http://localhost:3000/oauth/google/callback');
+      console.error('   Production: https://zhoreb-meggido.github.io/bitebudget/oauth/google/callback');
       throw error;
     }
   }
