@@ -1,10 +1,10 @@
-# BiteBudget (Voedseljournaal) v1.6.0
+# BiteBudget (Voedseljournaal) v1.6.2
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.6.0:** Automatic OAuth Token Refresh + HRV Tracking - Geen handmatige popups meer & monitor je herstel!
+**🎉 Nieuw in v1.6.2:** Mobile UX Improvements - Swipe gestures voor tab navigatie & betere table overflow handling!
 
 ---
 
@@ -337,6 +337,76 @@ npm run build
 
 ## 📋 Changelog
 
+### **v1.6.2 - Mobile UX Improvements** (2025-01-11)
+
+#### **Swipe Gestures for Tab Navigation** 👆
+- ✅ **useSwipeTabs Hook** - Reusable hook for swipe gesture detection
+- ✅ **Analyze Page Swipes** - Swipe left/right to navigate between Voeding, Activiteit, Balance, Trends tabs
+- ✅ **Data Page Swipes** - Swipe left/right to navigate between Producten, Templates, Import/Export tabs
+- ✅ **Conflict Prevention** - 50px minimum swipe distance prevents accidental tab switches
+- ✅ **Vertical Scroll Friendly** - preventScrollOnSwipe: false allows vertical scrolling
+- ✅ **Touch-Only** - Gestures only on mobile/tablet (trackMouse: false)
+- ✅ **Passive Events** - Better scroll performance with passive touch events
+- ✅ **react-swipeable Library** - Professional gesture detection with configurable thresholds
+
+#### **Mobile Table Overflow Fixes** 📱
+- ✅ **ProductsPortionsTab** - Nutrition info gets horizontal scroll wrapper
+  - overflow-x-auto with whitespace-nowrap prevents text overflow
+  - Long nutrition summaries scroll horizontally on narrow screens
+- ✅ **TrendsTab Chart** - Chart container gets overflow-x-auto
+  - min-w-[320px] prevents chart squashing on small screens
+  - Multiple Y-axes remain readable when many metrics selected
+- ✅ **Consistent Pattern** - All data displays follow same overflow handling pattern
+
+#### **Technical Implementation** 🔧
+- ✅ **react-swipeable@7.0.2** - Added to dependencies
+- ✅ **useSwipeTabs Hook** - Generic hook for any tab-based component
+- ✅ **Configurable Thresholds** - minSwipeDistance and minSwipeVelocity parameters
+- ✅ **Version Bump** - 1.6.1 → 1.6.2 for PWA cache management
+
+**Impact:** Native app-like swipe navigation + geen overflow issues op mobiel - perfecte mobile experience!
+
+---
+
+### **v1.6.1 - Critical Sync Bugfixes & Search Performance** (2025-01-11)
+
+#### **Critical Sync Bugfixes** 🔧
+- ✅ **Duplicate Entries Fixed** - ID preservation during sync prevents duplicate meals
+  - Problem: entriesService.addEntry() always generated new IDs, discarding cloud IDs
+  - Solution: Use db.entries.add() directly to preserve cloud IDs
+  - Impact: No more duplicate entries when editing meal time after sync
+- ✅ **Cleanup Bug Fixed** - Soft-deleted items cleanup now works properly
+  - Problem: cleanupOldDeletedItems() used getAllEntries() instead of getAllEntriesIncludingDeleted()
+  - Solution: Use *IncludingDeleted() methods to find items marked as deleted
+  - Impact: 14-day tombstone cleanup now removes old deleted items correctly
+- ✅ **OAuth Popup on Idle Fixed** - Token refresh attempts before showing popup
+  - Problem: Browser throttles timers when tab inactive → 50-min auto-refresh doesn't run
+  - Solution: Added tryAutoRefreshOnStartup() and ensureValidToken() before sync
+  - Impact: No more unexpected OAuth popups when returning to app after idle
+- ✅ **Infinite Update Loop Fixed** - Cloud timestamps now preserved during sync
+  - Problem: updateEntry/Product/Weight() always set updated_at: now(), creating infinite loops
+  - Solution: Use db.*.update() directly with destructured cloudData to preserve timestamps
+  - Impact: No more 200+ items updating on every sync
+
+#### **Search Performance - Debouncing** ⚡
+- ✅ **useDebounce Hook** - Generic debounce hook with 300ms default delay
+- ✅ **AddMealModal** - Product and template search debounced
+- ✅ **ProductsPortionsTab** - Search query debounced
+- ✅ **TemplatesTab** - Search query debounced
+- ✅ **Reduced Filtering** - useMemo dependencies use debounced values
+- ✅ **Better Performance** - Less re-renders during typing
+
+#### **Technical Details** 🔧
+- ✅ **ID Preservation** - db.*.add(cloudItem) instead of service methods
+- ✅ **Timestamp Preservation** - db.*.update(id, cloudData) without spreading id
+- ✅ **Auto-Refresh Logic** - tryAutoRefreshOnStartup() checks token expiry on app start
+- ✅ **Pre-Sync Token Check** - ensureValidToken() before each sync attempt
+- ✅ **Cleanup Methods** - getAllEntriesIncludingDeleted(), getAllProductsIncludingDeleted()
+
+**Impact:** Rock-solid sync reliability - no more duplicates, cleanups work, tokens refresh silently, and infinite loops eliminated!
+
+---
+
 ### **v1.6.0 - Automatic OAuth Token Refresh** (2025-01-10)
 
 #### **Automatic Token Refresh via Supabase** 🔄
@@ -606,7 +676,9 @@ src/
 │   ├── usePortions.ts                ✅ Portions with auto-sync (v1.3+)
 │   ├── useTemplates.ts               ✅ Templates with auto-sync (v1.3+)
 │   ├── useSettings.ts                ✅ Settings with auto-sync (v1.2.1+)
-│   └── useWeights.ts                 ✅ Weights with auto-sync
+│   ├── useWeights.ts                 ✅ Weights with auto-sync
+│   ├── useDebounce.ts                ✅ Generic debounce hook (v1.6.1+)
+│   └── useSwipeTabs.ts               ✅ Swipe gesture navigation (v1.6.2+)
 ├── utils/
 │   ├── date.utils.ts                 ✅ Date helpers (UTC-safe)
 │   ├── download.utils.ts             ✅ File download
@@ -627,7 +699,7 @@ public/
 
 ## 🔧 Tech Stack
 
-### Current (v1.6.0)
+### Current (v1.6.2)
 - **React 18** + **TypeScript 5**
 - **Vite 5** - Build tool
 - **Tailwind CSS 3** - Styling
@@ -635,6 +707,7 @@ public/
 - **Chart.js 4.5** + **react-chartjs-2** - Visualizations
 - **jsPDF 2.5** + **jspdf-autotable** - PDF generation
 - **html5-qrcode** - Barcode scanning
+- **react-swipeable 7.0** - Touch gesture detection
 - **Supabase 2.81** - Backend for OAuth token management
 - **Google Identity Services** - OAuth 2.0
 - **Web Crypto API** - End-to-end encryption
@@ -871,7 +944,17 @@ npm run build
 
 ### Non-Critical
 - HMR Fast Refresh warnings in dev mode (doesn't affect functionality)
-- OAuth tokens expire after 1 hour (app toont automatisch popup met re-login optie)
+
+### Fixed in v1.6.2
+- ✅ Mobile table overflow - nutrition info and charts now scroll horizontally
+- ✅ Missing swipe navigation - added native app-like swipe gestures for tabs
+
+### Fixed in v1.6.1
+- ✅ Duplicate entries after sync when meal time edited - ID preservation now prevents this
+- ✅ Soft-deleted items cleanup not working - now uses *IncludingDeleted() methods
+- ✅ OAuth popup appearing when app idle - automatic refresh attempts before showing popup
+- ✅ Infinite update loop (200+ items updating every sync) - timestamps now preserved
+- ✅ Search performance - debouncing reduces filtering operations during typing
 
 ### Fixed in v1.2.1
 - ✅ Products not syncing automatically - now triggers auto-sync
@@ -905,97 +988,83 @@ npm run build
 
 ## 📝 Version History
 
-### v1.4.0 (January 2025) - Current
-**Data Management Page - Complete Controle over je Data**
-- ✅ Nieuwe Data page met 3 tabs (Producten & Porties, Templates, Import/Export)
-- ✅ ProductEditModal - Volledig formulier voor product CRUD
-- ✅ PortionEditModal - Eenvoudig porties toevoegen/bewerken
-- ✅ TemplateEditModal - Dynamische template editor met product/portie selectie
-- ✅ Inline portie weergave per product
-- ✅ Template edit met auto-selectie van default porties
-- ✅ Uniforme emoji button stijl (⭐✏️🗑️) overal
-- ✅ Search & filter per tab
-- ✅ Delete confirmaties
-- ✅ Tooltips op alle buttons
-- ✅ Settings page gefocust op Cloud Sync en App configuratie
+### v1.6.2 (January 2025) - Current
+**Mobile UX Improvements - Swipe Gestures & Table Overflow Fixes**
+- ✅ Swipe left/right to navigate between tabs (Analyze & Data pages)
+- ✅ useSwipeTabs hook with conflict prevention (50px min distance)
+- ✅ Mobile table overflow fixes (ProductsPortionsTab, TrendsTab)
+- ✅ react-swipeable library integration
+- ✅ Native app-like navigation experience
+
+### v1.6.1 (January 2025)
+**Critical Sync Bugfixes & Search Performance**
+- ✅ Fixed duplicate entries bug (ID preservation during sync)
+- ✅ Fixed soft-deleted items cleanup (getAllEntriesIncludingDeleted)
+- ✅ Fixed OAuth popup on idle (auto-refresh on startup)
+- ✅ Fixed infinite update loop (preserve cloud timestamps)
+- ✅ Search debouncing (useDebounce hook, 300ms delay)
+
+### v1.6.0 (January 2025)
+**Automatic OAuth Token Refresh + HRV Tracking**
+- ✅ Authorization Code Flow with Supabase Edge Functions
+- ✅ Automatic token refresh every 50 minutes
+- ✅ HRV tracking (overnight + 7-day average)
+- ✅ Enhanced CSV import with Garmin format support
+- ✅ Zero user interaction for token management
+
+### v1.5.0 (January 2025)
+**Templates, Integrations & Smart Sync**
+- ✅ Meal templates with favorites and quick add
+- ✅ Garmin Connect CSV import
+- ✅ Smart token management with proactive warnings
+- ✅ Sync service fixes (duplicate barcode, entry conflicts)
+
+### v1.4.0 (January 2025)
+**Data Management Page**
+- ✅ Data page met 3 tabs (Producten & Porties, Templates, Import/Export)
+- ✅ Full CRUD modals voor producten, porties en templates
+- ✅ Inline portie weergave en default portie support
+- ✅ Uniforme emoji button stijl (⭐✏️🗑️)
 
 ### v1.3.0 (January 2025)
-**Porties & Templates - Snellere Maaltijd Tracking**
-- ✅ Portie templates with default portions database (50+ products)
-- ✅ Multiple unit support (g, ml, stuks, el, tl)
-- ✅ Portion selector dropdown in AddMealModal
-- ✅ Meal templates system with categories
-- ✅ Templates tab with recent/favorites/all sections
-- ✅ Quick load templates to products tab
-- ✅ Cloud sync v1.3 with portions and templates
-- ✅ Database v7 with productPortions and mealTemplates tables
-- ✅ Auto-sync for portions and templates
-- ✅ Soft delete propagation for portions and templates
+**Porties & Templates**
+- ✅ Portie templates database (50+ producten)
+- ✅ Meal templates met categorieën en favorites
+- ✅ Quick add sectie voor snelle maaltijd logging
+- ✅ Cloud sync v1.3 met portions/templates support
 
 ### v1.2.1 (January 2025)
-**Cloud Sync Fixes & Mobile UX Improvements**
-- ✅ Products auto-sync on all operations (add/update/delete/favorite)
-- ✅ Settings auto-sync on all operations (update/save/reset)
-- ✅ Fixed products merge strategy (now syncs all updates, not just deletions)
-- ✅ Automatic sync after Google Drive login (when auto-sync enabled)
-- ✅ Automatic sync on cloud reconnect in loadCloudInfo
-- ✅ Local changes made while offline now sync when connection restores
-- ✅ Bidirectional merge on login/reconnect (pull then push)
-- ✅ Tab navigation on Journal Page (Vandaag / Producten)
-- ✅ Inline product management (no separate modal)
-- ✅ AddMealModal sticky action button (always visible)
-- ✅ Compact product badges with inline gram inputs
-- ✅ Removed height restriction on products list
-- ✅ Placeholders instead of default values (easier small value input)
-- ✅ Auto-select text on focus for faster editing
-- ✅ Optimized input width for 3-digit values
-- ✅ Icon-only edit/delete buttons with hover animations
+**Cloud Sync Fixes & Mobile UX**
+- ✅ Auto-sync voor products en settings
+- ✅ Offline changes sync bij reconnect
+- ✅ Tab navigatie op Journal Page
+- ✅ AddMealModal sticky footer en compact badges
 
 ### v1.2.0 (November 2024)
-**Advanced PDF Reporting & Dashboard Improvements**
-- ✅ Soft delete with deletion propagation across devices
-- ✅ Consolidated PDF generator (merged 2 into 1)
-- ✅ 2x2 graph grid with absolute Y-axis values
-- ✅ 6 metric cards in optimized single-row layout
-- ✅ Week overview table in PDF reports
-- ✅ Monthly reports with multi-month selection
-- ✅ CSV export with all 8 metrics
-- ✅ Dual period selectors (viewing vs exporting)
-- ✅ Dashboard export section
-- ✅ Fixed weight projection sign
-- ✅ Backward compatibility for undefined metrics
-- ✅ NaN errors fixed in graph rendering
+**PDF Reporting & Dashboard**
+- ✅ Consolidated PDF generator met 2x2 graph grid
+- ✅ Monthly reports met multi-month selectie
+- ✅ CSV export met alle 8 metrics
+- ✅ Dual period selectors
 
 ### v1.1.0 (November 2024)
-**Cloud Sync + Enhancements**
+**Cloud Sync Launch**
 - ✅ End-to-end encrypted Google Drive sync
 - ✅ Automatic bidirectional merge
-- ✅ Persistent auto-sync state
-- ✅ Safe merge for all sync operations (no data loss)
-- ✅ Token expiry warning with one-click re-login
-- ✅ Runtime token expiry detection
-- ✅ Manual refresh button voor quick sync
-- ✅ Weights & settings in sync data
-- ✅ 8 metrics dashboard with projections
-- ✅ ISO week numbers in heatmap
-- ✅ Optimized dashboard layout
+- ✅ 8 metrics dashboard met projecties
+- ✅ Safe merge (no data loss)
 
 ### v1.0.0 (November 2024)
 **PWA + OpenFoodFacts**
-- ✅ Progressive Web App with offline support
-- ✅ Barcode scanner integration
-- ✅ OpenFoodFacts product database
-- ✅ Carbohydrates & sugars tracking
-- ✅ Service worker for caching
-- ✅ Installable on all platforms
+- ✅ Progressive Web App met offline support
+- ✅ Barcode scanner + OpenFoodFacts integratie
+- ✅ Installeerbaar op alle platforms
 
 ### v0.9.0 (October 2024)
-**Feature Complete**
-- ✅ All 6 tabs implemented
+**Initial Release**
+- ✅ 6 tabs (Journal, Tracking, Dashboard, Analyse, Data, Settings)
 - ✅ Responsive mobile design
-- ✅ Report generation (TXT/PDF)
-- ✅ Smart import with dedup
-- ✅ Multi-axis charts
+- ✅ PDF/TXT reports
 
 ---
 
@@ -1019,5 +1088,5 @@ Personal project - All rights reserved
 ---
 
 **Last Updated:** January 11, 2025
-**Status:** v1.6.0 - Automatic OAuth Token Refresh + HRV Tracking
-**Next:** Automatic Garmin data sync & Recipe builder
+**Status:** v1.6.2 - Mobile UX Improvements (Swipe Gestures + Table Overflow)
+**Next:** Performance optimizations (memoization) & Chart.js config deduplication
