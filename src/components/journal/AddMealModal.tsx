@@ -446,7 +446,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                           {/* Inline editing when selected */}
                           {isSelected && (
                             <div className="space-y-2 mt-2">
-                              {/* First row: gram input + portion selector */}
+                              {/* First row: gram input + portion selector + delete button */}
                               <div className="flex flex-wrap items-center gap-2">
                                 {/* Gram input */}
                                 <div className="flex items-center gap-1">
@@ -509,10 +509,8 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                                     + Portie
                                   </button>
                                 )}
-                              </div>
 
-                              {/* Second row: delete button always on its own row for mobile */}
-                              <div className="flex">
+                                {/* Delete button */}
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -523,9 +521,9 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                                     delete newGrams[product.id!];
                                     setProductGrams(newGrams);
                                   }}
-                                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:text-red-700 text-xl font-bold"
+                                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:text-red-700 text-lg"
                                   aria-label="Verwijder product"
-                                >✕ Verwijder</button>
+                                >✕</button>
                               </div>
                             </div>
                           )}
