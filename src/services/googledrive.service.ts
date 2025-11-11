@@ -34,6 +34,42 @@ class GoogleDriveService {
     // Start automatic refresh timer if enabled and token exists
     if (this.isSignedIn()) {
       this.startAutomaticRefreshTimer();
+    } else {
+      // Token expired but we might be able to refresh automatically
+      // Try silent refresh on startup if using authorization code flow
+      this.tryAutoRefreshOnStartup();
+    }
+  }
+
+  /**
+   * Try to automatically refresh token on startup if expired
+   * Prevents popup if we can silently refresh via Supabase
+   */
+  private async tryAutoRefreshOnStartup(): Promise<void> {
+    const method = localStorage.getItem('google_oauth_method');
+    if (method !== 'authorization_code') return;
+    if (!supabaseService.isAvailable()) return;
+
+    // Check if token recently expired (within last 24 hours)
+    const expiresAt = localStorage.getItem('google_token_expires_at');
+    if (!expiresAt) return;
+
+    const expiredMs = Date.now() - parseInt(expiresAt);
+    if (expiredMs > 24 * 60 * 60 * 1000) {
+      // Token expired more than 24 hours ago, don't auto-refresh
+      return;
+    }
+
+    try {
+      console.log('🔄 Token expired, attempting automatic refresh on startup...');
+      await this.automaticRefresh();
+
+      // Success! Start the timer
+      this.startAutomaticRefreshTimer();
+      console.log('✅ Startup auto-refresh successful!');
+    } catch (error) {
+      console.warn('⚠️ Startup auto-refresh failed, user will need to sign in:', error);
+      // Don't throw - let the app continue, sync will show modal when needed
     }
   }
 

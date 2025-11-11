@@ -189,7 +189,7 @@ class SyncService {
 
     try {
       // Cleanup entries
-      const entries = await entriesService.getAllEntries();
+      const entries = await entriesService.getAllEntriesIncludingDeleted();
       const oldDeletedEntries = entries.filter(
         e => e.deleted && e.deleted_at && e.deleted_at < cutoffDate
       );
@@ -203,7 +203,7 @@ class SyncService {
       }
 
       // Cleanup products
-      const products = await productsService.getAllProducts();
+      const products = await productsService.getAllProductsIncludingDeleted();
       const oldDeletedProducts = products.filter(
         p => p.deleted && p.deleted_at && p.deleted_at < cutoffDate
       );
@@ -368,7 +368,8 @@ class SyncService {
       if (!localEntry && !existingById) {
         console.log(`➕ Adding new entry from cloud: ${key}`);
         try {
-          await entriesService.addEntry(cloudEntry);
+          // Use db.entries.add directly to preserve cloud ID (don't generate new ID)
+          await db.entries.add(cloudEntry);
           entriesAdded++;
         } catch (err) {
           console.error(`❌ Failed to add entry ${key}:`, err);
@@ -382,7 +383,9 @@ class SyncService {
                  new Date(cloudEntry.updated_at) > new Date(localEntry.updated_at)) {
         // Cloud entry is newer - propagate all changes including deletion
         console.log(`🔄 Updating entry (cloud is newer): ${key}`);
-        await entriesService.updateEntry(localEntry.id!, cloudEntry);
+        // Use db.entries.update directly to preserve cloud timestamp (don't create new one)
+        const { id, ...cloudData } = cloudEntry;
+        await db.entries.update(localEntry.id!, cloudData);
         entriesUpdated++;
       } else {
         entriesSkipped++;
@@ -409,7 +412,8 @@ class SyncService {
       if (!localProduct) {
         // New product from cloud - doesn't exist by name or barcode
         try {
-          await productsService.addProduct(cloudProduct);
+          // Use db.products.add directly to preserve cloud ID (don't generate new ID)
+          await db.products.add(cloudProduct);
           productsAdded++;
         } catch (err) {
           console.error(`❌ Failed to add product ${cloudProduct.name}:`, err);
@@ -418,7 +422,9 @@ class SyncService {
       } else if (cloudProduct.updated_at && localProduct.updated_at &&
                  new Date(cloudProduct.updated_at) > new Date(localProduct.updated_at)) {
         // Cloud product is newer - propagate all changes including deletion
-        await productsService.updateProduct(localProduct.id!, cloudProduct);
+        // Use db.products.update directly to preserve cloud timestamp (don't create new one)
+        const { id, ...cloudData } = cloudProduct;
+        await db.products.update(localProduct.id!, cloudData);
         productsUpdated++;
       } else {
         productsSkipped++;
@@ -439,7 +445,8 @@ class SyncService {
 
         if (!localWeight) {
           // New weight from cloud
-          await weightsService.addWeight(cloudWeight);
+          // Use db.weights.add directly to preserve cloud ID (don't generate new ID)
+          await db.weights.add(cloudWeight);
           weightsAdded++;
         } else {
           // Determine which is newer: use deleted_at if deleted, otherwise created_at
@@ -452,7 +459,9 @@ class SyncService {
 
           if (cloudTimestamp && localTimestamp && new Date(cloudTimestamp) > new Date(localTimestamp)) {
             // Cloud weight is newer - propagate all changes including deletion
-            await weightsService.updateWeight(localWeight.id!, cloudWeight);
+            // Use db.weights.update directly to preserve cloud timestamp (don't create new one)
+            const { id, ...cloudData } = cloudWeight;
+            await db.weights.update(localWeight.id!, cloudData);
             weightsUpdated++;
           } else {
             weightsSkipped++;
@@ -760,6 +769,13 @@ class SyncService {
     this.isSyncing = true;
 
     try {
+      // Before checking if signed in, try auto-refresh if token expired
+      // This prevents popup when browser was idle and token expired
+      if (!googleDriveService.isSignedIn()) {
+        await googleDriveService.ensureValidToken();
+      }
+
+      // Now check again after potential refresh
       if (!googleDriveService.isSignedIn()) {
         throw new Error('Not signed in to Google Drive');
       }
