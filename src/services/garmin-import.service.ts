@@ -286,24 +286,30 @@ class GarminImportService {
   }
 
   /**
-   * Parse Heart Rate CSV
-   * Format 1 (Resting only): ,Resting Heart Rate
-   *                          10/15/2025,54
-   * Format 2 (With max):     ,Resting HR,Max HR
-   *                          10/15/2025,54,180
+   * Parse Heart Rate CSV/TSV
+   * Format 1 (CSV - Resting only): ,Resting Heart Rate
+   *                                10/15/2025,54
+   * Format 2 (CSV - With max):     ,Resting HR,Max HR
+   *                                10/15/2025,54,180
+   * Format 3 (TSV - Copy/paste from Garmin site):
+   *                                Nov 11	55 bpm	94 bpm
    */
   private parseHeartRateCSV(lines: string[]): ParsedGarminData[] {
     const result: ParsedGarminData[] = [];
 
+    // Detect if this is tab-separated (copy-pasted from Garmin site)
+    const isTabSeparated = lines.some(line => line.includes('\t'));
+
     for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(',');
+      const parts = isTabSeparated ? lines[i].split('\t') : lines[i].split(',');
       if (parts.length < 2) continue; // Need at least date + resting HR
 
       const date = this.parseDate(parts[0]);
       if (!date) continue;
 
-      const restingHR = parseFloat(parts[1]) || 0;
-      const maxHR = parts.length >= 3 ? (parseFloat(parts[2]) || 0) : 0;
+      // Parse HR values - remove "bpm" suffix if present
+      const restingHR = parseFloat(parts[1].replace(/\s*bpm\s*/i, '')) || 0;
+      const maxHR = parts.length >= 3 ? (parseFloat(parts[2].replace(/\s*bpm\s*/i, '')) || 0) : 0;
 
       if (restingHR > 0) { // Only add if we have valid resting HR
         result.push({
@@ -541,7 +547,7 @@ class GarminImportService {
 
   /**
    * Parse date from various formats
-   * Supports: MM/DD/YYYY, YYYY-MM-DD, etc.
+   * Supports: MM/DD/YYYY, YYYY-MM-DD, "Nov 11" (from copy-paste), etc.
    */
   private parseDate(dateStr: string): string | null {
     if (!dateStr || dateStr.trim() === '') return null;
@@ -558,6 +564,25 @@ class GarminImportService {
       // Try YYYY-MM-DD format (already correct)
       if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return dateStr;
+      }
+
+      // Try "Nov 11" format (from Garmin website copy-paste)
+      const monthDayMatch = dateStr.match(/^([A-Za-z]+)\s+(\d+)$/);
+      if (monthDayMatch) {
+        const monthName = monthDayMatch[1];
+        const day = monthDayMatch[2];
+
+        // Determine year (current year, or previous if month is in future)
+        const currentDate = new Date();
+        let year = currentDate.getFullYear();
+        const monthIndex = this.getMonthIndex(monthName);
+
+        // If the month hasn't occurred yet this year, use previous year
+        if (monthIndex > currentDate.getMonth()) {
+          year--;
+        }
+
+        return `${year}-${String(monthIndex + 1).padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
 
       // Try parsing as Date object

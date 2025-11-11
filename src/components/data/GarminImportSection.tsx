@@ -304,6 +304,7 @@ export function GarminImportSection() {
             <li className="ml-4">- Intensity Minutes</li>
             <li className="ml-4">- Sleep Score (4 weken format bevat ook Body Battery)</li>
             <li>• Upload alle bestanden tegelijk - data wordt samengevoegd per datum</li>
+            <li className="mt-2">• <strong>Geen CSV export knop?</strong> Selecteer data op de Garmin site, kopieer (Ctrl+C), plak in een .txt bestand en hernoem naar .csv</li>
           </ul>
         </div>
       </div>
