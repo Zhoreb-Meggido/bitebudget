@@ -539,7 +539,7 @@ As data grows over time, these optimizations will maintain performance and manag
 
 ---
 
-## 📁 Project Structuur
+## 📁 Project Structuur 
 
 ```
 src/
