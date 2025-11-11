@@ -1,66 +1,156 @@
-# TODO - Volgende Sessie
+# TODO - BiteBudget Improvements
 
-## ~~Sync Improvements - Consistente Soft Delete~~ ✅ COMPLETED
+## Quick Wins (30-60 min each)
 
-### Probleem
-Momenteel hebben verschillende data types inconsistente delete strategieën:
+### 1. Mobile Tables Overflow Fix
+**Probleem:** Tables lopen over op mobiel, waardoor data niet goed zichtbaar is.
 
-**Met soft delete:**
-- ✅ ProductPortions (`deleted`, `deleted_at`)
-- ✅ MealTemplates (`deleted`, `deleted_at`)
-- ✅ Weights (`deleted`, `deleted_at`)
+**Oplossing:**
+- Voeg horizontal scroll toe voor tables op mobiel
+- Gebruik `overflow-x-auto` wrapper om tables
+- Overweeg alternatieve mobile layout (stacked cards ipv table)
 
-**Zonder soft delete (hard delete):**
-- ❌ Entries (geen `deleted` veld)
-- ❌ Products (geen `deleted` veld)
-- ❌ DailyActivities (geen `deleted` veld)
+**Effort:** ~30-45 minuten
 
-Dit kan sync problemen veroorzaken: als je een entry op mobiel hard-deletet, en later merged met desktop, kan de entry weer terug komen omdat de desktop versie niet weet dat hij verwijderd is.
+---
 
-### Taken
+### 2. Swipe Gestures voor Tab Navigatie
+**Feature:** Swipe left/right om tussen tabs te navigeren op mobiel.
 
-#### 1. Database Schema Updates ✅
-- [x] Voeg `deleted?: boolean` veld toe aan Entry type (was al aanwezig)
-- [x] Voeg `deleted_at?: string` veld toe aan Entry type (was al aanwezig)
-- [x] Voeg `deleted?: boolean` veld toe aan Product type (was al aanwezig)
-- [x] Voeg `deleted_at?: string` veld toe aan Product type (was al aanwezig)
-- [x] Voeg `deleted?: boolean` veld toe aan DailyActivity type
-- [x] Voeg `deleted_at?: string` veld toe aan DailyActivity type
+**Implementatie:**
+- **Optie 1 (aanbevolen):** Gebruik `react-swipeable` library
+  - `npm install react-swipeable`
+  - Wrap tab content in `<Swipeable>` component
+  - Detect left/right swipes en trigger tab change
+  - Effort: ~30-45 minuten
 
-#### 2. Service Updates ✅
-- [x] Entries Service: Filter op `deleted !== true` in getAllEntries
-- [x] Entries Service: Voeg `getAllEntriesIncludingDeleted()` toe
-- [x] Entries Service: Update `deleteEntry()` naar soft delete (was al soft delete)
-- [x] Products Service: Filter op `deleted !== true` in getAllProducts
-- [x] Products Service: Voeg `getAllProductsIncludingDeleted()` toe
-- [x] Products Service: Update `deleteProduct()` naar soft delete (was al soft delete)
-- [x] Activities Service: Filter op `deleted !== true` in getAllActivities
-- [x] Activities Service: Voeg `getAllActivitiesIncludingDeleted()` toe
-- [x] Activities Service: Update delete functie naar soft delete
+- **Optie 2:** Custom touch event handlers
+  - Implement touch start/move/end handlers
+  - Calculate swipe direction en distance
+  - Meer werk, meer controle
+  - Effort: ~2-3 uur
 
-#### 3. Sync Service Updates ✅
-- [x] Update `exportAllData()` om deleted items mee te nemen (zoals bij portions/templates)
-- [x] Update merge to use *IncludingDeleted() voor entries, products, activities
-- [x] Zorg dat merge logica deleted status respecteert voor alle types
-- [x] Test dat deleted items correct syncen tussen devices
+**Voordeel:** Betere mobile UX, native app-achtig gevoel
 
-#### 4. UI Updates ✅
-- [x] Delete acties gebruiken al soft delete via services (entries, products, activities)
-- [ ] Optioneel: "Recent verwijderd" view om soft-deleted items te tonen/herstellen
+**Effort:** 30-45 min (met library) | 2-3 uur (custom)
 
-#### 5. Console Logging Uitbreiden ✅
-- [x] Toon in console hoeveel items van totaal soft-deleted zijn bij export
-  - `📤 Preparing export with: { entries: "189 (12 deleted)", products: "98 (5 deleted)", ... }`
-- [x] Toon in console hoeveel items van totaal soft-deleted zijn bij merge
-  - `📊 Cloud data contains: { entries: "189 (12 deleted)", products: "98 (5 deleted)", ... }`
+---
 
-### Voordelen
-- **Consistentie**: Alle data types werken hetzelfde
-- **Data veiligheid**: Geen accidenteel permanent verlies van data
-- **Sync betrouwbaarheid**: Deleted status wordt correct gesynchroniseerd
-- **Debugbaarheid**: Duidelijk overzicht van deleted items in console
+## Medium Effort (1-3 uur)
 
-### Opmerkingen
-- Dit is een breaking change voor bestaande data (migratie nodig)
-- Overweeg een cleanup functie voor items die >30 dagen deleted zijn
-- Test grondig met sync scenario's: delete op A, sync naar B, modify op B, sync terug naar A
+### 3. Performance Optimalisatie - Memoization
+**Probleem:** Veel components re-renderen onnodig vaak.
+
+**Taken:**
+- [ ] Audit components met React DevTools Profiler
+- [ ] Voeg `useMemo` toe voor filtered/sorted lijsten
+- [ ] Voeg `useCallback` toe voor event handlers in list items
+- [ ] Overweeg `React.memo` voor pure components
+- [ ] Test performance verbetering met Chrome DevTools
+
+**Prioriteit:** Medium (merken vooral bij grote datasets)
+
+**Effort:** ~2-3 uur
+
+---
+
+### 4. Chart.js Configuratie Duplicatie
+**Probleem:** ~650 lines code duplicatie in verschillende chart configuraties.
+
+**Oplossing:**
+- [ ] Extract common chart options naar shared config object
+- [ ] Create reusable chart option builders
+- [ ] Consolideer color schemes en styling
+- [ ] Reduce duplicatie in plugin configuraties
+
+**Voordeel:**
+- Minder code om te maintainen
+- Consistente styling across charts
+- Makkelijker om chart settings aan te passen
+
+**Effort:** ~2-3 uur
+
+---
+
+## Larger Features (4+ uur)
+
+### 5. Body Battery Visualisatie Verbeteringen
+**Feature:** Betere weergave van Garmin Body Battery data in trends.
+
+**Mogelijke verbeteringen:**
+- [ ] Historische trends over langere periode
+- [ ] Correlatie met activiteiten en slaap
+- [ ] Inzicht in recovery patterns
+- [ ] Vergelijk verschillende tijdsperiodes
+
+**Effort:** ~4-6 uur
+
+---
+
+### 6. Distance Tracking & Visualisatie
+**Feature:** Betere weergave van afgelegde afstanden.
+
+**Taken:**
+- [ ] Distance per activity type (running, cycling, walking)
+- [ ] Weekly/monthly totals
+- [ ] Distance trends over tijd
+- [ ] Goal tracking voor distance
+
+**Effort:** ~4-6 uur
+
+---
+
+### 7. Weekly/Monthly Aggregate Views
+**Feature:** Overzicht van nutrition en activity data per week/maand.
+
+**Taken:**
+- [ ] Week view met dagelijkse gemiddelden
+- [ ] Month view met weekly trends
+- [ ] Vergelijking tussen weken/maanden
+- [ ] Export functionaliteit voor aggregates
+
+**Voordeel:** Beter inzicht in lange termijn trends
+
+**Effort:** ~6-8 uur
+
+---
+
+## Completed ✅
+
+### Sync Improvements - Critical Bugfixes (v1.6.1) ✅
+- [x] Fix duplicate entries bug when meal time is edited after sync
+- [x] Fix soft-deleted items cleanup (getAllEntriesIncludingDeleted)
+- [x] Fix OAuth popup appearing when idle (auto-refresh on startup)
+- [x] Fix infinite update loop (preserve cloud timestamps)
+
+### Search Performance - Debouncing (v1.6.1) ✅
+- [x] Implement useDebounce hook (300ms delay)
+- [x] Apply debouncing to AddMealModal search
+- [x] Apply debouncing to ProductsPortionsTab search
+- [x] Apply debouncing to TemplatesTab search
+
+### Soft Delete Implementation (v1.6.0) ✅
+- [x] Consistent soft delete for all data types
+- [x] 14-day tombstone retention for cross-device sync
+- [x] Cleanup function for old deleted items
+
+---
+
+## Backlog / Future Ideas
+
+### Code Quality
+- [ ] TypeScript strict mode improvements
+- [ ] Unit tests voor critical business logic
+- [ ] E2E tests voor sync scenarios
+
+### Features
+- [ ] Barcode scanner improvements (betere database lookups)
+- [ ] Meal photo's opslaan en tonen
+- [ ] Recipe calculator (bereken nutrition voor hele recepten)
+- [ ] Social features (delen van templates/recepten)
+
+### Infrastructure
+- [ ] Progressive loading voor grote datasets
+- [ ] Offline queue voor sync operations
+- [ ] Background sync met Service Worker
+- [ ] Compression voor sync payloads
