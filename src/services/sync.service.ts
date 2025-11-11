@@ -763,6 +763,13 @@ class SyncService {
     this.isSyncing = true;
 
     try {
+      // Before checking if signed in, try auto-refresh if token expired
+      // This prevents popup when browser was idle and token expired
+      if (!googleDriveService.isSignedIn()) {
+        await googleDriveService.ensureValidToken();
+      }
+
+      // Now check again after potential refresh
       if (!googleDriveService.isSignedIn()) {
         throw new Error('Not signed in to Google Drive');
       }
