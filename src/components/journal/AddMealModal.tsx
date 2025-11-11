@@ -521,9 +521,9 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                                     delete newGrams[product.id!];
                                     setProductGrams(newGrams);
                                   }}
-                                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-500 hover:text-red-700 text-lg"
+                                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-red-600 hover:text-red-800 text-lg"
                                   aria-label="Verwijder product"
-                                >✕</button>
+                                >🗑️</button>
                               </div>
                             </div>
                           )}
