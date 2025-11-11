@@ -175,21 +175,21 @@ function TemplateCard({ template, onEdit, onToggleFavorite, onDelete }: Template
         <div className="flex gap-1">
           <button
             onClick={() => onToggleFavorite(template)}
-            className="px-2 py-1 text-xl hover:scale-110 transition"
+            className="text-xl hover:scale-110 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
             title={template.isFavorite ? 'Verwijder uit favorieten' : 'Toevoegen aan favorieten'}
           >
             {template.isFavorite ? '⭐' : '☆'}
           </button>
           <button
             onClick={() => onEdit(template)}
-            className="px-2 py-1 text-xl hover:scale-110 transition"
+            className="text-xl hover:scale-110 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Bewerken"
           >
             ✏️
           </button>
           <button
             onClick={() => onDelete(template)}
-            className="px-2 py-1 text-xl hover:scale-110 transition"
+            className="text-xl hover:scale-110 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Verwijderen"
           >
             🗑️
