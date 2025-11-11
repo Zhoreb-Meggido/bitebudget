@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>BiteBudget</title>
+  <script>
+    // GitHub Pages SPA redirect for OAuth callbacks
+    // When /oauth/google/callback is hit, redirect to root with params intact
+
+    // Keep all search params (including the OAuth code)
+    var searchParams = window.location.search;
+
+    // Redirect to base URL with params
+    window.location.replace('/bitebudget/' + searchParams);
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>
