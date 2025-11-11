@@ -32,6 +32,16 @@ function App() {
       const state = urlParams.get('state');
 
       if (code) {
+        // Prevent duplicate execution (React Strict Mode calls useEffect twice in dev)
+        const processingFlag = sessionStorage.getItem('oauth_processing');
+        if (processingFlag === code) {
+          console.log('⏭️ OAuth callback already processing, skipping duplicate...');
+          return;
+        }
+
+        // Mark this code as being processed
+        sessionStorage.setItem('oauth_processing', code);
+
         setOauthProcessing(true);
         console.log('📥 OAuth callback detected, exchanging code for tokens...');
 
@@ -50,6 +60,8 @@ function App() {
           window.history.replaceState({}, document.title, window.location.pathname);
         } finally {
           setOauthProcessing(false);
+          // Clear the processing flag
+          sessionStorage.removeItem('oauth_processing');
         }
       }
     };
