@@ -189,7 +189,7 @@ class SyncService {
 
     try {
       // Cleanup entries
-      const entries = await entriesService.getAllEntries();
+      const entries = await entriesService.getAllEntriesIncludingDeleted();
       const oldDeletedEntries = entries.filter(
         e => e.deleted && e.deleted_at && e.deleted_at < cutoffDate
       );
@@ -203,7 +203,7 @@ class SyncService {
       }
 
       // Cleanup products
-      const products = await productsService.getAllProducts();
+      const products = await productsService.getAllProductsIncludingDeleted();
       const oldDeletedProducts = products.filter(
         p => p.deleted && p.deleted_at && p.deleted_at < cutoffDate
       );
