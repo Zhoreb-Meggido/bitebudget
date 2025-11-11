@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useProducts, usePortions } from '@/hooks';
+import { useState, useMemo } from 'react';
+import { useProducts, usePortions, useDebounce } from '@/hooks';
 import type { Product, ProductPortion } from '@/types';
 import { ProductEditModal } from './ProductEditModal';
 import { PortionEditModal } from './PortionEditModal';
@@ -15,6 +15,9 @@ export function ProductsPortionsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyWithPortions, setShowOnlyWithPortions] = useState(false);
   const [sortBy, setSortBy] = useState<'favorite' | 'name-asc' | 'name-desc' | 'calories' | 'protein'>('favorite');
+
+  // Debounce search query to reduce filtering on every keystroke
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Product modal state
   const [showProductModal, setShowProductModal] = useState(false);
@@ -184,34 +187,37 @@ export function ProductsPortionsTab() {
     }
   };
 
-  // Filter and sort products
-  const filteredProducts = products
-    .filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-      if (!matchesSearch) return false;
+  // Filter and sort products with debounced search
+  const filteredProducts = useMemo(() =>
+    products
+      .filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        if (!matchesSearch) return false;
 
-      if (showOnlyWithPortions) {
-        const productPortions = allPortions.filter(p => p.productName === product.name);
-        return productPortions.length > 0;
-      }
+        if (showOnlyWithPortions) {
+          const productPortions = allPortions.filter(p => p.productName === product.name);
+          return productPortions.length > 0;
+        }
 
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'favorite') {
-        if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
-        return a.name.localeCompare(b.name);
-      } else if (sortBy === 'name-asc') {
-        return a.name.localeCompare(b.name);
-      } else if (sortBy === 'name-desc') {
-        return b.name.localeCompare(a.name);
-      } else if (sortBy === 'calories') {
-        return b.calories - a.calories;
-      } else if (sortBy === 'protein') {
-        return b.protein - a.protein;
-      }
-      return 0;
-    });
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'favorite') {
+          if (a.favorite !== b.favorite) return a.favorite ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        } else if (sortBy === 'name-asc') {
+          return a.name.localeCompare(b.name);
+        } else if (sortBy === 'name-desc') {
+          return b.name.localeCompare(a.name);
+        } else if (sortBy === 'calories') {
+          return b.calories - a.calories;
+        } else if (sortBy === 'protein') {
+          return b.protein - a.protein;
+        }
+        return 0;
+      }),
+    [products, debouncedSearchQuery, showOnlyWithPortions, allPortions, sortBy]
+  );
 
   if (isLoading) {
     return <div className="text-center py-8 text-gray-500">Laden...</div>;

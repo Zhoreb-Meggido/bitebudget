@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Product, Entry, MealTemplate, MealCategory, ProductPortion } from '@/types';
 import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from '@/utils';
-import { useTemplates, usePortions } from '@/hooks';
+import { useTemplates, usePortions, useDebounce } from '@/hooks';
 
 interface Props {
   isOpen: boolean;
@@ -37,6 +37,10 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateCategory, setNewTemplateCategory] = useState<MealCategory>('anders');
+
+  // Debounce search terms to reduce filtering on every keystroke
+  const debouncedProductSearch = useDebounce(productSearch, 300);
+  const debouncedTemplateSearch = useDebounce(templateSearch, 300);
 
   // Portions state
   const { portions: allPortions, addPortion } = usePortions();
@@ -131,10 +135,10 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
   }, [editEntry, isOpen, products]);
 
   // Sort products: selected first, then favorites, then alphabetical
-  // Memoized for performance
+  // Memoized for performance with debounced search
   const sortedProducts = useMemo(() =>
     products
-      .filter(p => productSearch === '' || p.name.toLowerCase().includes(productSearch.toLowerCase()))
+      .filter(p => debouncedProductSearch === '' || p.name.toLowerCase().includes(debouncedProductSearch.toLowerCase()))
       .sort((a, b) => {
         const aSelected = a.id && selectedProducts.includes(a.id);
         const bSelected = b.id && selectedProducts.includes(b.id);
@@ -148,14 +152,14 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         // 3. Then alphabetical
         return a.name.localeCompare(b.name);
       }),
-    [products, productSearch, selectedProducts]
+    [products, debouncedProductSearch, selectedProducts]
   );
 
   const filteredTemplates = useMemo(() =>
     templates
-      .filter(t => templateSearch === '' || t.name.toLowerCase().includes(templateSearch.toLowerCase()))
+      .filter(t => debouncedTemplateSearch === '' || t.name.toLowerCase().includes(debouncedTemplateSearch.toLowerCase()))
       .sort((a, b) => a.name.localeCompare(b.name)),
-    [templates, templateSearch]
+    [templates, debouncedTemplateSearch]
   );
 
   if (!isOpen) return null;
