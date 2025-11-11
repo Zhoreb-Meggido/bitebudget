@@ -25,6 +25,8 @@ export interface ParsedGarminData {
   };
   sleepSeconds?: number;
   bodyBattery?: number;
+  hrvOvernight?: number;
+  hrv7DayAvg?: number;
 }
 
 export interface ImportResult {
@@ -87,6 +89,9 @@ class GarminImportService {
     if (headers.includes('sleep score') || headers.includes('sleep') || headers.includes('avg duration') || headers.includes('body battery')) {
       console.log('✅ Detected: Sleep CSV');
       return this.parseSleepCSV(lines);
+    } else if (headers.includes('overnight hrv') || headers.includes('7d avg')) {
+      console.log('✅ Detected: HRV CSV');
+      return this.parseHRVCSV(lines);
     } else if (headers.includes('active calories')) {
       console.log('✅ Detected: Calories CSV');
       return this.parseCaloriesCSV(lines);
@@ -318,6 +323,41 @@ class GarminImportService {
             resting: restingHR,
             max: maxHR,
           },
+        });
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Parse HRV CSV (Heart Rate Variability)
+   * Format (CSV): Date,Overnight HRV,Baseline,7d Avg
+   *               Nov 11,42ms,35ms - 51ms,34ms
+   * Format (TSV): Nov 11	42ms	35ms - 51ms	34ms
+   */
+  private parseHRVCSV(lines: string[]): ParsedGarminData[] {
+    const result: ParsedGarminData[] = [];
+
+    // Detect if this is tab-separated (copy-pasted from Garmin site)
+    const isTabSeparated = lines.some(line => line.includes('\t'));
+
+    for (let i = 1; i < lines.length; i++) {
+      const parts = isTabSeparated ? lines[i].split('\t') : lines[i].split(',');
+      if (parts.length < 2) continue; // Need at least date + overnight HRV
+
+      const date = this.parseDate(parts[0]);
+      if (!date) continue;
+
+      // Parse HRV values - remove "ms" suffix if present
+      const overnight = parseFloat(parts[1].replace(/\s*ms\s*/i, '')) || 0;
+      const avg7d = parts.length >= 4 ? (parseFloat(parts[3].replace(/\s*ms\s*/i, '')) || 0) : 0;
+
+      if (overnight > 0) { // Only add if we have valid overnight HRV
+        result.push({
+          date,
+          hrvOvernight: overnight,
+          hrv7DayAvg: avg7d > 0 ? avg7d : undefined,
         });
       }
     }
@@ -615,7 +655,9 @@ class GarminImportService {
           dayData.distance ||
           dayData.heartRate ||
           dayData.sleepSeconds ||
-          dayData.bodyBattery;
+          dayData.bodyBattery ||
+          dayData.hrvOvernight ||
+          dayData.hrv7DayAvg;
 
         if (!hasData) {
           continue; // Skip empty days
@@ -660,6 +702,12 @@ class GarminImportService {
         }
         if (dayData.bodyBattery !== undefined) {
           activity.bodyBattery = dayData.bodyBattery;
+        }
+        if (dayData.hrvOvernight !== undefined) {
+          activity.hrvOvernight = dayData.hrvOvernight;
+        }
+        if (dayData.hrv7DayAvg !== undefined) {
+          activity.hrv7DayAvg = dayData.hrv7DayAvg;
         }
 
         await activitiesService.addOrUpdateActivity(activity as Omit<DailyActivity, 'id' | 'created_at' | 'updated_at'>);

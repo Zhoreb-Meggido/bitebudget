@@ -179,7 +179,7 @@ export function GarminImportSection() {
                 Je kunt meerdere CSV bestanden tegelijk uploaden
               </p>
               <p className="text-xs text-gray-500 mt-2">
-                Ondersteund: Calories, Steps, Stress, Intensity Minutes, Resting Heart Rate, Sleep (inclusief Body Battery)
+                Ondersteund: Calories, Steps, Stress, Intensity Minutes, Resting Heart Rate, HRV Status, Sleep (inclusief Body Battery)
               </p>
             </label>
           </div>
@@ -255,6 +255,8 @@ export function GarminImportSection() {
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">HR rust</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Slaap</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Body Batt</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">HRV</th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">HRV 7d</th>
                       <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Stress</th>
                     </tr>
                   </thead>
@@ -268,6 +270,8 @@ export function GarminImportSection() {
                         <td className="px-3 py-2 text-sm text-gray-900">{day.heartRate?.resting || '-'}</td>
                         <td className="px-3 py-2 text-sm text-gray-900">{formatSleepDuration(day.sleepSeconds)}</td>
                         <td className="px-3 py-2 text-sm text-gray-900">{day.bodyBattery || '-'}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900">{day.hrvOvernight || '-'}</td>
+                        <td className="px-3 py-2 text-sm text-gray-900">{day.hrv7DayAvg || '-'}</td>
                         <td className="px-3 py-2 text-sm text-gray-900">{day.stress || '-'}</td>
                       </tr>
                     ))}
@@ -300,6 +304,7 @@ export function GarminImportSection() {
             <li className="ml-4">- Calories (kies dagelijks/maandelijks, NIET wekelijks)</li>
             <li className="ml-4">- Steps</li>
             <li className="ml-4">- Resting Heart Rate</li>
+            <li className="ml-4">- HRV Status</li>
             <li className="ml-4">- Stress</li>
             <li className="ml-4">- Intensity Minutes</li>
             <li className="ml-4">- Sleep Score (4 weken format bevat ook Body Battery)</li>
