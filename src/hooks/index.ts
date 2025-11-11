@@ -10,3 +10,4 @@ export { useWeights } from './useWeights';
 export { usePortions } from './usePortions';
 export { useTemplates } from './useTemplates';
 export { useActivities } from './useActivities';
+export { useDebounce } from './useDebounce';

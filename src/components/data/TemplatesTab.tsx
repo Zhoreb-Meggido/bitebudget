@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useTemplates } from '@/hooks';
+import { useState, useMemo } from 'react';
+import { useTemplates, useDebounce } from '@/hooks';
 import type { MealTemplate } from '@/types';
 import { TemplateEditModal } from './TemplateEditModal';
 
@@ -8,6 +8,9 @@ export function TemplatesTab() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
+  // Debounce search query to reduce filtering on every keystroke
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Modal state
   const [showTemplateModal, setShowTemplateModal] = useState(false);
@@ -43,28 +46,34 @@ export function TemplatesTab() {
     await deleteTemplate(template.id!);
   };
 
-  // Filter templates based on search and favorites filter
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (template.category && template.category.toLowerCase().includes(searchQuery.toLowerCase()));
-    if (!matchesSearch) return false;
+  // Filter templates based on debounced search and favorites filter
+  const filteredTemplates = useMemo(() =>
+    templates.filter(template => {
+      const matchesSearch = template.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        (template.category && template.category.toLowerCase().includes(debouncedSearchQuery.toLowerCase()));
+      if (!matchesSearch) return false;
 
-    if (showOnlyFavorites) {
-      return template.isFavorite;
-    }
+      if (showOnlyFavorites) {
+        return template.isFavorite;
+      }
 
-    return true;
-  });
+      return true;
+    }),
+    [templates, debouncedSearchQuery, showOnlyFavorites]
+  );
 
   // Group templates by category
-  const templatesByCategory = filteredTemplates.reduce((acc, template) => {
-    const category = template.category || 'Zonder categorie';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(template);
-    return acc;
-  }, {} as Record<string, MealTemplate[]>);
+  const templatesByCategory = useMemo(() =>
+    filteredTemplates.reduce((acc, template) => {
+      const category = template.category || 'Zonder categorie';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(template);
+      return acc;
+    }, {} as Record<string, MealTemplate[]>),
+    [filteredTemplates]
+  );
 
   if (isLoading) {
     return <div className="text-center py-8 text-gray-500">Laden...</div>;
