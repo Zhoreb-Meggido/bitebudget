@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useActivities } from '@/hooks';
-import { Line } from 'react-chartjs-2';
+import { Line, Scatter } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -42,12 +42,32 @@ const METRICS: MetricConfig[] = [
   { key: 'hrv7DayAvg', label: 'HRV 7d Gem', color: 'rgb(6, 182, 212)', unit: 'ms' },
 ];
 
+// Correlation calculation helper
+function calculateCorrelation(x: number[], y: number[]): number {
+  if (x.length !== y.length || x.length === 0) return 0;
+
+  const n = x.length;
+  const sumX = x.reduce((a, b) => a + b, 0);
+  const sumY = y.reduce((a, b) => a + b, 0);
+  const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+  const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
+  const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+
+  const numerator = n * sumXY - sumX * sumY;
+  const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+  if (denominator === 0) return 0;
+  return numerator / denominator;
+}
+
 export function TrendsTab() {
   const { activities } = useActivities();
   const [selectedMetrics, setSelectedMetrics] = useState<Set<MetricKey>>(
     new Set(['steps', 'calories', 'intensityMinutes'])
   );
   const [period, setPeriod] = useState<7 | 14 | 30 | 90>(30);
+  const [correlationMetricX, setCorrelationMetricX] = useState<MetricKey>('steps');
+  const [correlationMetricY, setCorrelationMetricY] = useState<MetricKey>('calories');
 
   // Filter activities by period
   const filteredActivities = useMemo(() => {
@@ -395,6 +415,146 @@ export function TrendsTab() {
     });
   };
 
+  // Get metric value from activity
+  const getMetricValue = (activity: typeof activities[0], metric: MetricKey): number => {
+    switch (metric) {
+      case 'steps':
+        return activity.steps || 0;
+      case 'calories':
+        return activity.totalCalories || 0;
+      case 'intensityMinutes':
+        return activity.intensityMinutes || 0;
+      case 'restingHeartRate':
+        return activity.restingHeartRate || 0;
+      case 'stressLevel':
+        return activity.stressLevel || 0;
+      case 'sleepDuration':
+        return (activity.sleepSeconds || 0) / 3600; // Convert to hours
+      case 'hrvOvernight':
+        return activity.hrvOvernight || 0;
+      case 'hrv7DayAvg':
+        return activity.hrv7DayAvg || 0;
+      default:
+        return 0;
+    }
+  };
+
+  // Correlation scatter plot data
+  const correlationData = useMemo(() => {
+    const xData: number[] = [];
+    const yData: number[] = [];
+    const labels: string[] = [];
+
+    filteredActivities.forEach(activity => {
+      const xValue = getMetricValue(activity, correlationMetricX);
+      const yValue = getMetricValue(activity, correlationMetricY);
+
+      // Only include if both values are non-zero (valid data)
+      if (xValue > 0 && yValue > 0) {
+        xData.push(xValue);
+        yData.push(yValue);
+        labels.push(activity.date);
+      }
+    });
+
+    if (xData.length === 0) return null;
+
+    const correlation = calculateCorrelation(xData, yData);
+
+    // Create scatter plot data points
+    const scatterData = xData.map((x, i) => ({ x, y: yData[i] }));
+
+    // Calculate regression line (best fit)
+    const n = xData.length;
+    const sumX = xData.reduce((a, b) => a + b, 0);
+    const sumY = yData.reduce((a, b) => a + b, 0);
+    const sumXY = xData.reduce((sum, xi, i) => sum + xi * yData[i], 0);
+    const sumX2 = xData.reduce((sum, xi) => sum + xi * xi, 0);
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    const minX = Math.min(...xData);
+    const maxX = Math.max(...xData);
+    const regressionLine = [
+      { x: minX, y: slope * minX + intercept },
+      { x: maxX, y: slope * maxX + intercept },
+    ];
+
+    return {
+      correlation,
+      scatterData,
+      regressionLine,
+      dataPoints: xData.length,
+    };
+  }, [filteredActivities, correlationMetricX, correlationMetricY]);
+
+  const scatterChartData = useMemo(() => {
+    if (!correlationData) return null;
+
+    const xMetric = METRICS.find(m => m.key === correlationMetricX);
+    const yMetric = METRICS.find(m => m.key === correlationMetricY);
+
+    return {
+      datasets: [
+        {
+          label: 'Data punten',
+          data: correlationData.scatterData,
+          backgroundColor: 'rgba(59, 130, 246, 0.6)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        },
+        {
+          label: 'Trend lijn',
+          data: correlationData.regressionLine,
+          type: 'line' as const,
+          borderColor: 'rgba(239, 68, 68, 0.8)',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          fill: false,
+          pointRadius: 0,
+        },
+      ],
+    };
+  }, [correlationData, correlationMetricX, correlationMetricY]);
+
+  const scatterChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          usePointStyle: true,
+          padding: 15,
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+      },
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: METRICS.find(m => m.key === correlationMetricX)?.label || '',
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: METRICS.find(m => m.key === correlationMetricY)?.label || '',
+        },
+      },
+    },
+  };
+
   return (
     <div>
       {/* Quick Stats Cards */}
@@ -523,6 +683,130 @@ export function TrendsTab() {
               💡 Tip: Tik op de grafiek voor details per datum
             </div>
           </>
+        )}
+      </div>
+
+      {/* Correlation Analysis */}
+      <div>
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900">Correlatie Analyse</h2>
+          <p className="text-sm text-gray-600 mt-1">Ontdek verbanden tussen verschillende metrics</p>
+        </div>
+
+        <div className="p-6 border-b border-gray-200">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                X-as (horizontaal)
+              </label>
+              <select
+                value={correlationMetricX}
+                onChange={(e) => setCorrelationMetricX(e.target.value as MetricKey)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {METRICS.map(metric => (
+                  <option key={metric.key} value={metric.key}>{metric.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Y-as (verticaal)
+              </label>
+              <select
+                value={correlationMetricY}
+                onChange={(e) => setCorrelationMetricY(e.target.value as MetricKey)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {METRICS.map(metric => (
+                  <option key={metric.key} value={metric.key}>{metric.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {correlationData ? (
+          <>
+            {/* Correlation Stats */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-2">Correlatie Coëfficiënt</div>
+                    <div className={`text-4xl font-bold ${
+                      Math.abs(correlationData.correlation) > 0.7 ? 'text-green-600' :
+                      Math.abs(correlationData.correlation) > 0.4 ? 'text-yellow-600' :
+                      'text-gray-600'
+                    }`}>
+                      {correlationData.correlation.toFixed(3)}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {Math.abs(correlationData.correlation) > 0.7 ? '✅ Sterke correlatie' :
+                       Math.abs(correlationData.correlation) > 0.4 ? '⚠️ Matige correlatie' :
+                       '❌ Zwakke correlatie'}
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-2">Data Punten</div>
+                    <div className="text-4xl font-bold text-blue-600">
+                      {correlationData.dataPoints}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Laatste {period} dagen
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-2">Relatie</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {correlationData.correlation > 0 ? '📈 Positief' : '📉 Negatief'}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {correlationData.correlation > 0
+                        ? 'Als X stijgt, stijgt Y ook'
+                        : 'Als X stijgt, daalt Y'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 text-sm text-gray-700 bg-white rounded p-4">
+                  <strong>💡 Interpretatie:</strong>
+                  <ul className="mt-2 space-y-1 list-disc list-inside">
+                    {Math.abs(correlationData.correlation) > 0.7 && (
+                      <li>Er is een <strong>sterke {correlationData.correlation > 0 ? 'positieve' : 'negatieve'}</strong> relatie tussen deze metrics.</li>
+                    )}
+                    {Math.abs(correlationData.correlation) > 0.4 && Math.abs(correlationData.correlation) <= 0.7 && (
+                      <li>Er is een <strong>matige {correlationData.correlation > 0 ? 'positieve' : 'negatieve'}</strong> relatie tussen deze metrics.</li>
+                    )}
+                    {Math.abs(correlationData.correlation) <= 0.4 && (
+                      <li>Er is <strong>weinig tot geen</strong> direct verband tussen deze metrics.</li>
+                    )}
+                    <li className="text-xs text-gray-500 mt-2">
+                      Correlatie betekent niet altijd causatie. Andere factoren kunnen ook een rol spelen.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Scatter Plot */}
+            <div className="p-6">
+              <div className="h-[400px] sm:h-[500px]">
+                <Scatter data={scatterChartData!} options={scatterChartOptions} />
+              </div>
+              <div className="mt-4 text-xs text-gray-500 text-center">
+                💡 Elk punt is één dag. De rode lijn toont de algemene trend.
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="p-6 text-center text-gray-500">
+            <p className="text-lg mb-2">Onvoldoende data voor correlatie analyse</p>
+            <p className="text-sm">Zorg dat je meerdere dagen met beide metrics hebt geregistreerd</p>
+          </div>
         )}
       </div>
     </div>
