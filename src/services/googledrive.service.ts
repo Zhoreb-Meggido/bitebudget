@@ -20,7 +20,8 @@ class GoogleDriveService {
   private readonly SCOPES = 'https://www.googleapis.com/auth/drive.file';
   private readonly FOLDER_NAME = 'BiteBudget';
   private readonly FILE_NAME = 'bitebudget-data.enc';
-  private readonly REDIRECT_URI = `${window.location.origin}/oauth/google/callback`;
+  // Include base path for GitHub Pages deployment (e.g., /bitebudget/)
+  private readonly REDIRECT_URI = `${window.location.origin}${import.meta.env.BASE_URL}oauth/google/callback`;
 
   private accessToken: string | null = null;
   private refreshInProgress: boolean = false;
