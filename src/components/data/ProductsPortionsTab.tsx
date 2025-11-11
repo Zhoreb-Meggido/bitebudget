@@ -421,14 +421,14 @@ function ProductWithPortions({
           <div className="flex gap-1">
             <button
               onClick={() => onEditProduct(product)}
-              className="px-2 py-1 text-xl hover:scale-110 transition"
+              className="text-xl hover:scale-110 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="Bewerken"
             >
               ✏️
             </button>
             <button
               onClick={() => onDeleteProduct(product)}
-              className="px-2 py-1 text-xl hover:scale-110 transition"
+              className="text-xl hover:scale-110 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="Verwijderen"
             >
               🗑️

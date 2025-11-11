@@ -80,6 +80,7 @@ export function SettingsPage() {
                 <label className="block text-xs text-gray-600 mb-1">Rustdag (kcal)</label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   value={localSettings.caloriesRest}
                   onChange={(e) => handleChange('caloriesRest', e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -89,6 +90,7 @@ export function SettingsPage() {
                 <label className="block text-xs text-gray-600 mb-1">Sportdag (kcal)</label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   value={localSettings.caloriesSport}
                   onChange={(e) => handleChange('caloriesSport', e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -105,6 +107,7 @@ export function SettingsPage() {
                 <label className="block text-xs text-gray-600 mb-1">Rustdag (g)</label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   value={localSettings.proteinRest}
                   onChange={(e) => handleChange('proteinRest', e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -114,6 +117,7 @@ export function SettingsPage() {
                 <label className="block text-xs text-gray-600 mb-1">Sportdag (g)</label>
                 <input
                   type="number"
+                  inputMode="decimal"
                   value={localSettings.proteinSport}
                   onChange={(e) => handleChange('proteinSport', e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"

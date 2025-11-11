@@ -7,6 +7,8 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { downloadTextFile } from './download.utils';
+import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
+import { DEFAULT_SETTINGS } from '@/types/database.types';
 import type { Entry } from '@/types';
 
 interface DayData {
@@ -195,7 +197,7 @@ function getGradientColor(value: number, type: string): { r: number; g: number; 
 
   switch (type) {
     case 'calories': {
-      const calGoal = 1900;
+      const calGoal = DEFAULT_SETTINGS.caloriesRest;
       const percentage = Math.min(value / calGoal, 1.5);
       if (percentage <= 0.95) {
         r = 34;
@@ -970,9 +972,9 @@ function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): voi
     let cardX = 15;
 
     const metrics = [
-      { key: 'calories', label: 'Calorieën', value: monthAvg.calories, unit: 'kcal', target: '<1900' },
+      { key: 'calories', label: 'Calorieën', value: monthAvg.calories, unit: 'kcal', target: `<${DEFAULT_SETTINGS.caloriesRest}` },
       { key: 'protein', label: 'Eiwit', value: monthAvg.protein, unit: 'g', target: '110-120' },
-      { key: 'fiber', label: 'Vezels', value: monthAvg.fiber, unit: 'g', target: '>=35' },
+      { key: 'fiber', label: 'Vezels', value: monthAvg.fiber, unit: 'g', target: `>=${NUTRITION_CONSTANTS.FIBER_SUFFICIENT}` },
       { key: 'saturatedFat', label: 'Verz. vet', value: monthAvg.saturatedFat, unit: 'g', target: '<20' },
       { key: 'sodium', label: 'Natrium', value: monthAvg.sodium, unit: 'mg', target: '<2300' },
     ];

@@ -181,6 +181,7 @@ export function TrackingPage() {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
@@ -320,14 +321,14 @@ export function TrackingPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => handleEdit(w)}
-                          className="text-blue-600 hover:text-blue-900 mr-3 sm:mr-4 text-base sm:text-sm"
+                          className="text-blue-600 hover:text-blue-900 mr-2 text-xl min-w-[44px] min-h-[44px] inline-flex items-center justify-center"
                           aria-label="Bewerken"
                         >
                           ✏️
                         </button>
                         <button
                           onClick={() => handleDelete(w.id!)}
-                          className="text-red-600 hover:text-red-900 text-base sm:text-sm"
+                          className="text-red-600 hover:text-red-900 text-xl min-w-[44px] min-h-[44px] inline-flex items-center justify-center"
                           aria-label="Verwijderen"
                         >
                           🗑️

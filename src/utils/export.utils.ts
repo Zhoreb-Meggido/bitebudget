@@ -4,6 +4,8 @@
 
 import type { Entry } from '@/types';
 import { calculateTotals } from './calculations';
+import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
+import { DEFAULT_SETTINGS } from '@/types/database.types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -265,13 +267,13 @@ export function generatePDFReport(options: ExportOptions): jsPDF {
       const getMetricColor = (metric: string, value: number): [number, number, number] => {
         switch (metric) {
           case 'calories':
-            return value < 1900 ? [34, 197, 94] : value < 2100 ? [234, 179, 8] : [239, 68, 68]; // green/yellow/red
+            return value < DEFAULT_SETTINGS.caloriesRest ? [34, 197, 94] : value < NUTRITION_CONSTANTS.CALORIE_YELLOW_THRESHOLD ? [234, 179, 8] : [239, 68, 68]; // green/yellow/red
           case 'protein':
             return value >= 72 ? [34, 197, 94] : value >= 36 ? [234, 179, 8] : [239, 68, 68];
           case 'saturatedFat':
             return value < 20 ? [34, 197, 94] : value < 25 ? [234, 179, 8] : [239, 68, 68];
           case 'fiber':
-            return value >= 35 ? [34, 197, 94] : value >= 17.5 ? [234, 179, 8] : [239, 68, 68];
+            return value >= NUTRITION_CONSTANTS.FIBER_SUFFICIENT ? [34, 197, 94] : value >= NUTRITION_CONSTANTS.FIBER_MINIMUM ? [234, 179, 8] : [239, 68, 68];
           case 'sodium':
             return value < 2300 ? [34, 197, 94] : value < 2800 ? [234, 179, 8] : [239, 68, 68];
           default:

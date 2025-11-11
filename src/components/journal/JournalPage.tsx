@@ -347,13 +347,13 @@ export function JournalPage() {
                         {entry.calories} kcal • {entry.protein}g eiw • {entry.carbohydrates}g koolh • {entry.sugars}g suik • {entry.saturatedFat}g v.vet • {entry.fiber}g vez • {entry.sodium}mg natr
                       </div>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-1 flex-shrink-0">
                       <button
                         onClick={() => {
                           setEditingEntry(entry);
                           setShowAddMeal(true);
                         }}
-                        className="text-blue-600 hover:text-blue-800 text-lg"
+                        className="text-blue-600 hover:text-blue-800 text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
                         aria-label="Bewerk maaltijd"
                       >
                         ✏️
@@ -364,7 +364,7 @@ export function JournalPage() {
                             deleteEntry(entry.id!);
                           }
                         }}
-                        className="text-red-600 hover:text-red-800 text-lg"
+                        className="text-red-600 hover:text-red-800 text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
                         aria-label="Verwijder maaltijd"
                       >
                         🗑️
