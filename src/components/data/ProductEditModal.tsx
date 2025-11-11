@@ -144,6 +144,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 value={formData.calories}
                 onChange={(e) => setFormData(prev => ({ ...prev, calories: e.target.value }))}
@@ -157,6 +158,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 value={formData.protein}
                 onChange={(e) => setFormData(prev => ({ ...prev, protein: e.target.value }))}
@@ -174,6 +176,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 value={formData.carbohydrates}
                 onChange={(e) => setFormData(prev => ({ ...prev, carbohydrates: e.target.value }))}
@@ -186,6 +189,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 value={formData.sugars}
                 onChange={(e) => setFormData(prev => ({ ...prev, sugars: e.target.value }))}
@@ -202,6 +206,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 value={formData.fat}
                 onChange={(e) => setFormData(prev => ({ ...prev, fat: e.target.value }))}
@@ -215,6 +220,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 value={formData.saturatedFat}
                 onChange={(e) => setFormData(prev => ({ ...prev, saturatedFat: e.target.value }))}
@@ -231,6 +237,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="0.1"
                 value={formData.fiber}
                 onChange={(e) => setFormData(prev => ({ ...prev, fiber: e.target.value }))}
@@ -243,6 +250,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               </label>
               <input
                 type="number"
+                inputMode="decimal"
                 step="1"
                 value={formData.sodium}
                 onChange={(e) => setFormData(prev => ({ ...prev, sodium: e.target.value }))}

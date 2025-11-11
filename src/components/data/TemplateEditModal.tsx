@@ -285,6 +285,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                               </label>
                               <input
                                 type="number"
+                                inputMode="decimal"
                                 step="0.1"
                                 value={product.grams || ''}
                                 onChange={(e) => handleItemChange(index, 'grams', parseFloat(e.target.value) || 0)}

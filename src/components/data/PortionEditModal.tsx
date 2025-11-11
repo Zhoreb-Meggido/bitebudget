@@ -109,6 +109,7 @@ export function PortionEditModal({ isOpen, onClose, portion, productName, onSave
             </label>
             <input
               type="number"
+              inputMode="decimal"
               step="0.1"
               value={formData.grams}
               onChange={(e) => setFormData(prev => ({ ...prev, grams: e.target.value }))}
