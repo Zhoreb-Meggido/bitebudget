@@ -11,3 +11,4 @@ export { usePortions } from './usePortions';
 export { useTemplates } from './useTemplates';
 export { useActivities } from './useActivities';
 export { useDebounce } from './useDebounce';
+export { useSwipeTabs } from './useSwipeTabs';
