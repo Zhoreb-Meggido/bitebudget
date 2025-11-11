@@ -4,7 +4,7 @@
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.6.0:** Automatic OAuth Token Refresh - Geen handmatige popups meer!
+**🎉 Nieuw in v1.6.0:** Automatic OAuth Token Refresh + HRV Tracking - Geen handmatige popups meer & monitor je herstel!
 
 ---
 
@@ -354,6 +354,24 @@ npm run build
 - ✅ **3-Month Tokens** - Garmin tokens valid for 90 days (vs 1 hour for Google)
 - ✅ **Future-Ready** - Infrastructure prepared for automatic Garmin data sync
 
+#### **HRV Tracking & CSV Import Improvements** 💓
+- ✅ **HRV Metrics** - Track Heart Rate Variability for recovery monitoring
+  - Overnight HRV measurement (ms)
+  - 7-day HRV average (ms)
+  - HRV Status CSV import from Garmin Connect
+- ✅ **Enhanced CSV Import** - Better support for Garmin export formats
+  - 2-column Resting Heart Rate CSV support (date + resting HR)
+  - Tab-separated format detection for copy-paste from Garmin website
+  - "bpm" and "ms" suffix stripping for cleaner data
+  - Month abbreviation date parsing ("Nov 11" → 2025-11-11)
+  - Automatic year inference based on current date
+- ✅ **Trends View Updates** - HRV metrics replace Distance
+  - Distance metric removed (no CSV available from Garmin)
+  - HRV Overnight card and chart added
+  - HRV 7-day average visualization
+  - Shared Y-axis scale for HRV metrics
+  - Average HRV stats card on dashboard
+
 #### **Backend Integration** 🔧
 - ✅ **Supabase Client** - @supabase/supabase-js@2.81.0 integration
 - ✅ **Database Migration** - oauth_tokens table with RLS security
@@ -392,9 +410,10 @@ To enable automatic refresh:
 
 #### **Garmin Connect Integration** 📊
 - ✅ **CSV Import** - Import daily activities from Garmin Connect CSV exports
-- ✅ **Activity Tracking** - Track steps, distance, calories, and active minutes
-- ✅ **Data Validation** - Smart parsing with error handling
+- ✅ **Activity Tracking** - Track steps, calories, active minutes, resting heart rate, stress, sleep, Body Battery, HRV (v1.6+)
+- ✅ **Data Validation** - Smart parsing with error handling and format detection
 - ✅ **Duplicate Detection** - Prevents importing same data twice
+- ✅ **Copy-Paste Support** - Tab-separated format for data not available as CSV (v1.6+)
 - ✅ **Export Support** - Activities included in data export/import
 
 #### **Analyze Page Improvements** 📈
@@ -688,6 +707,33 @@ public/
 }
 ```
 
+**DailyActivity** (Fitness Tracking - v1.5+)
+```typescript
+{
+  id: string;
+  date: string;              // YYYY-MM-DD
+  totalCalories: number;     // Totaal verbruik (kcal)
+  activeCalories: number;    // Actieve calorieën (kcal)
+  restingCalories: number;   // BMR/rustcalorieën (kcal)
+  steps: number;             // Aantal stappen
+  intensityMinutes?: number; // Actieve minuten
+  distanceMeters?: number;   // Totale afstand in meters
+  floorsClimbed?: number;    // Verdiepingen
+  heartRateResting?: number; // Rusthartslag (bpm)
+  heartRateMax?: number;     // Max hartslag (bpm)
+  stressLevel?: number;      // Stress (0-100)
+  bodyBattery?: number;      // Body Battery (0-100, Garmin-specific)
+  sleepSeconds?: number;     // Slaapduur in seconden
+  hrvOvernight?: number;     // v1.6+ HRV Overnight meting (ms)
+  hrv7DayAvg?: number;       // v1.6+ HRV 7-day average (ms)
+  activities?: FitnessActivity[]; // Specifieke workouts
+  created_at: string;
+  updated_at: string;
+  deleted?: boolean;         // Soft delete flag
+  deleted_at?: string;       // Deletion timestamp
+}
+```
+
 **Settings** (Gebruikersinstellingen)
 ```typescript
 {
@@ -972,6 +1018,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** January 10, 2025
-**Status:** v1.6.0 - Automatic OAuth Token Refresh
+**Last Updated:** January 11, 2025
+**Status:** v1.6.0 - Automatic OAuth Token Refresh + HRV Tracking
 **Next:** Automatic Garmin data sync & Recipe builder
