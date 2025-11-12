@@ -10,6 +10,7 @@ import { activitiesService } from '@/services/activities.service';
 import { downloadTextFile } from '@/utils/download.utils';
 import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity } from '@/types';
 import { GarminImportSection } from './GarminImportSection';
+import { SQLiteSchemaExplorer } from './SQLiteSchemaExplorer';
 
 interface BackupData {
   version: string;
@@ -304,6 +305,9 @@ export function ImportExportTab() {
 
       {/* Garmin CSV Import */}
       <GarminImportSection />
+
+      {/* Health Connect SQLite Explorer */}
+      <SQLiteSchemaExplorer />
 
       {/* Status Messages */}
       {(exportStatus || importStatus) && (
