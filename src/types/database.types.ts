@@ -210,10 +210,8 @@ export type GarminActivity = FitnessActivity;
 // ============================================
 
 export interface UserSettings {
-  caloriesRest: number;
-  caloriesSport: number;
-  proteinRest: number;
-  proteinSport: number;
+  calories: number;
+  protein: number;
   carbohydratesMax: number;
   sugarsMax: number;
   fatMax: number;
@@ -225,10 +223,8 @@ export interface UserSettings {
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
-  caloriesRest: 1900,
-  caloriesSport: 2200,
-  proteinRest: 110,
-  proteinSport: 120,
+  calories: 2200,
+  protein: 120,
   carbohydratesMax: 250,
   sugarsMax: 50,
   fatMax: 70,
@@ -255,12 +251,6 @@ export const SETTINGS_KEYS = {
 } as const;
 
 // ============================================
-// DAY TYPES
-// ============================================
-
-export type DayType = 'rust' | 'sport';
-
-// ============================================
 // BACKUP/EXPORT
 // ============================================
 
@@ -282,7 +272,6 @@ export interface BackupData {
 
 export interface DailyData {
   date: string;
-  dayType: DayType;
   calories: number;
   protein: number;
   carbohydrates: number;

@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useEntries, useProducts, useSettings, useTemplates } from '@/hooks';
 import { getTodayDate, calculateTotals, calculateProductNutrition } from '@/utils';
-import type { DayType, MealTemplate } from '@/types';
+import type { MealTemplate } from '@/types';
 import { AddMealModal } from './AddMealModal';
 
 export function JournalPage() {
@@ -15,7 +15,6 @@ export function JournalPage() {
   const { recentTemplates, trackUsage } = useTemplates();
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
-  const [dayType, setDayType] = useState<DayType>('rust');
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
   const [quickAddTemplate, setQuickAddTemplate] = useState<MealTemplate | null>(null);
@@ -103,10 +102,11 @@ export function JournalPage() {
     };
   }, [selectedDate, entries]);
 
-  // Goals based on day type
-  const goals = dayType === 'sport'
-    ? { calories: settings.caloriesSport, protein: settings.proteinSport }
-    : { calories: settings.caloriesRest, protein: settings.proteinRest };
+  // Daily goals
+  const goals = {
+    calories: settings.calories,
+    protein: settings.protein,
+  };
 
   const limits = {
     carbohydrates: settings.carbohydratesMax,
@@ -144,27 +144,15 @@ export function JournalPage() {
       <div className="max-w-7xl mx-auto">
         {/* Dashboard Card */}
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
-          {/* Date & Day Type */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <div className="w-full sm:w-auto">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Datum</label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div className="flex items-end">
-              <button
-                onClick={() => setDayType(dayType === 'rust' ? 'sport' : 'rust')}
-                className={`w-full sm:w-auto px-4 py-2 rounded-lg font-medium transition whitespace-nowrap ${
-                  dayType === 'sport' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
-                }`}
-              >
-                {dayType === 'sport' ? '💪 Sportdag' : '😴 Rustdag'}
-              </button>
-            </div>
+          {/* Date Selector */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           {/* Compact 2x4 Grid - All Metrics (also on mobile) */}
