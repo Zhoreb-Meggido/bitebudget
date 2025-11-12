@@ -25,6 +25,7 @@ class GoogleDriveService {
 
   private accessToken: string | null = null;
   private refreshInProgress: boolean = false;
+  private refreshPromise: Promise<void> | null = null; // Shared promise for concurrent refresh requests
   private automaticRefreshInterval: number | null = null;
   private initializationPromise: Promise<void> | null = null;
 
@@ -269,55 +270,65 @@ class GoogleDriveService {
    * Automatically refresh token via Supabase Edge Function
    */
   private async automaticRefresh(): Promise<void> {
-    if (this.refreshInProgress) {
-      console.log('🔄 Refresh already in progress...');
+    // If refresh is already in progress, wait for it to complete
+    if (this.refreshInProgress && this.refreshPromise) {
+      console.log('🔄 Refresh already in progress, waiting for it to complete...');
+      await this.refreshPromise;
       return;
     }
 
+    // Start new refresh
     this.refreshInProgress = true;
 
-    try {
-      console.log('🔄 Automatically refreshing Google token...');
+    // Create a new promise that all concurrent callers will wait for
+    this.refreshPromise = (async () => {
+      try {
+        console.log('🔄 Automatically refreshing Google token...');
 
-      const { access_token, expires_at } = await supabaseService.refreshGoogleToken();
+        const { access_token, expires_at } = await supabaseService.refreshGoogleToken();
 
-      this.accessToken = access_token;
-      localStorage.setItem('google_access_token', access_token);
-      localStorage.setItem('google_token_expires_at', new Date(expires_at).getTime().toString());
+        this.accessToken = access_token;
+        localStorage.setItem('google_access_token', access_token);
+        localStorage.setItem('google_token_expires_at', new Date(expires_at).getTime().toString());
 
-      console.log('✅ Token automatically refreshed!');
+        console.log('✅ Token automatically refreshed!');
 
-      // Dispatch event to notify UI
-      window.dispatchEvent(new CustomEvent('google-token-refreshed'));
+        // Dispatch event to notify UI
+        window.dispatchEvent(new CustomEvent('google-token-refreshed'));
 
-    } catch (error: any) {
-      console.error('❌ Automatic refresh failed:', error);
+      } catch (error: any) {
+        console.error('❌ Automatic refresh failed:', error);
 
-      // Check if refresh token is expired/revoked (401/404 from Supabase)
-      const errorMessage = error?.message || '';
-      if (errorMessage.includes('expired') || errorMessage.includes('revoked') || errorMessage.includes('not found')) {
-        console.warn('⚠️ Refresh token expired or revoked - user needs to re-authenticate');
+        // Check if refresh token is expired/revoked (401/404 from Supabase)
+        const errorMessage = error?.message || '';
+        if (errorMessage.includes('expired') || errorMessage.includes('revoked') || errorMessage.includes('not found')) {
+          console.warn('⚠️ Refresh token expired or revoked - user needs to re-authenticate');
 
-        // Clear OAuth state to force re-login
-        this.accessToken = null;
-        localStorage.removeItem('google_access_token');
-        localStorage.removeItem('google_token_expires_at');
-        localStorage.removeItem('google_oauth_method');
+          // Clear OAuth state to force re-login
+          this.accessToken = null;
+          localStorage.removeItem('google_access_token');
+          localStorage.removeItem('google_token_expires_at');
+          localStorage.removeItem('google_oauth_method');
 
-        // Stop automatic refresh timer
-        if (this.automaticRefreshInterval) {
-          clearInterval(this.automaticRefreshInterval);
-          this.automaticRefreshInterval = null;
+          // Stop automatic refresh timer
+          if (this.automaticRefreshInterval) {
+            clearInterval(this.automaticRefreshInterval);
+            this.automaticRefreshInterval = null;
+          }
         }
+
+        // Dispatch expiry warning to show modal
+        window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
+
+        throw error;
+      } finally {
+        this.refreshInProgress = false;
+        this.refreshPromise = null;
       }
+    })();
 
-      // Dispatch expiry warning to show modal
-      window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
-
-      throw error;
-    } finally {
-      this.refreshInProgress = false;
-    }
+    // Wait for the refresh to complete
+    await this.refreshPromise;
   }
 
   /**
@@ -472,15 +483,28 @@ class GoogleDriveService {
       await this.initializationPromise;
     }
 
+    // If refresh is already in progress, wait for it to complete
+    if (this.refreshInProgress && this.refreshPromise) {
+      console.log('⏳ Waiting for ongoing token refresh to complete...');
+      try {
+        await this.refreshPromise;
+        return true; // Refresh succeeded
+      } catch (error) {
+        console.error('⚠️ Ongoing refresh failed:', error);
+        return false;
+      }
+    }
+
     const token = this.getAccessToken();
     if (!token) {
       console.log('⚠️ No token available, user needs to sign in');
       return false;
     }
 
-    // Check if token is expired (even after initialization)
-    if (this.isTokenExpired(0)) {
-      console.log('⚠️ Token expired (even after initialization)');
+    // Check if token is expired or will expire very soon (within 2 minutes)
+    // Using a 2-minute buffer to prevent race conditions where token expires during API call
+    if (this.isTokenExpired(2)) {
+      console.log('⚠️ Token expired or expiring soon, attempting refresh...');
 
       // Try automatic refresh if available
       const method = localStorage.getItem('google_oauth_method');
@@ -581,9 +605,12 @@ class GoogleDriveService {
    * Find or create BiteBudget folder
    */
   private async findOrCreateFolder(): Promise<string> {
+    // Ensure token is valid before making API call
     if (!await this.ensureValidToken()) {
       throw new Error('Not authenticated');
     }
+
+    // Get fresh token after validation
     const token = this.getAccessToken();
     if (!token) throw new Error('Not authenticated');
 
@@ -595,17 +622,28 @@ class GoogleDriveService {
       }
     );
 
+    if (!searchResponse.ok && searchResponse.status === 401) {
+      throw new Error('Authentication failed - token may have expired during request');
+    }
+
     const searchData = await searchResponse.json();
 
     if (searchData.files && searchData.files.length > 0) {
       return searchData.files[0].id;
     }
 
+    // Ensure token is still valid before creating folder (in case search took long)
+    if (!await this.ensureValidToken()) {
+      throw new Error('Not authenticated');
+    }
+    const freshToken = this.getAccessToken();
+    if (!freshToken) throw new Error('Not authenticated');
+
     // Create new folder
     const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${freshToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -613,6 +651,10 @@ class GoogleDriveService {
         mimeType: 'application/vnd.google-apps.folder',
       }),
     });
+
+    if (!createResponse.ok && createResponse.status === 401) {
+      throw new Error('Authentication failed - token may have expired during request');
+    }
 
     const createData = await createResponse.json();
     return createData.id;
@@ -622,9 +664,12 @@ class GoogleDriveService {
    * Find existing backup file
    */
   private async findFile(folderId: string): Promise<string | null> {
+    // Ensure token is valid before making API call
     if (!await this.ensureValidToken()) {
       throw new Error('Not authenticated');
     }
+
+    // Get fresh token after validation
     const token = this.getAccessToken();
     if (!token) throw new Error('Not authenticated');
 
@@ -634,6 +679,10 @@ class GoogleDriveService {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
+
+    if (!response.ok && response.status === 401) {
+      throw new Error('Authentication failed - token may have expired during request');
+    }
 
     const data = await response.json();
 
@@ -648,14 +697,23 @@ class GoogleDriveService {
    * Upload encrypted data to Google Drive
    */
   async uploadData(encryptedData: string): Promise<void> {
+    // Ensure token is valid at the start
     if (!await this.ensureValidToken()) {
       throw new Error('Not authenticated');
     }
-    const token = this.getAccessToken();
-    if (!token) throw new Error('Not authenticated');
 
+    // Find/create folder (has its own token validation)
     const folderId = await this.findOrCreateFolder();
     const existingFileId = await this.findFile(folderId);
+
+    // Ensure token is still valid before upload (in case folder/file operations took long)
+    if (!await this.ensureValidToken()) {
+      throw new Error('Not authenticated');
+    }
+
+    // Get fresh token right before upload
+    const token = this.getAccessToken();
+    if (!token) throw new Error('Not authenticated');
 
     const metadata = {
       name: this.FILE_NAME,
@@ -680,6 +738,9 @@ class GoogleDriveService {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication failed - token may have expired during request');
+      }
       throw new Error(`Upload failed: ${response.statusText}`);
     }
   }
@@ -688,18 +749,27 @@ class GoogleDriveService {
    * Download encrypted data from Google Drive
    */
   async downloadData(): Promise<string | null> {
+    // Ensure token is valid at the start
     if (!await this.ensureValidToken()) {
       throw new Error('Not authenticated');
     }
-    const token = this.getAccessToken();
-    if (!token) throw new Error('Not authenticated');
 
+    // Find folder and file (have their own token validation)
     const folderId = await this.findOrCreateFolder();
     const fileId = await this.findFile(folderId);
 
     if (!fileId) {
       return null; // No backup found
     }
+
+    // Ensure token is still valid before download
+    if (!await this.ensureValidToken()) {
+      throw new Error('Not authenticated');
+    }
+
+    // Get fresh token right before download
+    const token = this.getAccessToken();
+    if (!token) throw new Error('Not authenticated');
 
     const response = await fetch(
       `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
@@ -709,6 +779,9 @@ class GoogleDriveService {
     );
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication failed - token may have expired during request');
+      }
       throw new Error(`Download failed: ${response.statusText}`);
     }
 
@@ -719,16 +792,25 @@ class GoogleDriveService {
    * Get last sync info
    */
   async getLastSyncInfo(): Promise<{ date: Date; size: number } | null> {
+    // Ensure token is valid at the start
     if (!await this.ensureValidToken()) {
       throw new Error('Not authenticated');
     }
-    const token = this.getAccessToken();
-    if (!token) throw new Error('Not authenticated');
 
+    // Find folder and file (have their own token validation)
     const folderId = await this.findOrCreateFolder();
     const fileId = await this.findFile(folderId);
 
     if (!fileId) return null;
+
+    // Ensure token is still valid before fetching metadata
+    if (!await this.ensureValidToken()) {
+      throw new Error('Not authenticated');
+    }
+
+    // Get fresh token right before API call
+    const token = this.getAccessToken();
+    if (!token) throw new Error('Not authenticated');
 
     const response = await fetch(
       `https://www.googleapis.com/drive/v3/files/${fileId}?fields=modifiedTime,size`,
@@ -736,6 +818,13 @@ class GoogleDriveService {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Authentication failed - token may have expired during request');
+      }
+      throw new Error(`Failed to get sync info: ${response.statusText}`);
+    }
 
     const data = await response.json();
 
