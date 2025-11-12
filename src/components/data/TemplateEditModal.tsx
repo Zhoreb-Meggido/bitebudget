@@ -20,6 +20,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
   });
   const [templateProducts, setTemplateProducts] = useState<ProductInEntry[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [productSearchQueries, setProductSearchQueries] = useState<Record<number, string>>({});
 
   // Load template data when editing
   useEffect(() => {
@@ -43,6 +44,9 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
 
   const handleAddItem = () => {
     setTemplateProducts([...templateProducts, { name: '', grams: 0, portionName: undefined }]);
+    // Clear search query for new item
+    const newIndex = templateProducts.length;
+    setProductSearchQueries(prev => ({ ...prev, [newIndex]: '' }));
   };
 
   const handleRemoveItem = (index: number) => {
@@ -130,6 +134,23 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Helper function: Get filtered and sorted products for a specific item index
+  const getFilteredProducts = (index: number) => {
+    const searchQuery = (productSearchQueries[index] || '').toLowerCase().trim();
+
+    // Filter products based on search query (match name or brand)
+    let filtered = allProducts;
+    if (searchQuery) {
+      filtered = allProducts.filter(p =>
+        p.name.toLowerCase().includes(searchQuery) ||
+        (p.brand && p.brand.toLowerCase().includes(searchQuery))
+      );
+    }
+
+    // Sort alphabetically by name
+    return [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
   };
 
   if (!isOpen) return null;
@@ -226,16 +247,26 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                 {templateProducts.map((product, index) => {
                   const productPortions = allPortions.filter(p => p.productName === product.name);
                   const hasPortions = productPortions.length > 0;
+                  const filteredProducts = getFilteredProducts(index);
 
                   return (
                     <div key={index} className="bg-gray-50 border border-gray-300 rounded-lg p-3">
                       <div className="flex items-start gap-2">
                         <div className="flex-1 space-y-2">
-                          {/* Product Select */}
+                          {/* Product Select with Search */}
                           <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">
                               Product *
                             </label>
+                            {/* Search input */}
+                            <input
+                              type="text"
+                              placeholder="Zoek op naam of merk..."
+                              value={productSearchQueries[index] || ''}
+                              onChange={(e) => setProductSearchQueries(prev => ({ ...prev, [index]: e.target.value }))}
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 mb-1"
+                            />
+                            {/* Product dropdown */}
                             <select
                               value={product.name}
                               onChange={(e) => handleProductSelect(index, e.target.value)}
@@ -243,12 +274,20 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                               required
                             >
                               <option value="">-- Selecteer product --</option>
-                              {allProducts.map(p => (
+                              {filteredProducts.map(p => (
                                 <option key={p.id} value={p.name}>
-                                  {p.favorite && '⭐ '}{p.name}
+                                  {p.favorite && '⭐ '}
+                                  {p.name}
+                                  {p.brand && ` (${p.brand})`}
                                 </option>
                               ))}
                             </select>
+                            {/* Show result count if filtering */}
+                            {productSearchQueries[index] && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                {filteredProducts.length} product{filteredProducts.length !== 1 ? 'en' : ''} gevonden
+                              </div>
+                            )}
                           </div>
 
                           {/* Portion Select (if available) & Grams */}
