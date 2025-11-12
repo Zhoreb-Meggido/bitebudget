@@ -229,10 +229,10 @@ function TemplateCard({ template, onEdit, onToggleFavorite, onDelete }: Template
       )}
 
       {/* Usage Stats */}
-      {template.usageCount !== undefined && template.usageCount > 0 && (
+      {template.useCount !== undefined && template.useCount > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-300">
           <div className="text-xs text-gray-500">
-            Gebruikt: {template.usageCount}x
+            Gebruikt: {template.useCount}x
             {template.lastUsed && (
               <span className="ml-2">
                 • Laatst: {new Date(template.lastUsed).toLocaleDateString('nl-NL', {

@@ -8,6 +8,26 @@ interface Props {
   onSave: (data: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
 }
 
+/**
+ * Parse a number string that might use comma or dot as decimal separator
+ * Examples: "1,2" -> 1.2, "1.2" -> 1.2, "1" -> 1
+ */
+function parseDecimal(value: string): number {
+  if (!value || value.trim() === '') return 0;
+  // Replace comma with dot for parseFloat compatibility
+  return parseFloat(value.replace(',', '.')) || 0;
+}
+
+/**
+ * Convert a number to string with dot as decimal separator (not comma)
+ * This ensures the HTML input receives a valid format regardless of locale
+ */
+function toDecimalString(value: number | undefined): string {
+  if (value === undefined || value === null) return '';
+  // Use toFixed to ensure proper decimal format, then remove trailing zeros
+  return value.toString().replace(',', '.');
+}
+
 export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
   const [formData, setFormData] = useState({
     name: '',
@@ -30,14 +50,14 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
       setFormData({
         name: product.name,
         brand: product.brand || '',
-        calories: product.calories.toString(),
-        protein: product.protein.toString(),
-        carbohydrates: product.carbohydrates?.toString() || '',
-        sugars: product.sugars?.toString() || '',
-        fat: product.fat.toString(),
-        saturatedFat: product.saturatedFat?.toString() || '',
-        fiber: product.fiber?.toString() || '',
-        sodium: product.sodium?.toString() || '',
+        calories: toDecimalString(product.calories),
+        protein: toDecimalString(product.protein),
+        carbohydrates: toDecimalString(product.carbohydrates),
+        sugars: toDecimalString(product.sugars),
+        fat: toDecimalString(product.fat),
+        saturatedFat: toDecimalString(product.saturatedFat),
+        fiber: toDecimalString(product.fiber),
+        sodium: toDecimalString(product.sodium),
         favorite: product.favorite || false,
       });
     } else {
@@ -71,14 +91,14 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
       await onSave({
         name: formData.name.trim(),
         brand: formData.brand.trim() || undefined,
-        calories: parseFloat(formData.calories) || 0,
-        protein: parseFloat(formData.protein) || 0,
-        carbohydrates: parseFloat(formData.carbohydrates) || undefined,
-        sugars: parseFloat(formData.sugars) || undefined,
-        fat: parseFloat(formData.fat) || 0,
-        saturatedFat: parseFloat(formData.saturatedFat) || undefined,
-        fiber: parseFloat(formData.fiber) || undefined,
-        sodium: parseInt(formData.sodium) || undefined,
+        calories: parseDecimal(formData.calories),
+        protein: parseDecimal(formData.protein),
+        carbohydrates: formData.carbohydrates ? parseDecimal(formData.carbohydrates) : undefined,
+        sugars: formData.sugars ? parseDecimal(formData.sugars) : undefined,
+        fat: parseDecimal(formData.fat),
+        saturatedFat: formData.saturatedFat ? parseDecimal(formData.saturatedFat) : undefined,
+        fiber: formData.fiber ? parseDecimal(formData.fiber) : undefined,
+        sodium: formData.sodium ? parseInt(formData.sodium.replace(',', '.')) : undefined,
         favorite: formData.favorite,
       });
       onClose();

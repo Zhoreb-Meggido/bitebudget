@@ -7,6 +7,16 @@ import type { Product, Entry, MealTemplate, MealCategory, ProductPortion } from 
 import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from '@/utils';
 import { useTemplates, usePortions, useDebounce } from '@/hooks';
 
+/**
+ * Parse a number string that might use comma or dot as decimal separator
+ * Examples: "1,2" -> 1.2, "1.2" -> 1.2, "1" -> 1
+ */
+function parseDecimal(value: string): number {
+  if (!value || value.trim() === '') return 0;
+  // Replace comma with dot for parseFloat compatibility
+  return parseFloat(value.replace(',', '.')) || 0;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -224,14 +234,14 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       date: selectedDate,
       time: manualMeal.time || getCurrentTime(),
       name: manualMeal.name,
-      calories: parseInt(manualMeal.calories) || 0,
-      protein: parseFloat(manualMeal.protein) || 0,
-      carbohydrates: parseFloat(manualMeal.carbohydrates) || 0,
-      sugars: parseFloat(manualMeal.sugars) || 0,
-      fat: parseFloat(manualMeal.fat) || 0,
-      saturatedFat: parseFloat(manualMeal.saturatedFat) || 0,
-      fiber: parseFloat(manualMeal.fiber) || 0,
-      sodium: parseInt(manualMeal.sodium) || 0,
+      calories: parseInt(manualMeal.calories.replace(',', '.')) || 0,
+      protein: parseDecimal(manualMeal.protein),
+      carbohydrates: parseDecimal(manualMeal.carbohydrates),
+      sugars: parseDecimal(manualMeal.sugars),
+      fat: parseDecimal(manualMeal.fat),
+      saturatedFat: parseDecimal(manualMeal.saturatedFat),
+      fiber: parseDecimal(manualMeal.fiber),
+      sodium: parseInt(manualMeal.sodium.replace(',', '.')) || 0,
     };
 
     if (isEditMode && editEntry && onUpdateMeal) {
@@ -249,14 +259,14 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         date: selectedDate,
         time: data.time || getCurrentTime(),
         name: data.name || 'Geïmporteerde maaltijd',
-        calories: parseInt(data.calories) || 0,
-        protein: parseFloat(data.protein) || 0,
-        carbohydrates: parseFloat(data.carbohydrates) || 0,
-        sugars: parseFloat(data.sugars) || 0,
-        fat: parseFloat(data.fat) || 0,
-        saturatedFat: parseFloat(data.saturatedFat) || 0,
-        fiber: parseFloat(data.fiber) || 0,
-        sodium: parseInt(data.sodium) || 0,
+        calories: parseInt(String(data.calories).replace(',', '.')) || 0,
+        protein: parseDecimal(String(data.protein)),
+        carbohydrates: parseDecimal(String(data.carbohydrates)),
+        sugars: parseDecimal(String(data.sugars)),
+        fat: parseDecimal(String(data.fat)),
+        saturatedFat: parseDecimal(String(data.saturatedFat)),
+        fiber: parseDecimal(String(data.fiber)),
+        sodium: parseInt(String(data.sodium).replace(',', '.')) || 0,
       });
       resetForm();
     } catch (e) {
