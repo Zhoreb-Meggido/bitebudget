@@ -26,19 +26,31 @@ class GoogleDriveService {
   private accessToken: string | null = null;
   private refreshInProgress: boolean = false;
   private automaticRefreshInterval: number | null = null;
+  private initializationPromise: Promise<void> | null = null;
 
   constructor() {
     // Initialize Supabase
     supabaseService.initialize();
 
+    // Start initialization process (with token refresh if needed)
+    this.initializationPromise = this.initialize();
+  }
+
+  /**
+   * Initialize service and handle token refresh on startup
+   */
+  private async initialize(): Promise<void> {
     // Start automatic refresh timer if enabled and token exists
     if (this.isSignedIn()) {
       this.startAutomaticRefreshTimer();
     } else {
       // Token expired but we might be able to refresh automatically
       // Try silent refresh on startup if using authorization code flow
-      this.tryAutoRefreshOnStartup();
+      await this.tryAutoRefreshOnStartup();
     }
+
+    // Initialization complete
+    this.initializationPromise = null;
   }
 
   /**
@@ -436,6 +448,12 @@ class GoogleDriveService {
    * Ensure we have a valid token (with automatic refresh if available)
    */
   async ensureValidToken(): Promise<boolean> {
+    // Wait for initialization to complete (includes startup token refresh)
+    if (this.initializationPromise) {
+      console.log('⏳ Waiting for service initialization to complete...');
+      await this.initializationPromise;
+    }
+
     const token = this.getAccessToken();
     if (!token) {
       console.log('⚠️ No token available, user needs to sign in');
