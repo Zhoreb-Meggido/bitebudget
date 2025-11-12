@@ -290,10 +290,28 @@ class GoogleDriveService {
       // Dispatch event to notify UI
       window.dispatchEvent(new CustomEvent('google-token-refreshed'));
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Automatic refresh failed:', error);
 
-      // If automatic refresh fails, dispatch expiry warning
+      // Check if refresh token is expired/revoked (401/404 from Supabase)
+      const errorMessage = error?.message || '';
+      if (errorMessage.includes('expired') || errorMessage.includes('revoked') || errorMessage.includes('not found')) {
+        console.warn('⚠️ Refresh token expired or revoked - user needs to re-authenticate');
+
+        // Clear OAuth state to force re-login
+        this.accessToken = null;
+        localStorage.removeItem('google_access_token');
+        localStorage.removeItem('google_token_expires_at');
+        localStorage.removeItem('google_oauth_method');
+
+        // Stop automatic refresh timer
+        if (this.automaticRefreshInterval) {
+          clearInterval(this.automaticRefreshInterval);
+          this.automaticRefreshInterval = null;
+        }
+      }
+
+      // Dispatch expiry warning to show modal
       window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
 
       throw error;
@@ -460,9 +478,9 @@ class GoogleDriveService {
       return false;
     }
 
-    // Check if token is expired
+    // Check if token is expired (even after initialization)
     if (this.isTokenExpired(0)) {
-      console.log('⚠️ Token expired');
+      console.log('⚠️ Token expired (even after initialization)');
 
       // Try automatic refresh if available
       const method = localStorage.getItem('google_oauth_method');

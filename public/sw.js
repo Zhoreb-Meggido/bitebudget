@@ -3,8 +3,8 @@
  * Provides offline functionality and caching
  */
 
-const CACHE_NAME = 'bitebudget-v1.6.2';
-const RUNTIME_CACHE = 'bitebudget-runtime-v1.6.2';
+const CACHE_NAME = 'bitebudget-v1.6.3';
+const RUNTIME_CACHE = 'bitebudget-runtime-v1.6.3';
 
 // Files to cache immediately on install
 // Note: Use relative paths from service worker location
@@ -15,7 +15,7 @@ const PRECACHE_URLS = [
 
 // Install event - precache critical assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker v1.6.2...');
+  console.log('[SW] Installing service worker v1.6.3...');
 
   event.waitUntil(
     caches.open(CACHE_NAME)
