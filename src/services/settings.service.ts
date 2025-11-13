@@ -23,12 +23,13 @@ class SettingsService {
         if (loadedSettings.caloriesRest !== undefined || loadedSettings.caloriesSport !== undefined) {
           console.log('🔄 Migrating old rust/sport day settings to new format...');
 
-          // Use sport day values (more realistic for active users)
+          // Use new field if it exists, otherwise use sport day values (more realistic for active users)
           const migratedSettings: UserSettings = {
             ...DEFAULT_SETTINGS,
             ...loadedSettings,
-            calories: loadedSettings.caloriesSport || loadedSettings.caloriesRest || DEFAULT_SETTINGS.calories,
-            protein: loadedSettings.proteinSport || loadedSettings.proteinRest || DEFAULT_SETTINGS.protein,
+            // Only migrate if new field doesn't exist yet
+            calories: loadedSettings.calories ?? (loadedSettings.caloriesSport || loadedSettings.caloriesRest || DEFAULT_SETTINGS.calories),
+            protein: loadedSettings.protein ?? (loadedSettings.proteinSport || loadedSettings.proteinRest || DEFAULT_SETTINGS.protein),
           };
 
           // Remove old fields
