@@ -481,7 +481,24 @@ class SyncService {
     if (cloudData.settings) {
       // Settings don't have timestamps in current implementation, so we just update
       // You could add a timestamp field to settings for proper conflict resolution
-      await settingsService.saveSettings(cloudData.settings);
+
+      // Migrate old rust/sport day settings if they exist in cloud data
+      const settingsToSave = cloudData.settings as any;
+      if (settingsToSave.caloriesRest !== undefined || settingsToSave.caloriesSport !== undefined) {
+        console.log('🔄 Migrating old rust/sport day settings from cloud data...');
+
+        // Use sport day values (more realistic for active users)
+        settingsToSave.calories = settingsToSave.caloriesSport || settingsToSave.caloriesRest || settingsToSave.calories;
+        settingsToSave.protein = settingsToSave.proteinSport || settingsToSave.proteinRest || settingsToSave.protein;
+
+        // Remove old fields
+        delete settingsToSave.caloriesRest;
+        delete settingsToSave.caloriesSport;
+        delete settingsToSave.proteinRest;
+        delete settingsToSave.proteinSport;
+      }
+
+      await settingsService.saveSettings(settingsToSave);
     }
 
     // Merge product portions - add cloud portions that don't exist locally or are newer
