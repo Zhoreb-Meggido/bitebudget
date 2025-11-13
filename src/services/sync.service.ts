@@ -12,6 +12,7 @@ import { portionsService } from './portions.service';
 import { templatesService } from './templates.service';
 import { activitiesService } from './activities.service';
 import { db } from './database.service';
+import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
 import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity } from '@/types';
 
 export interface SyncData {
@@ -194,7 +195,7 @@ class SyncService {
         e => e.deleted && e.deleted_at && e.deleted_at < cutoffDate
       );
       for (const entry of oldDeletedEntries) {
-        if (entry.id) {
+        if (entry.id && typeof entry.id === 'number') {
           await db.entries.delete(entry.id);
         }
       }
@@ -208,7 +209,7 @@ class SyncService {
         p => p.deleted && p.deleted_at && p.deleted_at < cutoffDate
       );
       for (const product of oldDeletedProducts) {
-        if (product.id) {
+        if (product.id && typeof product.id === 'number') {
           await db.products.delete(product.id);
         }
       }
@@ -222,7 +223,7 @@ class SyncService {
         w => w.deleted && w.deleted_at && w.deleted_at < cutoffDate
       );
       for (const weight of oldDeletedWeights) {
-        if (weight.id) {
+        if (weight.id && typeof weight.id === 'number') {
           await db.weights.delete(weight.id);
         }
       }
@@ -236,7 +237,7 @@ class SyncService {
         p => p.deleted && p.deleted_at && p.deleted_at < cutoffDate
       );
       for (const portion of oldDeletedPortions) {
-        if (portion.id) {
+        if (portion.id && typeof portion.id === 'number') {
           await db.productPortions.delete(portion.id);
         }
       }
@@ -250,7 +251,7 @@ class SyncService {
         t => t.deleted && t.deleted_at && t.deleted_at < cutoffDate
       );
       for (const template of oldDeletedTemplates) {
-        if (template.id) {
+        if (template.id && typeof template.id === 'number') {
           await db.mealTemplates.delete(template.id);
         }
       }
@@ -292,7 +293,7 @@ class SyncService {
     });
 
     return {
-      version: '1.5', // Updated version for Google Fit integration
+      version: BACKUP_SCHEMA_VERSION.CURRENT,
       timestamp: new Date().toISOString(),
       entries,
       products,
@@ -385,8 +386,10 @@ class SyncService {
         console.log(`🔄 Updating entry (cloud is newer): ${key}`);
         // Use db.entries.update directly to preserve cloud timestamp (don't create new one)
         const { id, ...cloudData } = cloudEntry;
-        await db.entries.update(localEntry.id!, cloudData);
-        entriesUpdated++;
+        if (typeof localEntry.id === 'number') {
+          await db.entries.update(localEntry.id, cloudData);
+          entriesUpdated++;
+        }
       } else {
         entriesSkipped++;
       }
@@ -424,8 +427,10 @@ class SyncService {
         // Cloud product is newer - propagate all changes including deletion
         // Use db.products.update directly to preserve cloud timestamp (don't create new one)
         const { id, ...cloudData } = cloudProduct;
-        await db.products.update(localProduct.id!, cloudData);
-        productsUpdated++;
+        if (typeof localProduct.id === 'number') {
+          await db.products.update(localProduct.id, cloudData);
+          productsUpdated++;
+        }
       } else {
         productsSkipped++;
       }
@@ -474,8 +479,6 @@ class SyncService {
 
     // Merge settings - always take the newest timestamp
     if (cloudData.settings) {
-      const localSettings = await settingsService.loadSettings();
-
       // Settings don't have timestamps in current implementation, so we just update
       // You could add a timestamp field to settings for proper conflict resolution
       await settingsService.saveSettings(cloudData.settings);
@@ -524,8 +527,10 @@ class SyncService {
                      new Date(cloudPortion.updated_at) > new Date(localPortion.updated_at)) {
             // Cloud portion is newer - use cloud data but keep local ID to avoid duplicates
             const { id, ...cloudData } = cloudPortion;
-            await db.productPortions.update(localPortion.id!, cloudData);
-            updatedCount++;
+            if (typeof localPortion.id === 'number') {
+              await db.productPortions.update(localPortion.id, cloudData);
+              updatedCount++;
+            }
           }
         } catch (err) {
           console.error(`❌ Error processing portion ${cloudPortion.productName} - ${cloudPortion.portionName}:`, err);
@@ -579,8 +584,10 @@ class SyncService {
                      new Date(cloudTemplate.updated_at) > new Date(localTemplate.updated_at)) {
             // Cloud template is newer - use cloud data but keep local ID to avoid duplicates
             const { id, ...cloudData } = cloudTemplate;
-            await db.mealTemplates.update(localTemplate.id!, cloudData);
-            updatedCount++;
+            if (typeof localTemplate.id === 'number') {
+              await db.mealTemplates.update(localTemplate.id, cloudData);
+              updatedCount++;
+            }
           }
         } catch (err) {
           console.error(`❌ Error processing template ${cloudTemplate.name}:`, err);
@@ -614,8 +621,10 @@ class SyncService {
                      new Date(cloudActivity.updated_at) > new Date(localActivity.updated_at)) {
             // Cloud activity is newer - use cloud data but keep local ID
             const { id, ...cloudData } = cloudActivity;
-            await db.dailyActivities.update(localActivity.id!, cloudData);
-            updatedCount++;
+            if (typeof localActivity.id === 'number') {
+              await db.dailyActivities.update(localActivity.id, cloudData);
+              updatedCount++;
+            }
           }
         } catch (err) {
           console.error(`❌ Error processing activity ${cloudActivity.date}:`, err);

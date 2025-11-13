@@ -197,7 +197,7 @@ function getGradientColor(value: number, type: string): { r: number; g: number; 
 
   switch (type) {
     case 'calories': {
-      const calGoal = DEFAULT_SETTINGS.caloriesRest;
+      const calGoal = DEFAULT_SETTINGS.calories;
       const percentage = Math.min(value / calGoal, 1.5);
       if (percentage <= 0.95) {
         r = 34;
@@ -972,7 +972,7 @@ function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): voi
     let cardX = 15;
 
     const metrics = [
-      { key: 'calories', label: 'Calorieën', value: monthAvg.calories, unit: 'kcal', target: `<${DEFAULT_SETTINGS.caloriesRest}` },
+      { key: 'calories', label: 'Calorieën', value: monthAvg.calories, unit: 'kcal', target: `<${DEFAULT_SETTINGS.calories}` },
       { key: 'protein', label: 'Eiwit', value: monthAvg.protein, unit: 'g', target: '110-120' },
       { key: 'fiber', label: 'Vezels', value: monthAvg.fiber, unit: 'g', target: `>=${NUTRITION_CONSTANTS.FIBER_SUFFICIENT}` },
       { key: 'saturatedFat', label: 'Verz. vet', value: monthAvg.saturatedFat, unit: 'g', target: '<20' },

@@ -72,88 +72,81 @@ export function SettingsPage() {
         <div className="p-4 sm:p-6 border-b border-gray-200">
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Dagelijkse Doelen</h2>
 
-          {/* Calorieën */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Calorieën (kcal)</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={localSettings.calories}
-              onChange={(e) => handleChange('calories', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Eiwit */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Eiwit minimum (g)</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              value={localSettings.protein}
-              onChange={(e) => handleChange('protein', e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Macros */}
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Macronutriënten (max)</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Koolhydraten (g)</label>
-                <input
-                  type="number"
-                  value={localSettings.carbohydratesMax}
-                  onChange={(e) => handleChange('carbohydratesMax', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Suikers (g)</label>
-                <input
-                  type="number"
-                  value={localSettings.sugarsMax}
-                  onChange={(e) => handleChange('sugarsMax', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Vet (g)</label>
-                <input
-                  type="number"
-                  value={localSettings.fatMax}
-                  onChange={(e) => handleChange('fatMax', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Verzadigd Vet (g)</label>
-                <input
-                  type="number"
-                  value={localSettings.saturatedFatMax}
-                  onChange={(e) => handleChange('saturatedFatMax', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Vezels (g) min</label>
-                <input
-                  type="number"
-                  value={localSettings.fiberMin}
-                  onChange={(e) => handleChange('fiberMin', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Natrium (mg)</label>
-                <input
-                  type="number"
-                  value={localSettings.sodiumMax}
-                  onChange={(e) => handleChange('sodiumMax', e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+          {/* All 8 settings in one grid: 4 rows x 2 cols on mobile, 2 rows x 4 cols on desktop */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Calorieën (kcal)</label>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={localSettings.calories}
+                onChange={(e) => handleChange('calories', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Eiwit (g) min</label>
+              <input
+                type="number"
+                inputMode="decimal"
+                value={localSettings.protein}
+                onChange={(e) => handleChange('protein', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Koolhydraten (g)</label>
+              <input
+                type="number"
+                value={localSettings.carbohydratesMax}
+                onChange={(e) => handleChange('carbohydratesMax', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Suikers (g)</label>
+              <input
+                type="number"
+                value={localSettings.sugarsMax}
+                onChange={(e) => handleChange('sugarsMax', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Vet (g)</label>
+              <input
+                type="number"
+                value={localSettings.fatMax}
+                onChange={(e) => handleChange('fatMax', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Verzadigd Vet (g)</label>
+              <input
+                type="number"
+                value={localSettings.saturatedFatMax}
+                onChange={(e) => handleChange('saturatedFatMax', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Vezels (g) min</label>
+              <input
+                type="number"
+                value={localSettings.fiberMin}
+                onChange={(e) => handleChange('fiberMin', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Natrium (mg)</label>
+              <input
+                type="number"
+                value={localSettings.sodiumMax}
+                onChange={(e) => handleChange('sodiumMax', e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
         </div>

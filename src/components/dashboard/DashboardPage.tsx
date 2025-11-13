@@ -148,7 +148,7 @@ export function DashboardPage() {
 
     // Calculate projected weight change per week
     // Calorie deficit/surplus per day, assuming 7700 kcal = 1 kg
-    const calorieGoal = settings.caloriesRest; // Use rest day as default
+    const calorieGoal = settings.calories;
     const dailyDeficit = calorieGoal - averages.calories;
     const weeklyDeficit = dailyDeficit * 7;
     // Negative sign: deficit (eating less) = weight loss (negative weight change)

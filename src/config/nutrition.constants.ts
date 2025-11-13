@@ -28,7 +28,7 @@ export const NUTRITION_CONSTANTS = {
 
   /**
    * Calorie evaluation thresholds
-   * Note: Actual calorie goals are in user settings (caloriesRest/caloriesSport)
+   * Note: Actual calorie goals are in user settings (calories)
    */
   /** Upper threshold for "yellow" calorie warning */
   CALORIE_YELLOW_THRESHOLD: 2100,

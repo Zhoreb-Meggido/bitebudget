@@ -11,6 +11,7 @@ import { downloadTextFile } from '@/utils/download.utils';
 import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity } from '@/types';
 import { GarminImportSection } from './GarminImportSection';
 import { SQLiteSchemaExplorer } from './SQLiteSchemaExplorer';
+import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
 
 interface BackupData {
   version: string;
@@ -40,7 +41,7 @@ export function ImportExportTab() {
   // Export all data
   const handleExportAll = () => {
     const backup: BackupData = {
-      version: '1.5',
+      version: BACKUP_SCHEMA_VERSION.CURRENT,
       exportDate: new Date().toISOString(),
       entries,
       products,
@@ -61,7 +62,7 @@ export function ImportExportTab() {
   // Export entries only
   const handleExportEntries = () => {
     const backup: BackupData = {
-      version: '1.0',
+      version: BACKUP_SCHEMA_VERSION.V1_0,
       exportDate: new Date().toISOString(),
       entries,
     };
@@ -76,7 +77,7 @@ export function ImportExportTab() {
   // Export products only
   const handleExportProducts = () => {
     const backup: BackupData = {
-      version: '1.0',
+      version: BACKUP_SCHEMA_VERSION.V1_0,
       exportDate: new Date().toISOString(),
       products,
     };
@@ -91,7 +92,7 @@ export function ImportExportTab() {
   // Export weights only
   const handleExportWeights = () => {
     const backup: BackupData = {
-      version: '1.0',
+      version: BACKUP_SCHEMA_VERSION.V1_0,
       exportDate: new Date().toISOString(),
       weights,
     };
@@ -105,7 +106,7 @@ export function ImportExportTab() {
 
   const handleExportPortions = () => {
     const backup: BackupData = {
-      version: '1.3',
+      version: BACKUP_SCHEMA_VERSION.V1_3,
       exportDate: new Date().toISOString(),
       productPortions: portions,
     };
@@ -119,7 +120,7 @@ export function ImportExportTab() {
 
   const handleExportTemplates = () => {
     const backup: BackupData = {
-      version: '1.3',
+      version: BACKUP_SCHEMA_VERSION.V1_3,
       exportDate: new Date().toISOString(),
       mealTemplates: templates,
     };
@@ -133,7 +134,7 @@ export function ImportExportTab() {
 
   const handleExportActivities = () => {
     const backup: BackupData = {
-      version: '1.5',
+      version: BACKUP_SCHEMA_VERSION.V1_5,
       exportDate: new Date().toISOString(),
       dailyActivities: activities,
     };

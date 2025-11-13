@@ -135,7 +135,7 @@ export function NutritionTab() {
           sodium: acc.sodium + day.sodium,
         }), { calories: 0, protein: 0, carbohydrates: 0, sugars: 0, saturatedFat: 0, fiber: 0, sodium: 0 });
 
-        const daysUnderCalories = days.filter(d => d.calories < settings.caloriesRest).length;
+        const daysUnderCalories = days.filter(d => d.calories < settings.calories).length;
 
         return {
           weekStart,
@@ -163,7 +163,7 @@ export function NutritionTab() {
 
     switch (metric) {
       case 'calories':
-        if (value < settings.caloriesRest) return 'bg-green-500';
+        if (value < settings.calories) return 'bg-green-500';
         if (value < NUTRITION_CONSTANTS.CALORIE_YELLOW_THRESHOLD) return 'bg-yellow-500';
         return 'bg-red-500';
 
@@ -223,7 +223,7 @@ export function NutritionTab() {
 
         // Always count calories and protein (core metrics)
         totalMetrics += 2;
-        if (dayData.calories < settings.caloriesRest) score++;
+        if (dayData.calories < settings.calories) score++;
 
         // Protein: check if at least 80% of target (Voedingscentrum recommendation)
         const proteinTarget = NUTRITION_CONSTANTS.PROTEIN_PER_KG_MIN * currentWeight;
@@ -516,7 +516,7 @@ export function NutritionTab() {
 
                           // Always count calories and protein
                           totalMetrics += 2;
-                          if (day.data.calories < settings.caloriesRest) score++;
+                          if (day.data.calories < settings.calories) score++;
 
                           // Protein: check if at least 80% of target
                           const proteinTarget = NUTRITION_CONSTANTS.PROTEIN_PER_KG_MIN * currentWeight;

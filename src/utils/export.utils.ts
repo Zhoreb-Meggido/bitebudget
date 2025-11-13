@@ -267,7 +267,7 @@ export function generatePDFReport(options: ExportOptions): jsPDF {
       const getMetricColor = (metric: string, value: number): [number, number, number] => {
         switch (metric) {
           case 'calories':
-            return value < DEFAULT_SETTINGS.caloriesRest ? [34, 197, 94] : value < NUTRITION_CONSTANTS.CALORIE_YELLOW_THRESHOLD ? [234, 179, 8] : [239, 68, 68]; // green/yellow/red
+            return value < DEFAULT_SETTINGS.calories ? [34, 197, 94] : value < NUTRITION_CONSTANTS.CALORIE_YELLOW_THRESHOLD ? [234, 179, 8] : [239, 68, 68]; // green/yellow/red
           case 'protein':
             return value >= 72 ? [34, 197, 94] : value >= 36 ? [234, 179, 8] : [239, 68, 68];
           case 'saturatedFat':
