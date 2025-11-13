@@ -117,6 +117,11 @@
 
 ## Completed ✅
 
+### CloudSync Settings Fix (v1.6.8) ✅
+- [x] Fix settings merge logic to use timestamps instead of format check
+- [x] Settings updates from other devices no longer get lost during sync
+- [x] Added settingsUpdatedAt field to SyncData for proper timestamp comparison
+
 ### Sync Improvements - Critical Bugfixes (v1.6.1) ✅
 - [x] Fix duplicate entries bug when meal time is edited after sync
 - [x] Fix soft-deleted items cleanup (getAllEntriesIncludingDeleted)
@@ -139,6 +144,15 @@
 ## Backlog / Future Ideas
 
 ### Code Quality
+- [ ] **Version Consolidation - Remove Legacy Migration Code**
+  - Consolideer huidige versie, verwijder support voor oude formaten
+  - Settings migratie: Verwijder alle caloriesRest/caloriesSport migratie code
+  - SyncData interface: Maak productPortions, mealTemplates, dailyActivities verplicht (verwijder `?`)
+  - Verwijder alle backward compatibility checks in sync/import functies
+  - Vereenvoudig BACKUP_SCHEMA_VERSION tot alleen CURRENT
+  - **Let op:** Eerst testen dat huidige data nog importeerbaar is na export
+  - **Voordeel:** Schonere code, minder complexity, makkelijker onderhoud
+  - **Risico:** Laag (alleen 1 gebruiker, geen oude backups die nog geïmporteerd moeten)
 - [ ] TypeScript strict mode improvements
 - [ ] Unit tests voor critical business logic
 - [ ] E2E tests voor sync scenarios
