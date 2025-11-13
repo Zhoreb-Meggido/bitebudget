@@ -486,28 +486,39 @@ class SyncService {
       console.log(`✅ Weights merge complete: ${weightsAdded} added, ${weightsUpdated} updated, ${weightsSkipped} skipped`);
     }
 
-    // Merge settings - always take the newest timestamp
+    // Merge settings - prefer local settings if they have new format, otherwise use cloud
     if (cloudData.settings) {
-      // Settings don't have timestamps in current implementation, so we just update
-      // You could add a timestamp field to settings for proper conflict resolution
+      // Get current local settings
+      const localSettings = await settingsService.loadSettings();
+      const cloudSettings = cloudData.settings as any;
 
-      // Migrate old rust/sport day settings if they exist in cloud data
-      const settingsToSave = cloudData.settings as any;
-      if (settingsToSave.caloriesRest !== undefined || settingsToSave.caloriesSport !== undefined) {
-        console.log('🔄 Migrating old rust/sport day settings from cloud data...');
+      // Check if local settings already have new format (migrated)
+      const localHasNewFormat = localSettings.calories !== undefined &&
+                                 (cloudSettings.caloriesRest !== undefined || cloudSettings.caloriesSport !== undefined);
 
-        // Use sport day values (more realistic for active users)
-        settingsToSave.calories = settingsToSave.caloriesSport || settingsToSave.caloriesRest || settingsToSave.calories;
-        settingsToSave.protein = settingsToSave.proteinSport || settingsToSave.proteinRest || settingsToSave.protein;
+      if (localHasNewFormat) {
+        // Local settings are already migrated, prefer them over cloud's old format
+        console.log('✓ Local settings already migrated, keeping local values');
+        // Don't save cloud settings - keep local
+      } else {
+        // Local settings not migrated yet, or cloud has new format too
+        // Migrate old rust/sport day settings if they exist in cloud data
+        if (cloudSettings.caloriesRest !== undefined || cloudSettings.caloriesSport !== undefined) {
+          console.log('🔄 Migrating old rust/sport day settings from cloud data...');
 
-        // Remove old fields
-        delete settingsToSave.caloriesRest;
-        delete settingsToSave.caloriesSport;
-        delete settingsToSave.proteinRest;
-        delete settingsToSave.proteinSport;
+          // Use new field if it exists, otherwise use sport day values (more realistic for active users)
+          cloudSettings.calories = cloudSettings.calories ?? (cloudSettings.caloriesSport || cloudSettings.caloriesRest);
+          cloudSettings.protein = cloudSettings.protein ?? (cloudSettings.proteinSport || cloudSettings.proteinRest);
+
+          // Remove old fields
+          delete cloudSettings.caloriesRest;
+          delete cloudSettings.caloriesSport;
+          delete cloudSettings.proteinRest;
+          delete cloudSettings.proteinSport;
+        }
+
+        await settingsService.saveSettings(cloudSettings);
       }
-
-      await settingsService.saveSettings(settingsToSave);
     }
 
     // Merge product portions - add cloud portions that don't exist locally or are newer
