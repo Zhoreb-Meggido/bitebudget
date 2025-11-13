@@ -22,6 +22,7 @@ export interface SyncData {
   products: Product[];
   weights: Weight[];
   settings: UserSettings;
+  settingsUpdatedAt?: string;          // v1.6.3+ - timestamp for settings
   productPortions?: ProductPortion[];  // v1.3+
   mealTemplates?: MealTemplate[];      // v1.3+
   dailyActivities?: DailyActivity[];   // v1.5+
@@ -270,7 +271,9 @@ class SyncService {
     const entries = await entriesService.getAllEntriesIncludingDeleted();
     const products = await productsService.getAllProductsIncludingDeleted();
     const weights = await weightsService.getAllWeights(); // Already includes deleted
-    let settings = await settingsService.loadSettings();
+    const settingsRecord = await settingsService.getSettingsRecord();
+    let settings = settingsRecord.settings;
+    const settingsUpdatedAt = settingsRecord.updated_at;
     const productPortions = await portionsService.getAllPortionsIncludingDeleted();
     const mealTemplates = await templatesService.getAllTemplatesIncludingDeleted();
     const dailyActivities = await activitiesService.getAllActivitiesIncludingDeleted();
@@ -308,6 +311,7 @@ class SyncService {
       products,
       weights,
       settings,
+      settingsUpdatedAt,
       productPortions,
       mealTemplates,
       dailyActivities,
@@ -486,38 +490,40 @@ class SyncService {
       console.log(`✅ Weights merge complete: ${weightsAdded} added, ${weightsUpdated} updated, ${weightsSkipped} skipped`);
     }
 
-    // Merge settings - prefer local settings if they have new format, otherwise use cloud
+    // Merge settings - use timestamp to determine which settings to keep
     if (cloudData.settings) {
-      // Get current local settings
-      const localSettings = await settingsService.loadSettings();
+      // Get current local settings with timestamp
+      const localSettingsRecord = await settingsService.getSettingsRecord();
+      const localSettings = localSettingsRecord.settings;
+      const localUpdatedAt = localSettingsRecord.updated_at;
+
       const cloudSettings = cloudData.settings as any;
+      const cloudUpdatedAt = cloudData.settingsUpdatedAt;
 
-      // Check if local settings already have new format (migrated)
-      const localHasNewFormat = localSettings.calories !== undefined &&
-                                 (cloudSettings.caloriesRest !== undefined || cloudSettings.caloriesSport !== undefined);
+      // Migrate old rust/sport day settings if they exist in cloud data
+      if (cloudSettings.caloriesRest !== undefined || cloudSettings.caloriesSport !== undefined) {
+        console.log('🔄 Migrating old rust/sport day settings from cloud data...');
 
-      if (localHasNewFormat) {
-        // Local settings are already migrated, prefer them over cloud's old format
-        console.log('✓ Local settings already migrated, keeping local values');
-        // Don't save cloud settings - keep local
-      } else {
-        // Local settings not migrated yet, or cloud has new format too
-        // Migrate old rust/sport day settings if they exist in cloud data
-        if (cloudSettings.caloriesRest !== undefined || cloudSettings.caloriesSport !== undefined) {
-          console.log('🔄 Migrating old rust/sport day settings from cloud data...');
+        // Use new field if it exists, otherwise use sport day values (more realistic for active users)
+        cloudSettings.calories = cloudSettings.calories ?? (cloudSettings.caloriesSport || cloudSettings.caloriesRest);
+        cloudSettings.protein = cloudSettings.protein ?? (cloudSettings.proteinSport || cloudSettings.proteinRest);
 
-          // Use new field if it exists, otherwise use sport day values (more realistic for active users)
-          cloudSettings.calories = cloudSettings.calories ?? (cloudSettings.caloriesSport || cloudSettings.caloriesRest);
-          cloudSettings.protein = cloudSettings.protein ?? (cloudSettings.proteinSport || cloudSettings.proteinRest);
+        // Remove old fields
+        delete cloudSettings.caloriesRest;
+        delete cloudSettings.caloriesSport;
+        delete cloudSettings.proteinRest;
+        delete cloudSettings.proteinSport;
+      }
 
-          // Remove old fields
-          delete cloudSettings.caloriesRest;
-          delete cloudSettings.caloriesSport;
-          delete cloudSettings.proteinRest;
-          delete cloudSettings.proteinSport;
-        }
-
+      // Compare timestamps to determine which settings to use
+      if (cloudUpdatedAt && new Date(cloudUpdatedAt) > new Date(localUpdatedAt)) {
+        // Cloud settings are newer - use cloud settings
+        console.log('🔄 Cloud settings are newer, updating local settings');
         await settingsService.saveSettings(cloudSettings);
+      } else {
+        // Local settings are newer or same age - keep local
+        console.log('✓ Local settings are up to date, keeping local values');
+        // Don't save cloud settings - keep local
       }
     }
 
@@ -742,7 +748,20 @@ class SyncService {
 
     // Import settings if available (backwards compatibility)
     if (data.settings) {
-      await settingsService.saveSettings(data.settings);
+      // Clean old fields before importing
+      const settingsToImport = { ...data.settings } as any;
+      delete settingsToImport.caloriesRest;
+      delete settingsToImport.caloriesSport;
+      delete settingsToImport.proteinRest;
+      delete settingsToImport.proteinSport;
+
+      // Migrate if needed
+      if ((data.settings as any).caloriesRest !== undefined || (data.settings as any).caloriesSport !== undefined) {
+        settingsToImport.calories = settingsToImport.calories ?? ((data.settings as any).caloriesSport || (data.settings as any).caloriesRest);
+        settingsToImport.protein = settingsToImport.protein ?? ((data.settings as any).proteinSport || (data.settings as any).proteinRest);
+      }
+
+      await settingsService.saveSettings(settingsToImport);
     }
 
     // Import product portions if available (v1.3+)
