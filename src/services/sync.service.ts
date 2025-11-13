@@ -270,10 +270,18 @@ class SyncService {
     const entries = await entriesService.getAllEntriesIncludingDeleted();
     const products = await productsService.getAllProductsIncludingDeleted();
     const weights = await weightsService.getAllWeights(); // Already includes deleted
-    const settings = await settingsService.loadSettings();
+    let settings = await settingsService.loadSettings();
     const productPortions = await portionsService.getAllPortionsIncludingDeleted();
     const mealTemplates = await templatesService.getAllTemplatesIncludingDeleted();
     const dailyActivities = await activitiesService.getAllActivitiesIncludingDeleted();
+
+    // Ensure old rust/sport day fields are removed from settings before export
+    const settingsClean = { ...settings } as any;
+    delete settingsClean.caloriesRest;
+    delete settingsClean.caloriesSport;
+    delete settingsClean.proteinRest;
+    delete settingsClean.proteinSport;
+    settings = settingsClean;
 
     // Count soft-deleted items
     const entriesDeleted = entries.filter(e => e.deleted === true).length;
@@ -287,6 +295,7 @@ class SyncService {
       entries: `${entries.length} (${entriesDeleted} deleted)`,
       products: `${products.length} (${productsDeleted} deleted)`,
       weights: `${weights.length} (${weightsDeleted} deleted)`,
+      settings: '✓',
       productPortions: `${productPortions.length} (${portionsDeleted} deleted)`,
       mealTemplates: `${mealTemplates.length} (${templatesDeleted} deleted)`,
       dailyActivities: `${dailyActivities.length} (${activitiesDeleted} deleted)`,
