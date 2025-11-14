@@ -63,6 +63,27 @@ class SettingsService {
   }
 
   /**
+   * Get settings record with timestamp (for sync purposes)
+   */
+  async getSettingsRecord(): Promise<{ settings: UserSettings; updated_at: string }> {
+    try {
+      const settingsRecord = await db.settings.get(SETTINGS_KEYS.USER_SETTINGS);
+      const settings = await this.loadSettings(); // This handles migration if needed
+
+      return {
+        settings,
+        updated_at: settingsRecord?.updated_at || new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('❌ Error getting settings record:', error);
+      return {
+        settings: DEFAULT_SETTINGS,
+        updated_at: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
    * Sla gebruikersinstellingen op in database
    */
   async saveSettings(settings: UserSettings): Promise<void> {
