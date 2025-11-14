@@ -30,7 +30,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
 
   // Calculate chart dimensions and scales
   const chartHeight = 300;
-  const chartWidth = 1000; // Wider to show full 24 hours
+  const chartWidth = 800; // Base width for aspect ratio
   const padding = { top: 20, right: 20, bottom: 40, left: 50 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
@@ -137,10 +137,10 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
       {/* Chart and Statistics Container */}
       <div className="flex flex-col lg:flex-row gap-3 items-start">
         {/* Chart */}
-        <div className="flex-1 w-full lg:w-auto" style={{ height: `${chartHeight}px` }}>
+        <div className="flex-1 w-full lg:w-auto">
           <svg
             viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-            className="w-full h-full"
+            className="w-full h-auto"
             preserveAspectRatio="xMinYMid meet"
           >
           <defs>
