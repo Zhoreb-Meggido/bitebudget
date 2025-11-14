@@ -377,7 +377,7 @@ export function ActivityTab() {
                           key={dayIndex}
                           className={`w-10 h-10 rounded ${colorClass} flex items-center justify-center text-white text-xs font-medium hover:ring-2 hover:ring-blue-400 transition-all ${
                             isClickable ? 'cursor-pointer hover:scale-110' : 'cursor-default'
-                          } ${selectedDate === day.date ? 'ring-4 ring-blue-500' : ''}`}
+                          } ${selectedDate === day.date ? 'ring-4 ring-blue-500' : ''} relative`}
                           title={tooltipText}
                           onClick={() => {
                             if (isClickable) {
@@ -386,6 +386,12 @@ export function ActivityTab() {
                           }}
                         >
                           {dayNum}
+                          {/* Heart indicator for days with intraday HR samples */}
+                          {hasHRData && selectedMetric === 'heartRate' && (
+                            <span className="absolute top-0 right-0 text-[8px]" style={{ lineHeight: '1' }}>
+                              💓
+                            </span>
+                          )}
                         </div>
                       );
                     })}
