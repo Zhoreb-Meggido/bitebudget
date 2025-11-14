@@ -99,6 +99,17 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
     { name: 'Zone 5 (Max)', min: estimatedMaxHR * 0.9, max: estimatedMaxHR, color: '#f87171', opacity: 0.15 }, // Red
   ];
 
+  // Calculate time spent in each zone
+  const zoneStats = hrZones.map(zone => {
+    const samplesInZone = data.samples.filter(s => s.bpm >= zone.min && s.bpm < zone.max).length;
+    const percentage = (samplesInZone / data.samples.length) * 100;
+    return {
+      ...zone,
+      count: samplesInZone,
+      percentage: percentage,
+    };
+  });
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex justify-between items-center mb-4">
@@ -123,8 +134,11 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
         </button>
       </div>
 
-      <div className="overflow-x-auto">
-        <svg width={chartWidth} height={chartHeight} className="max-w-full">
+      {/* Chart and Statistics Container */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Chart */}
+        <div className="flex-1 overflow-x-auto">
+          <svg width={chartWidth} height={chartHeight} className="max-w-full">
           <defs>
             <linearGradient id="heartRateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" style={{ stopColor: '#ef4444', stopOpacity: 0.3 }} />
@@ -254,18 +268,37 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
             Tijd
           </text>
         </svg>
-      </div>
+        </div>
 
-      {/* Heart Rate Zones Legend */}
-      <div className="mt-4">
-        <h4 className="text-sm font-semibold text-gray-700 mb-2">Hartslagzones</h4>
-        <div className="flex flex-wrap gap-4 text-xs text-gray-600">
-          {hrZones.map((zone, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: zone.color }}></div>
-              <span>{zone.name} ({Math.round(zone.min)}-{Math.round(zone.max)} bpm)</span>
-            </div>
-          ))}
+        {/* Zone Statistics */}
+        <div className="lg:w-64 flex-shrink-0">
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">Tijd per Zone</h4>
+          <div className="space-y-3">
+            {zoneStats.map((zone, i) => (
+              <div key={i} className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: zone.color, opacity: 1 }}></div>
+                    <span className="font-medium text-gray-700">{zone.name}</span>
+                  </div>
+                  <span className="font-semibold text-gray-900">{zone.percentage.toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="h-2 rounded-full transition-all"
+                    style={{
+                      width: `${zone.percentage}%`,
+                      backgroundColor: zone.color,
+                      opacity: 0.8
+                    }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {Math.round(zone.min)}-{Math.round(zone.max)} bpm • {zone.count} metingen
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
