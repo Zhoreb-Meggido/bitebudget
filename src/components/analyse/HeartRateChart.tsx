@@ -137,12 +137,11 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
       {/* Chart and Statistics Container */}
       <div className="flex flex-col lg:flex-row gap-3 items-start">
         {/* Chart */}
-        <div className="flex-1 w-full lg:w-auto">
+        <div className="flex-1 w-full lg:w-auto" style={{ height: `${chartHeight}px` }}>
           <svg
             viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-            className="w-full"
-            height={chartHeight}
-            preserveAspectRatio="none"
+            className="w-full h-full"
+            preserveAspectRatio="xMinYMid meet"
           >
           <defs>
             <linearGradient id="heartRateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
