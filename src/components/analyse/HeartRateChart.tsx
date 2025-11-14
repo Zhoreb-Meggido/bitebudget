@@ -4,7 +4,7 @@
  */
 
 import { useRef, useState, useEffect } from 'react';
-import type { DayHeartRateSamples } from '@/types';
+import type { DayHeartRateSamples, HeartRateSample } from '@/types';
 
 interface HeartRateChartProps {
   data: DayHeartRateSamples;
@@ -77,7 +77,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
 
   // Generate SVG path for line chart
   const linePath = data.samples
-    .map((sample, i) => {
+    .map((sample: HeartRateSample, i: number) => {
       const x = xScale(sample.timestamp);
       const y = yScale(sample.bpm);
       return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
@@ -119,7 +119,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
 
   // Calculate time spent in each zone
   const zoneStats = hrZones.map(zone => {
-    const samplesInZone = data.samples.filter(s => s.bpm >= zone.min && s.bpm < zone.max).length;
+    const samplesInZone = data.samples.filter((s: HeartRateSample) => s.bpm >= zone.min && s.bpm < zone.max).length;
     const percentage = (samplesInZone / data.samples.length) * 100;
     return {
       ...zone,

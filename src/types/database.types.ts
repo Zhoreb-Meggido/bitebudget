@@ -206,6 +206,27 @@ export interface FitnessActivity {
 export type GarminActivity = FitnessActivity;
 
 // ============================================
+// HEART RATE SAMPLES (Intraday HR data)
+// ============================================
+
+export interface HeartRateSample {
+  timestamp: number;  // Unix timestamp in milliseconds
+  bpm: number;        // Heart rate in beats per minute
+}
+
+export interface DayHeartRateSamples {
+  date: string;                    // Primary key: YYYY-MM-DD
+  samples: HeartRateSample[];      // Array of intraday samples (~680 per day)
+  sampleCount: number;             // Number of samples
+  minBpm: number;                  // Minimum BPM for the day
+  maxBpm: number;                  // Maximum BPM for the day
+  avgBpm: number;                  // Average BPM for the day
+  created_at: string;              // ISO timestamp
+  updated_at: string;              // ISO timestamp
+  deleted?: boolean;               // Soft delete flag
+}
+
+// ============================================
 // SETTINGS
 // ============================================
 
