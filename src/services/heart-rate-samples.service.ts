@@ -106,10 +106,9 @@ class HeartRateSamplesService {
    * Get all heart rate samples
    */
   async getAllSamples(): Promise<DayHeartRateSamples[]> {
-    return await db.heartRateSamples
-      .where('deleted')
-      .notEqual(true)
-      .toArray();
+    const all = await db.heartRateSamples.toArray();
+    // Filter out soft-deleted items in memory (deleted field is not indexed)
+    return all.filter(s => !s.deleted);
   }
 
   /**
