@@ -140,8 +140,9 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
         <div className="flex-1 w-full lg:w-auto">
           <svg
             viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-            className="w-full h-auto"
-            preserveAspectRatio="xMinYMin meet"
+            className="w-full"
+            height={chartHeight}
+            preserveAspectRatio="none"
           >
           <defs>
             <linearGradient id="heartRateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
