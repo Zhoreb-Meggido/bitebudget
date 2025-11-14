@@ -88,6 +88,17 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
     });
   }
 
+  // Heart rate zones (based on estimated max HR or measured max)
+  // Use 220 - 35 (age estimate) = 185 as default max HR
+  const estimatedMaxHR = 185;
+  const hrZones = [
+    { name: 'Zone 1 (Rust)', min: 0, max: estimatedMaxHR * 0.6, color: '#d1d5db', opacity: 0.15 }, // Gray
+    { name: 'Zone 2 (Vet)', min: estimatedMaxHR * 0.6, max: estimatedMaxHR * 0.7, color: '#60a5fa', opacity: 0.15 }, // Blue
+    { name: 'Zone 3 (Cardio)', min: estimatedMaxHR * 0.7, max: estimatedMaxHR * 0.8, color: '#34d399', opacity: 0.15 }, // Green
+    { name: 'Zone 4 (Anaërobe)', min: estimatedMaxHR * 0.8, max: estimatedMaxHR * 0.9, color: '#fb923c', opacity: 0.15 }, // Orange
+    { name: 'Zone 5 (Max)', min: estimatedMaxHR * 0.9, max: estimatedMaxHR, color: '#f87171', opacity: 0.15 }, // Red
+  ];
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex justify-between items-center mb-4">
@@ -120,6 +131,29 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
               <stop offset="100%" style={{ stopColor: '#ef4444', stopOpacity: 0.05 }} />
             </linearGradient>
           </defs>
+
+          {/* Heart Rate Zones (background) */}
+          {hrZones.map((zone, i) => {
+            const zoneTop = Math.max(yScale(zone.max), padding.top);
+            const zoneBottom = Math.min(yScale(zone.min), chartHeight - padding.bottom);
+            const zoneHeight = zoneBottom - zoneTop;
+
+            if (zoneHeight <= 0 || zoneBottom < padding.top || zoneTop > chartHeight - padding.bottom) {
+              return null; // Zone not visible in current range
+            }
+
+            return (
+              <rect
+                key={`zone-${i}`}
+                x={padding.left}
+                y={zoneTop}
+                width={innerWidth}
+                height={zoneHeight}
+                fill={zone.color}
+                opacity={zone.opacity}
+              />
+            );
+          })}
 
           {/* Grid lines (horizontal) */}
           {yLabels.map(bpm => (
@@ -222,23 +256,16 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
         </svg>
       </div>
 
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-600">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-500"></div>
-          <span>Uitstekend (≤60 bpm)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-yellow-500"></div>
-          <span>Goed (61-70 bpm)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-orange-400"></div>
-          <span>Gemiddeld (71-80 bpm)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-400"></div>
-          <span>Hoog (&gt;80 bpm)</span>
+      {/* Heart Rate Zones Legend */}
+      <div className="mt-4">
+        <h4 className="text-sm font-semibold text-gray-700 mb-2">Hartslagzones</h4>
+        <div className="flex flex-wrap gap-4 text-xs text-gray-600">
+          {hrZones.map((zone, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: zone.color }}></div>
+              <span>{zone.name} ({Math.round(zone.min)}-{Math.round(zone.max)} bpm)</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
