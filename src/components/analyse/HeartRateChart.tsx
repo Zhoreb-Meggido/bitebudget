@@ -48,7 +48,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
   // Calculate chart dimensions and scales
   const chartHeight = 300;
   const collapsedPanelWidth = 48; // Width of collapsed panel
-  const chartWidth = containerWidth - collapsedPanelWidth - 4; // Fixed width, only account for collapsed panel
+  const chartWidth = containerWidth - collapsedPanelWidth + 18; // Measured to fit snugly
   const padding = { top: 20, right: 20, bottom: 40, left: 50 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
@@ -110,7 +110,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
   // Use 220 - 35 (age estimate) = 185 as default max HR
   const estimatedMaxHR = 185;
   const hrZones = [
-    { name: 'Zone 1 (Rust)', min: 0, max: estimatedMaxHR * 0.6, color: '#d1d5db', opacity: 0.15 }, // Gray
+    { name: 'Zone 1 (Rust)', min: 0, max: estimatedMaxHR * 0.6, color: '#c4b5fd', opacity: 0.15 }, // Light Purple
     { name: 'Zone 2 (Vet)', min: estimatedMaxHR * 0.6, max: estimatedMaxHR * 0.7, color: '#60a5fa', opacity: 0.15 }, // Blue
     { name: 'Zone 3 (Cardio)', min: estimatedMaxHR * 0.7, max: estimatedMaxHR * 0.8, color: '#34d399', opacity: 0.15 }, // Green
     { name: 'Zone 4 (Anaërobe)', min: estimatedMaxHR * 0.8, max: estimatedMaxHR * 0.9, color: '#fb923c', opacity: 0.15 }, // Orange
