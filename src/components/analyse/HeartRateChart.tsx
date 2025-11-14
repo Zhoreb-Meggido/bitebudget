@@ -47,8 +47,8 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
 
   // Calculate chart dimensions and scales
   const chartHeight = 300;
-  const panelWidth = isExpanded ? 224 : 48; // Width of collapsed/expanded panel
-  const chartWidth = containerWidth - panelWidth - 8; // Subtract panel width + gap
+  const collapsedPanelWidth = 48; // Width of collapsed panel
+  const chartWidth = containerWidth - collapsedPanelWidth - 4; // Fixed width, only account for collapsed panel
   const padding = { top: 20, right: 20, bottom: 40, left: 50 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
