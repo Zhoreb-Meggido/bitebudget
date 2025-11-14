@@ -30,7 +30,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
 
   // Calculate chart dimensions and scales
   const chartHeight = 300;
-  const chartWidth = 800;
+  const chartWidth = 600; // Reduced from 800 to fit better
   const padding = { top: 20, right: 20, bottom: 40, left: 50 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
@@ -135,9 +135,9 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
       </div>
 
       {/* Chart and Statistics Container */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Chart */}
-        <div className="flex-1 overflow-x-auto">
+        <div className="overflow-x-auto">
           <svg width={chartWidth} height={chartHeight} className="max-w-full">
           <defs>
             <linearGradient id="heartRateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -271,21 +271,21 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
         </div>
 
         {/* Zone Statistics */}
-        <div className="lg:w-64 flex-shrink-0">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Tijd per Zone</h4>
-          <div className="space-y-3">
+        <div className="lg:w-52 flex-shrink-0">
+          <h4 className="text-sm font-semibold text-gray-700 mb-2">Tijd per Zone</h4>
+          <div className="space-y-2">
             {zoneStats.map((zone, i) => (
-              <div key={i} className="space-y-1">
+              <div key={i} className="space-y-0.5">
                 <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded" style={{ backgroundColor: zone.color, opacity: 1 }}></div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded" style={{ backgroundColor: zone.color, opacity: 1 }}></div>
                     <span className="font-medium text-gray-700">{zone.name}</span>
                   </div>
                   <span className="font-semibold text-gray-900">{zone.percentage.toFixed(1)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-gray-200 rounded-full h-1.5">
                   <div
-                    className="h-2 rounded-full transition-all"
+                    className="h-1.5 rounded-full transition-all"
                     style={{
                       width: `${zone.percentage}%`,
                       backgroundColor: zone.color,
@@ -293,8 +293,8 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
                     }}
                   ></div>
                 </div>
-                <div className="text-xs text-gray-500">
-                  {Math.round(zone.min)}-{Math.round(zone.max)} bpm • {zone.count} metingen
+                <div className="text-[10px] text-gray-500">
+                  {Math.round(zone.min)}-{Math.round(zone.max)} bpm
                 </div>
               </div>
             ))}
