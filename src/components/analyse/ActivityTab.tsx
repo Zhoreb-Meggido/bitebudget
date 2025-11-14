@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useActivities } from '@/hooks';
+import { useActivities, useHeartRateSamples } from '@/hooks';
+import { HeartRateChart } from './HeartRateChart';
 
-type ActivityMetric = 'steps' | 'calories' | 'intensityMinutes' | 'sleep' | 'bodyBattery' | 'stress';
+type ActivityMetric = 'heartRate' | 'steps' | 'calories' | 'intensityMinutes' | 'sleep' | 'bodyBattery' | 'stress';
 
 // Helper function to calculate ISO week number
 function getISOWeekNumber(date: Date): number {
@@ -18,8 +19,10 @@ function getISOWeekNumber(date: Date): number {
 
 export function ActivityTab() {
   const { activities, isLoading: loading } = useActivities();
-  const [selectedMetric, setSelectedMetric] = useState<ActivityMetric>('steps');
+  const { samples: hrSamples, isLoading: hrLoading, getSamplesMap } = useHeartRateSamples();
+  const [selectedMetric, setSelectedMetric] = useState<ActivityMetric>('heartRate');
   const [showTable, setShowTable] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const stats = useMemo(() => {
     if (activities.length === 0) return null;
@@ -30,7 +33,21 @@ export function ActivityTab() {
       activeCalories: acc.activeCalories + (activity.activeCalories || 0),
       intensityMinutes: acc.intensityMinutes + (activity.intensityMinutes || 0),
       sleepSeconds: acc.sleepSeconds + (activity.sleepSeconds || 0),
-    }), { steps: 0, calories: 0, activeCalories: 0, intensityMinutes: 0, sleepSeconds: 0 });
+      restingHR: acc.restingHR + (activity.heartRateResting || 0),
+      maxHR: acc.maxHR + (activity.heartRateMax || 0),
+      restingHRCount: acc.restingHRCount + (activity.heartRateResting ? 1 : 0),
+      maxHRCount: acc.maxHRCount + (activity.heartRateMax ? 1 : 0),
+    }), {
+      steps: 0,
+      calories: 0,
+      activeCalories: 0,
+      intensityMinutes: 0,
+      sleepSeconds: 0,
+      restingHR: 0,
+      maxHR: 0,
+      restingHRCount: 0,
+      maxHRCount: 0,
+    });
 
     return {
       avgSteps: Math.round(total.steps / activities.length),
@@ -38,9 +55,12 @@ export function ActivityTab() {
       avgActiveCalories: Math.round(total.activeCalories / activities.length),
       avgIntensityMinutes: Math.round(total.intensityMinutes / activities.length),
       avgSleepHours: (total.sleepSeconds / activities.length / 3600).toFixed(1),
+      avgRestingHR: total.restingHRCount > 0 ? Math.round(total.restingHR / total.restingHRCount) : 0,
+      avgMaxHR: total.maxHRCount > 0 ? Math.round(total.maxHR / total.maxHRCount) : 0,
       totalDays: activities.length,
+      totalHRDays: hrSamples.length,
     };
-  }, [activities]);
+  }, [activities, hrSamples]);
 
   // Weekday patterns (last 60 days)
   const weekdayPatterns = useMemo(() => {
@@ -74,14 +94,15 @@ export function ActivityTab() {
   const heatmapData = useMemo(() => {
     const today = new Date();
     const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-    const weeks: Array<Array<{ date: string; activity?: typeof activities[0] }>> = [];
+    const weeks: Array<Array<{ date: string; activity?: typeof activities[0]; hrSample?: typeof hrSamples[0] }>> = [];
 
-    // Create data map for quick lookup
+    // Create data maps for quick lookup
     const dataMap = new Map(activities.map(a => [a.date, a]));
+    const hrMap = getSamplesMap();
 
     // Generate 8 weeks
     for (let weekIndex = 0; weekIndex < 8; weekIndex++) {
-      const week: Array<{ date: string; activity?: typeof activities[0] }> = [];
+      const week: Array<{ date: string; activity?: typeof activities[0]; hrSample?: typeof hrSamples[0] }> = [];
 
       // Calculate Monday of this week in UTC
       const currentDayUTC = new Date(todayUTC);
@@ -102,6 +123,7 @@ export function ActivityTab() {
         week.push({
           date: dateStr,
           activity: dataMap.get(dateStr),
+          hrSample: hrMap.get(dateStr),
         });
       }
 
@@ -109,14 +131,23 @@ export function ActivityTab() {
     }
 
     return weeks.reverse(); // Oldest week first
-  }, [activities]);
+  }, [activities, hrSamples, getSamplesMap]);
 
   // Get color for metric value
-  const getColor = (metric: ActivityMetric, activity?: typeof activities[0]): string => {
-    if (!activity) return 'bg-gray-200';
-
+  const getColor = (metric: ActivityMetric, activity?: typeof activities[0], hrSample?: typeof hrSamples[0]): string => {
     switch (metric) {
+      case 'heartRate': {
+        if (!activity) return 'bg-gray-200';
+        const restingHR = activity.heartRateResting || 0;
+        if (restingHR === 0) return 'bg-gray-200';
+        // Color based on resting heart rate (fitness indicator)
+        if (restingHR <= 55) return 'bg-green-500';  // Excellent - very fit
+        if (restingHR <= 60) return 'bg-yellow-500'; // Good - fit
+        if (restingHR <= 65) return 'bg-orange-400'; // Average - moderate fitness
+        return 'bg-red-400';                         // High - needs improvement or recovery
+      }
       case 'steps': {
+        if (!activity) return 'bg-gray-200';
         const steps = activity.steps || 0;
         if (steps >= 10000) return 'bg-green-500';
         if (steps >= 7000) return 'bg-yellow-500';
@@ -125,6 +156,7 @@ export function ActivityTab() {
         return 'bg-gray-200';
       }
       case 'calories': {
+        if (!activity) return 'bg-gray-200';
         const cal = activity.totalCalories || 0;
         if (cal >= 2500) return 'bg-green-500';
         if (cal >= 2000) return 'bg-yellow-500';
@@ -133,6 +165,7 @@ export function ActivityTab() {
         return 'bg-gray-200';
       }
       case 'intensityMinutes': {
+        if (!activity) return 'bg-gray-200';
         // Intensity minutes can be 0 (valid: no intensive activity that day)
         // Only show gray if the whole activity record is missing
         if (activity.intensityMinutes === undefined || activity.intensityMinutes === null) {
@@ -146,6 +179,7 @@ export function ActivityTab() {
         return 'bg-red-400';
       }
       case 'sleep': {
+        if (!activity) return 'bg-gray-200';
         const hours = (activity.sleepSeconds || 0) / 3600;
         if (hours >= 7) return 'bg-green-500';
         if (hours >= 6) return 'bg-yellow-500';
@@ -154,6 +188,7 @@ export function ActivityTab() {
         return 'bg-gray-200';
       }
       case 'bodyBattery': {
+        if (!activity) return 'bg-gray-200';
         const bb = activity.bodyBattery || 0;
         if (bb >= 75) return 'bg-green-500';
         if (bb >= 50) return 'bg-yellow-500';
@@ -162,6 +197,7 @@ export function ActivityTab() {
         return 'bg-gray-200';
       }
       case 'stress': {
+        if (!activity) return 'bg-gray-200';
         const stress = activity.stressLevel || 0;
         if (stress === 0) return 'bg-gray-200';
         if (stress <= 30) return 'bg-green-500';
@@ -175,6 +211,7 @@ export function ActivityTab() {
   };
 
   const metricLabels: Record<ActivityMetric, string> = {
+    heartRate: 'Hartslag',
     steps: 'Stappen',
     calories: 'Calorieën',
     intensityMinutes: 'Intensity Minutes',
@@ -200,10 +237,21 @@ export function ActivityTab() {
     <div>
       {/* Stats Cards */}
       <div className="p-6 border-b border-gray-200">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
           <div className="text-sm text-gray-600 font-medium mb-1">Dagen</div>
           <div className="text-2xl font-bold text-gray-900">{stats?.totalDays || 0}</div>
+        </div>
+
+        <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
+          <div className="text-sm text-red-600 font-medium mb-1">💓 Ø Rust HR</div>
+          <div className="text-2xl font-bold text-red-900">{stats?.avgRestingHR || '-'}</div>
+          <div className="text-xs text-red-600 mt-1">{stats?.totalHRDays || 0} dagen</div>
+        </div>
+
+        <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-4 border border-pink-200">
+          <div className="text-sm text-pink-600 font-medium mb-1">⚡ Ø Max HR</div>
+          <div className="text-2xl font-bold text-pink-900">{stats?.avgMaxHR || '-'}</div>
         </div>
 
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
@@ -240,9 +288,13 @@ export function ActivityTab() {
 
           <select
             value={selectedMetric}
-            onChange={(e) => setSelectedMetric(e.target.value as ActivityMetric)}
+            onChange={(e) => {
+              setSelectedMetric(e.target.value as ActivityMetric);
+              setSelectedDate(null); // Reset selected date when switching metrics
+            }}
             className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
+            <option value="heartRate">💓 Hartslag</option>
             <option value="steps">Stappen</option>
             <option value="calories">Calorieën</option>
             <option value="intensityMinutes">Intensity Minutes</option>
@@ -255,7 +307,9 @@ export function ActivityTab() {
         {heatmapData.length === 0 ? (
           <div className="p-6 text-center text-gray-500">Geen data beschikbaar</div>
         ) : (
-          <div className="overflow-x-auto p-6">
+          <div className="p-2 md:p-4 flex flex-col lg:flex-row gap-4">
+            {/* Heatmap (left side on desktop, top on mobile) */}
+            <div className={`flex-shrink-0 overflow-x-auto ${selectedDate && selectedMetric === 'heartRate' ? 'lg:w-auto' : 'w-full'}`}>
             <div className="inline-block min-w-full">
               {/* Day labels */}
               <div className="flex gap-1 mb-2">
@@ -280,11 +334,16 @@ export function ActivityTab() {
                     {week.map((day, dayIndex) => {
                       const dayDate = new Date(day.date);
                       const dayNum = dayDate.getDate();
-                      const colorClass = getColor(selectedMetric, day.activity);
+                      const colorClass = getColor(selectedMetric, day.activity, day.hrSample);
+                      const hasHRData = day.hrSample && day.hrSample.sampleCount > 0;
+                      const isClickable = selectedMetric === 'heartRate' && hasHRData;
 
                       // Build tooltip
                       let tooltipText = day.date;
-                      if (day.activity) {
+                      if (selectedMetric === 'heartRate' && day.activity) {
+                        const restingHR = day.activity.heartRateResting || 0;
+                        tooltipText = restingHR > 0 ? `${day.date}: ${restingHR} bpm rust HR` : `${day.date}: Geen HR data`;
+                      } else if (day.activity) {
                         let value = '';
                         switch (selectedMetric) {
                           case 'steps':
@@ -316,10 +375,23 @@ export function ActivityTab() {
                       return (
                         <div
                           key={dayIndex}
-                          className={`w-10 h-10 rounded ${colorClass} flex items-center justify-center text-white text-xs font-medium hover:ring-2 hover:ring-blue-400 cursor-pointer`}
+                          className={`w-10 h-10 rounded ${colorClass} flex items-center justify-center text-white text-xs font-medium hover:ring-2 hover:ring-blue-400 transition-all ${
+                            isClickable ? 'cursor-pointer hover:scale-110' : 'cursor-default'
+                          } ${selectedDate === day.date ? 'ring-4 ring-blue-500' : ''} relative`}
                           title={tooltipText}
+                          onClick={() => {
+                            if (isClickable) {
+                              setSelectedDate(selectedDate === day.date ? null : day.date);
+                            }
+                          }}
                         >
                           {dayNum}
+                          {/* Heart indicator for days with intraday HR samples */}
+                          {hasHRData && selectedMetric === 'heartRate' && (
+                            <span className="absolute top-0 right-0 text-[8px]" style={{ lineHeight: '1' }}>
+                              💓
+                            </span>
+                          )}
                         </div>
                       );
                     })}
@@ -351,6 +423,17 @@ export function ActivityTab() {
                 </div>
               </div>
             </div>
+            </div>
+
+            {/* Heart Rate Chart (right side on desktop, below on mobile) */}
+            {selectedDate && selectedMetric === 'heartRate' && (
+              <div className="flex-1 min-w-0">
+                <HeartRateChart
+                  data={getSamplesMap().get(selectedDate)!}
+                  onClose={() => setSelectedDate(null)}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

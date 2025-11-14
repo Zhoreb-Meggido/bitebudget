@@ -9,7 +9,7 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate, DailyActivity } from '@/types';
+import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples } from '@/types';
 
 export class VoedseljournaalDB extends Dexie {
   // Tables
@@ -20,6 +20,7 @@ export class VoedseljournaalDB extends Dexie {
   productPortions!: Table<ProductPortion, number>;
   mealTemplates!: Table<MealTemplate, number>;
   dailyActivities!: Table<DailyActivity, number>;
+  heartRateSamples!: Table<DayHeartRateSamples, string>;
 
   constructor() {
     super('VoedseljournaalDB');
@@ -119,6 +120,25 @@ export class VoedseljournaalDB extends Dexie {
       productPortions: 'id, productName, created_at, updated_at',
       mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at',
       dailyActivities: 'id, date, created_at, updated_at'
+    });
+
+    // Version 9 - Add heart rate samples (intraday HR data)
+    // PRIMARY KEY: 'date' (YYYY-MM-DD string)
+    // Each record contains an array of HR samples for one day (~680 samples per day, every ~2 minutes)
+    this.version(9).stores({
+      entries: 'id, date, created_at, updated_at',
+      products: 'id, name, ean, source, created_at, updated_at',
+      weights: 'id, date, created_at',
+      settings: 'key',
+      productPortions: 'id, productName, created_at, updated_at',
+      mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at',
+      dailyActivities: 'id, date, created_at, updated_at',
+      heartRateSamples: 'date, sampleCount, created_at, updated_at'
+    }).upgrade(async tx => {
+      console.log('✅ V9: Added heartRateSamples table');
+      console.log('📊 Primary key: date (YYYY-MM-DD)');
+      console.log('💓 Each record stores array of HR samples for one day');
+      console.log('ℹ️ Import Health Connect data to populate');
     });
   }
 }
