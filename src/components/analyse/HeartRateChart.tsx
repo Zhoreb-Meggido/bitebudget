@@ -3,6 +3,7 @@
  * Shows ~680 HR samples for a single day with time on X-axis and BPM on Y-axis
  */
 
+import { useRef, useState, useEffect } from 'react';
 import type { DayHeartRateSamples } from '@/types';
 
 interface HeartRateChartProps {
@@ -11,6 +12,21 @@ interface HeartRateChartProps {
 }
 
 export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(800);
+
+  // Measure container width
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
   if (!data || !data.samples || data.samples.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -30,7 +46,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
 
   // Calculate chart dimensions and scales
   const chartHeight = 300;
-  const chartWidth = 800; // Base width for aspect ratio
+  const chartWidth = containerWidth; // Use actual container width
   const padding = { top: 20, right: 20, bottom: 40, left: 50 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
@@ -137,11 +153,10 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
       {/* Chart and Statistics Container */}
       <div className="flex flex-col lg:flex-row gap-3 items-start">
         {/* Chart */}
-        <div className="flex-1 w-full lg:w-auto">
+        <div className="flex-1 w-full lg:w-auto" ref={containerRef}>
           <svg
-            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-            className="w-full h-auto"
-            preserveAspectRatio="xMinYMid meet"
+            width={chartWidth}
+            height={chartHeight}
           >
           <defs>
             <linearGradient id="heartRateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
