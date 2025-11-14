@@ -30,7 +30,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
 
   // Calculate chart dimensions and scales
   const chartHeight = 300;
-  const chartWidth = 600; // Reduced from 800 to fit better
+  const chartWidth = 1000; // Wider to show full 24 hours
   const padding = { top: 20, right: 20, bottom: 40, left: 50 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
@@ -111,10 +111,10 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
   });
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <div className="flex justify-between items-center mb-4">
+    <div className="w-full">
+      <div className="flex justify-between items-center mb-3 px-2">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-gray-900">
             💓 Hartslag - {new Date(data.date).toLocaleDateString('nl-NL', {
               weekday: 'long',
               day: 'numeric',
@@ -122,7 +122,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
               year: 'numeric'
             })}
           </h3>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-xs text-gray-600 mt-0.5">
             {data.sampleCount} metingen • Gem: {data.avgBpm} bpm • Min: {data.minBpm} bpm • Max: {data.maxBpm} bpm
           </p>
         </div>
@@ -135,10 +135,10 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
       </div>
 
       {/* Chart and Statistics Container */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4 items-start">
         {/* Chart */}
-        <div className="overflow-x-auto">
-          <svg width={chartWidth} height={chartHeight} className="max-w-full">
+        <div className="flex-1 overflow-x-auto w-full lg:w-auto">
+          <svg width={chartWidth} height={chartHeight}>
           <defs>
             <linearGradient id="heartRateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" style={{ stopColor: '#ef4444', stopOpacity: 0.3 }} />
@@ -271,7 +271,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
         </div>
 
         {/* Zone Statistics */}
-        <div className="lg:w-52 flex-shrink-0">
+        <div className="w-full lg:w-52 flex-shrink-0 px-2 lg:px-0">
           <h4 className="text-sm font-semibold text-gray-700 mb-2">Tijd per Zone</h4>
           <div className="space-y-2">
             {zoneStats.map((zone, i) => (
