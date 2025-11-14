@@ -14,6 +14,7 @@ interface HeartRateChartProps {
 export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(800);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Measure container width
   useEffect(() => {
@@ -151,9 +152,9 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
       </div>
 
       {/* Chart and Statistics Container */}
-      <div className="flex flex-col lg:flex-row gap-3 items-start">
+      <div className="relative">
         {/* Chart */}
-        <div className="flex-1 w-full lg:w-auto" ref={containerRef}>
+        <div className="w-full" ref={containerRef}>
           <svg
             width={chartWidth}
             height={chartHeight}
@@ -289,35 +290,63 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
         </svg>
         </div>
 
-        {/* Zone Statistics */}
-        <div className="w-full lg:w-52 flex-shrink-0">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">Tijd per Zone</h4>
-          <div className="space-y-2">
-            {zoneStats.map((zone, i) => (
-              <div key={i} className="space-y-0.5">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded" style={{ backgroundColor: zone.color, opacity: 1 }}></div>
-                    <span className="font-medium text-gray-700">{zone.name}</span>
+        {/* Collapsible Zone Statistics Panel */}
+        <div
+          className={`absolute top-0 right-0 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg transition-all duration-300 ${
+            isExpanded ? 'w-56 p-3' : 'w-12 p-2'
+          }`}
+        >
+          {/* Toggle Button */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full flex items-center justify-center text-gray-600 hover:text-gray-900 mb-2"
+            title={isExpanded ? 'Inklappen' : 'Uitklappen'}
+          >
+            <span className="text-lg">{isExpanded ? '→' : '←'}</span>
+          </button>
+
+          {isExpanded ? (
+            /* Expanded: Full details */
+            <div>
+              <h4 className="text-xs font-semibold text-gray-700 mb-2">Tijd per Zone</h4>
+              <div className="space-y-2">
+                {zoneStats.map((zone, i) => (
+                  <div key={i} className="space-y-0.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded" style={{ backgroundColor: zone.color, opacity: 1 }}></div>
+                        <span className="font-medium text-gray-700 text-[10px]">{zone.name}</span>
+                      </div>
+                      <span className="font-semibold text-gray-900 text-xs">{zone.percentage.toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1">
+                      <div
+                        className="h-1 rounded-full transition-all"
+                        style={{
+                          width: `${zone.percentage}%`,
+                          backgroundColor: zone.color,
+                          opacity: 0.8
+                        }}
+                      ></div>
+                    </div>
+                    <div className="text-[9px] text-gray-500">
+                      {Math.round(zone.min)}-{Math.round(zone.max)} bpm
+                    </div>
                   </div>
-                  <span className="font-semibold text-gray-900">{zone.percentage.toFixed(1)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5">
-                  <div
-                    className="h-1.5 rounded-full transition-all"
-                    style={{
-                      width: `${zone.percentage}%`,
-                      backgroundColor: zone.color,
-                      opacity: 0.8
-                    }}
-                  ></div>
-                </div>
-                <div className="text-[10px] text-gray-500">
-                  {Math.round(zone.min)}-{Math.round(zone.max)} bpm
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ) : (
+            /* Collapsed: Only percentages */
+            <div className="space-y-1">
+              {zoneStats.map((zone, i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <div className="w-3 h-3 rounded mb-0.5" style={{ backgroundColor: zone.color, opacity: 1 }}></div>
+                  <span className="text-[9px] font-semibold text-gray-900">{zone.percentage.toFixed(0)}%</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
