@@ -137,14 +137,14 @@ export function ActivityTab() {
   const getColor = (metric: ActivityMetric, activity?: typeof activities[0], hrSample?: typeof hrSamples[0]): string => {
     switch (metric) {
       case 'heartRate': {
-        if (!hrSample) return 'bg-gray-200';
-        const avgHR = hrSample.avgBpm || 0;
-        if (avgHR === 0) return 'bg-gray-200';
-        // Color based on average daily heart rate (including all activities)
-        if (avgHR <= 75) return 'bg-green-500';  // Excellent - low average
-        if (avgHR <= 85) return 'bg-yellow-500'; // Good - normal range
-        if (avgHR <= 95) return 'bg-orange-400'; // Average - slightly elevated
-        return 'bg-red-400';                     // High - consistently elevated (>95)
+        if (!activity) return 'bg-gray-200';
+        const restingHR = activity.heartRateResting || 0;
+        if (restingHR === 0) return 'bg-gray-200';
+        // Color based on resting heart rate (fitness indicator)
+        if (restingHR <= 55) return 'bg-green-500';  // Excellent - very fit
+        if (restingHR <= 60) return 'bg-yellow-500'; // Good - fit
+        if (restingHR <= 65) return 'bg-orange-400'; // Average - moderate fitness
+        return 'bg-red-400';                         // High - needs improvement or recovery
       }
       case 'steps': {
         if (!activity) return 'bg-gray-200';
@@ -340,8 +340,9 @@ export function ActivityTab() {
 
                       // Build tooltip
                       let tooltipText = day.date;
-                      if (selectedMetric === 'heartRate' && day.hrSample) {
-                        tooltipText = `${day.date}: ${day.hrSample.avgBpm} bpm avg (${day.hrSample.minBpm}-${day.hrSample.maxBpm})`;
+                      if (selectedMetric === 'heartRate' && day.activity) {
+                        const restingHR = day.activity.heartRateResting || 0;
+                        tooltipText = restingHR > 0 ? `${day.date}: ${restingHR} bpm rust HR` : `${day.date}: Geen HR data`;
                       } else if (day.activity) {
                         let value = '';
                         switch (selectedMetric) {
