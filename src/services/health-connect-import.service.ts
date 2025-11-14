@@ -57,6 +57,9 @@ class HealthConnectImportService {
       // Check if this is a valid Health Connect database
       this.validateDatabase();
 
+      // Debug: Show all available FitDays data
+      this.debugFitDaysTables();
+
       // Get all unique dates from the database
       const dates = this.getUniqueDates();
 
@@ -96,6 +99,72 @@ class HealthConnectImportService {
     if (!result.length || !result[0].values.length) {
       throw new Error('Dit lijkt geen Health Connect database te zijn');
     }
+  }
+
+  /**
+   * Debug: List all available FitDays tables and sample data
+   * Call this after loading the database to see what metrics are available
+   */
+  debugFitDaysTables(): void {
+    if (!this.db) {
+      console.error('❌ Database not loaded');
+      return;
+    }
+
+    console.log('🔍 DEBUG: Scanning for FitDays data...');
+
+    // Get app_info_id for FitDays (usually 3)
+    const appInfoResult = this.db.exec(`
+      SELECT id, app_name FROM application_info_table
+      WHERE app_name LIKE '%FitDays%' OR app_name LIKE '%Sacoma%'
+    `);
+
+    const fitDaysAppId = appInfoResult[0]?.values[0]?.[0] || 3;
+    console.log(`📱 FitDays app_info_id: ${fitDaysAppId}`);
+
+    // Get all record tables
+    const tablesResult = this.db.exec(`
+      SELECT name FROM sqlite_master
+      WHERE type='table' AND name LIKE '%_record_table'
+      ORDER BY name
+    `);
+
+    const tables = tablesResult[0]?.values.map(row => row[0] as string) || [];
+    console.log(`📊 Found ${tables.length} record tables`);
+
+    // For each table, check if FitDays has data
+    tables.forEach(tableName => {
+      try {
+        const dataResult = this.db!.exec(`
+          SELECT COUNT(*) as count FROM ${tableName}
+          WHERE app_info_id = ${fitDaysAppId}
+        `);
+
+        const count = dataResult[0]?.values[0]?.[0] as number;
+        if (count > 0) {
+          console.log(`✅ ${tableName}: ${count} records from FitDays`);
+
+          // Get column names
+          const columnsResult = this.db!.exec(`PRAGMA table_info(${tableName})`);
+          const columns = columnsResult[0]?.values.map(row => row[1] as string) || [];
+          console.log(`   Columns:`, columns.join(', '));
+
+          // Get sample data
+          const sampleResult = this.db!.exec(`
+            SELECT * FROM ${tableName}
+            WHERE app_info_id = ${fitDaysAppId}
+            LIMIT 1
+          `);
+          if (sampleResult[0]?.values[0]) {
+            console.log(`   Sample data:`, sampleResult[0].values[0]);
+          }
+        }
+      } catch (err) {
+        // Skip tables that error out
+      }
+    });
+
+    console.log('🔍 DEBUG: FitDays scan complete');
   }
 
   /**
