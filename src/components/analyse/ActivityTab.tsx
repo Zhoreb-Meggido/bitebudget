@@ -307,7 +307,7 @@ export function ActivityTab() {
         {heatmapData.length === 0 ? (
           <div className="p-6 text-center text-gray-500">Geen data beschikbaar</div>
         ) : (
-          <div className="p-6 flex flex-col lg:flex-row gap-6">
+          <div className="p-2 md:p-4 flex flex-col lg:flex-row gap-4">
             {/* Heatmap (left side on desktop, top on mobile) */}
             <div className={`flex-shrink-0 overflow-x-auto ${selectedDate && selectedMetric === 'heartRate' ? 'lg:w-auto' : 'w-full'}`}>
             <div className="inline-block min-w-full">

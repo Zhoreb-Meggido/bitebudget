@@ -112,7 +112,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
 
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center mb-3 px-2">
+      <div className="flex justify-between items-center mb-2">
         <div>
           <h3 className="text-base font-semibold text-gray-900">
             💓 Hartslag - {new Date(data.date).toLocaleDateString('nl-NL', {
@@ -135,10 +135,14 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
       </div>
 
       {/* Chart and Statistics Container */}
-      <div className="flex flex-col lg:flex-row gap-4 items-start">
+      <div className="flex flex-col lg:flex-row gap-3 items-start">
         {/* Chart */}
-        <div className="flex-1 overflow-x-auto w-full lg:w-auto">
-          <svg width={chartWidth} height={chartHeight}>
+        <div className="flex-1 w-full lg:w-auto">
+          <svg
+            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+            className="w-full h-auto"
+            preserveAspectRatio="xMinYMin meet"
+          >
           <defs>
             <linearGradient id="heartRateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" style={{ stopColor: '#ef4444', stopOpacity: 0.3 }} />
@@ -271,7 +275,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
         </div>
 
         {/* Zone Statistics */}
-        <div className="w-full lg:w-52 flex-shrink-0 px-2 lg:px-0">
+        <div className="w-full lg:w-52 flex-shrink-0">
           <h4 className="text-sm font-semibold text-gray-700 mb-2">Tijd per Zone</h4>
           <div className="space-y-2">
             {zoneStats.map((zone, i) => (
