@@ -1,5 +1,5 @@
 import initSqlJs, { Database } from 'sql.js';
-import { DailyActivity, HeartRateSample } from '@/types/database.types';
+import { DailyActivity, HeartRateSample, Weight } from '@/types/database.types';
 import { heartRateSamplesService } from './heart-rate-samples.service';
 
 export interface HealthConnectImportResult {
@@ -8,6 +8,7 @@ export interface HealthConnectImportResult {
   skipped: number;
   errors: string[];
   activities: DailyActivity[];
+  weights?: Weight[];  // FitDays body composition data
 }
 
 export interface ParsedHealthConnectData {
@@ -115,7 +116,7 @@ class HealthConnectImportService {
 
     // Get app_info_id for FitDays (usually 3)
     const appInfoResult = this.db.exec(`
-      SELECT id, app_name FROM application_info_table
+      SELECT row_id, app_name FROM application_info_table
       WHERE app_name LIKE '%FitDays%' OR app_name LIKE '%Sacoma%'
     `);
 
@@ -357,12 +358,8 @@ class HealthConnectImportService {
       // Max HR is optional
     }
 
-    // 10. Heart Rate Samples (Intraday data) - Store separately
-    try {
-      await this.extractAndStoreHeartRateSamples(epochDay, date);
-    } catch (err) {
-      console.warn(`Could not extract HR samples for ${date}:`, err);
-    }
+    // Note: Heart Rate Samples extraction is now done separately during import
+    // to avoid writing to DB during preview
 
     // Add warnings for commonly missing fields
     if (!metrics.heartRateResting && !metrics.heartRateMax) {
@@ -378,9 +375,47 @@ class HealthConnectImportService {
   }
 
   /**
-   * Extract and store heart rate samples (intraday data)
+   * Extract and store heart rate samples (intraday data) for all dates
+   * Should be called during import, not during preview
    */
-  private async extractAndStoreHeartRateSamples(epochDay: number, date: string): Promise<void> {
+  async extractAndStoreAllHeartRateSamples(): Promise<void> {
+    if (!this.db) {
+      console.warn('❌ Database not loaded, cannot extract HR samples');
+      return;
+    }
+
+    // Get all unique dates that have HR data
+    const datesResult = this.db.exec(`
+      SELECT DISTINCT hr.local_date
+      FROM heart_rate_record_table hr
+      WHERE hr.app_info_id = 4  -- Garmin Connect
+      ORDER BY hr.local_date
+    `);
+
+    if (!datesResult[0]?.values || datesResult[0].values.length === 0) {
+      console.log('ℹ️ No heart rate data found');
+      return;
+    }
+
+    const epochDays = datesResult[0].values.map(row => row[0] as number);
+    console.log(`💓 Extracting HR samples for ${epochDays.length} days...`);
+
+    for (const epochDay of epochDays) {
+      const date = this.epochDaysToDate(epochDay);
+      try {
+        await this.extractAndStoreHeartRateSamplesForDay(epochDay, date);
+      } catch (err) {
+        console.warn(`Could not extract HR samples for ${date}:`, err);
+      }
+    }
+
+    console.log(`✅ Finished extracting HR samples`);
+  }
+
+  /**
+   * Extract and store heart rate samples (intraday data) for a specific day
+   */
+  private async extractAndStoreHeartRateSamplesForDay(epochDay: number, date: string): Promise<void> {
     if (!this.db) return;
 
     // Get all HR samples for this day
@@ -407,6 +442,103 @@ class HealthConnectImportService {
     await heartRateSamplesService.addOrUpdateSamples(date, samples);
 
     console.log(`💓 Stored ${samples.length} HR samples for ${date}`);
+  }
+
+  /**
+   * Extract FitDays body composition data (weight, body fat, bone mass, BMR)
+   * Returns array of Weight objects with body composition metrics
+   */
+  async extractFitDaysBodyComposition(): Promise<Weight[]> {
+    if (!this.db) {
+      throw new Error('Database not loaded');
+    }
+
+    console.log('🏋️ Extracting FitDays body composition data...');
+
+    // Get all dates that have weight data from FitDays
+    const datesResult = this.db.exec(`
+      SELECT DISTINCT local_date
+      FROM weight_record_table
+      WHERE app_info_id = 3  -- FitDays
+      ORDER BY local_date
+    `);
+
+    if (!datesResult[0]?.values || datesResult[0].values.length === 0) {
+      console.log('⚠️ No FitDays weight data found');
+      return [];
+    }
+
+    const epochDays = datesResult[0].values.map(row => row[0] as number);
+    const weights: Weight[] = [];
+
+    for (const epochDay of epochDays) {
+      const date = this.epochDaysToDate(epochDay);
+
+      // Get weight (in grams, need to convert to kg)
+      const weightResult = this.db.exec(`
+        SELECT weight, time, last_modified_time
+        FROM weight_record_table
+        WHERE local_date = ${epochDay} AND app_info_id = 3
+        ORDER BY time DESC
+        LIMIT 1
+      `);
+
+      if (!weightResult[0]?.values[0]) continue;
+
+      const weightGrams = weightResult[0].values[0][0] as number;
+      const timestamp = weightResult[0].values[0][1] as number;
+      const lastModified = weightResult[0].values[0][2] as number;
+
+      // Get body fat percentage
+      const bodyFatResult = this.db.exec(`
+        SELECT percentage
+        FROM body_fat_record_table
+        WHERE local_date = ${epochDay} AND app_info_id = 3
+        ORDER BY time DESC
+        LIMIT 1
+      `);
+      const bodyFat = bodyFatResult[0]?.values[0]?.[0] as number | undefined;
+
+      // Get bone mass (in grams, convert to kg)
+      const boneMassResult = this.db.exec(`
+        SELECT mass
+        FROM bone_mass_record_table
+        WHERE local_date = ${epochDay} AND app_info_id = 3
+        ORDER BY time DESC
+        LIMIT 1
+      `);
+      const boneMassGrams = boneMassResult[0]?.values[0]?.[0] as number | undefined;
+
+      // Get BMR (Basal Metabolic Rate in kcal)
+      const bmrResult = this.db.exec(`
+        SELECT basal_metabolic_rate
+        FROM basal_metabolic_rate_record_table
+        WHERE local_date = ${epochDay} AND app_info_id = 3
+        ORDER BY time DESC
+        LIMIT 1
+      `);
+      const bmr = bmrResult[0]?.values[0]?.[0] as number | undefined;
+
+      // Create Weight object
+      const weight: Weight = {
+        id: `hc_weight_${date}`,
+        date,
+        weight: parseFloat((weightGrams / 1000).toFixed(2)), // Convert grams to kg
+        bodyFat: bodyFat ? parseFloat(bodyFat.toFixed(1)) : undefined,
+        boneMass: boneMassGrams ? parseFloat((boneMassGrams / 1000).toFixed(2)) : undefined,
+        bmr: bmr ? Math.round(bmr) : undefined,
+        source: 'health_connect',
+        created_at: new Date(timestamp).toISOString(),
+        updated_at: new Date(lastModified).toISOString(),
+      };
+
+      weights.push(weight);
+
+      console.log(`✅ ${date}: ${weight.weight}kg, BF: ${weight.bodyFat}%, Bone: ${weight.boneMass}kg, BMR: ${weight.bmr}kcal`);
+    }
+
+    console.log(`🏋️ Extracted ${weights.length} FitDays weight measurements`);
+    return weights;
   }
 
   /**

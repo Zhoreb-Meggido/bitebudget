@@ -153,12 +153,23 @@ export interface OpenFoodFactsSearchResponse {
 // WEIGHTS (Gewicht Tracking)
 // ============================================
 
+export type WeightSource = 'manual' | 'health_connect';
+
 export interface Weight {
   id?: string;
   date: string;          // yyyy-MM-dd formaat
   weight: number;        // in kg
   note?: string;
+
+  // Body composition metrics (from smart scales like FitDays)
+  bodyFat?: number;      // Body fat percentage (0-100)
+  boneMass?: number;     // Bone mass in kg
+  bmr?: number;          // Basal Metabolic Rate in kcal
+
+  // Metadata
+  source?: WeightSource; // Where this measurement came from
   created_at: string;    // ISO timestamp
+  updated_at?: string;   // ISO timestamp (for merge strategy)
   deleted?: boolean;     // Soft delete flag
   deleted_at?: string;   // ISO timestamp when deleted
 }

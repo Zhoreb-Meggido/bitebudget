@@ -134,6 +134,113 @@ class WeightsService {
   async exportWeights(): Promise<Weight[]> {
     return await this.getAllWeights();
   }
+
+  /**
+   * Import FitDays body composition data with merge strategy
+   * Merge strategy: "newest timestamp wins" when conflicts occur
+   * - If a weight entry exists for the same date, compare timestamps
+   * - Keep the entry with the most recent updated_at timestamp
+   * - Preserves manual entries if they are more recent than FitDays data
+   */
+  async importFitDaysWeights(fitDaysWeights: Weight[]): Promise<{
+    imported: number;
+    updated: number;
+    skipped: number;
+  }> {
+    let imported = 0;
+    let updated = 0;
+    let skipped = 0;
+
+    console.log(`🏋️ Starting FitDays import with ${fitDaysWeights.length} weight records`);
+
+    for (const fitDaysWeight of fitDaysWeights) {
+      // Find existing weight entry for this date
+      const existing = await db.weights
+        .where('date')
+        .equals(fitDaysWeight.date)
+        .first();
+
+      console.log(`\n📅 Processing ${fitDaysWeight.date}:`);
+      console.log(`  FitDays: ${fitDaysWeight.weight}kg, BF: ${fitDaysWeight.bodyFat}%, updated_at: ${fitDaysWeight.updated_at}`);
+      if (existing) {
+        console.log(`  Existing: ${existing.weight}kg, BF: ${existing.bodyFat}%, updated_at: ${existing.updated_at}, created_at: ${existing.created_at}`);
+      } else {
+        console.log(`  Existing: NONE`);
+      }
+
+      if (!existing) {
+        // No existing entry for this date - add new entry
+        await db.weights.add({
+          ...fitDaysWeight,
+          id: fitDaysWeight.id || generateId(),
+          created_at: fitDaysWeight.created_at || getTimestamp(),
+        });
+        imported++;
+        console.log(`✅ Added FitDays weight for ${fitDaysWeight.date}: ${fitDaysWeight.weight}kg`);
+      } else {
+        // Entry exists - apply merge strategy
+        // STRATEGY: Always import body composition data from FitDays
+        // Only update weight value if FitDays timestamp is newer
+        const existingTimestamp = existing.updated_at || existing.created_at;
+        const fitDaysTimestamp = fitDaysWeight.updated_at || fitDaysWeight.created_at;
+
+        console.log(`  Comparing timestamps: FitDays (${fitDaysTimestamp}) vs Existing (${existingTimestamp})`);
+        console.log(`  FitDays is newer? ${fitDaysTimestamp > existingTimestamp}`);
+
+        if (fitDaysTimestamp > existingTimestamp) {
+          // FitDays data is newer - update everything
+          await db.weights.update(existing.id!, {
+            weight: fitDaysWeight.weight,
+            bodyFat: fitDaysWeight.bodyFat,
+            boneMass: fitDaysWeight.boneMass,
+            bmr: fitDaysWeight.bmr,
+            source: fitDaysWeight.source,
+            updated_at: fitDaysWeight.updated_at,
+            // Preserve manual note if it exists
+            note: existing.note || fitDaysWeight.note,
+          });
+          updated++;
+          console.log(`🔄 Updated weight for ${fitDaysWeight.date} (FitDays data is newer - all fields updated)`);
+        } else {
+          // Existing weight is newer, but still import body composition data if missing
+          const updates: Partial<Weight> = {};
+          let hasUpdates = false;
+
+          // Add body composition fields if they don't exist in the current record
+          if (fitDaysWeight.bodyFat !== undefined && existing.bodyFat === undefined) {
+            updates.bodyFat = fitDaysWeight.bodyFat;
+            hasUpdates = true;
+          }
+          if (fitDaysWeight.boneMass !== undefined && existing.boneMass === undefined) {
+            updates.boneMass = fitDaysWeight.boneMass;
+            hasUpdates = true;
+          }
+          if (fitDaysWeight.bmr !== undefined && existing.bmr === undefined) {
+            updates.bmr = fitDaysWeight.bmr;
+            hasUpdates = true;
+          }
+
+          if (hasUpdates) {
+            await db.weights.update(existing.id!, updates);
+            updated++;
+            console.log(`🔄 Added body composition data to ${fitDaysWeight.date} (kept existing weight)`);
+          } else {
+            skipped++;
+            console.log(`⏭️ Skipped ${fitDaysWeight.date} (existing data is complete and newer)`);
+          }
+        }
+      }
+    }
+
+    console.log(`🏋️ FitDays import complete: ${imported} added, ${updated} updated, ${skipped} skipped`);
+
+    // Trigger auto-sync if we made changes
+    if (imported > 0 || updated > 0) {
+      syncService.triggerAutoSync();
+    }
+
+    return { imported, updated, skipped };
+  }
 }
 
 // Singleton instance

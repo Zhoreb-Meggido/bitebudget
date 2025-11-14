@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { healthConnectImportService, type ParsedHealthConnectData } from '@/services/health-connect-import.service';
 import { activitiesService } from '@/services/activities.service';
+import { weightsService } from '@/services/weights.service';
 
 export function HealthConnectImportSection() {
   const [file, setFile] = useState<File | null>(null);
@@ -39,6 +40,17 @@ export function HealthConnectImportSection() {
       }
 
       setParsedData(results);
+
+      // Preview body composition data (don't import yet, just show in console)
+      try {
+        const bodyCompData = await healthConnectImportService.extractFitDaysBodyComposition();
+        console.log(`📊 Preview: Found ${bodyCompData.length} weight measurements with body composition`);
+        bodyCompData.forEach(w => {
+          console.log(`  ${w.date}: ${w.weight}kg, BF: ${w.bodyFat}%, Bone: ${w.boneMass}kg, BMR: ${w.bmr}kcal`);
+        });
+      } catch (err) {
+        console.warn('Could not preview body composition:', err);
+      }
     } catch (err: any) {
       setError(err?.message || 'Fout bij het parsen van de database');
       console.error('Health Connect parse error:', err);
@@ -57,10 +69,9 @@ export function HealthConnectImportSection() {
     setError('');
 
     try {
-      // Convert to DailyActivity objects
+      // 1. Import Activities
       const activities = healthConnectImportService.convertToActivities(parsedData);
 
-      // Import into database
       let imported = 0;
       let skipped = 0;
 
@@ -101,11 +112,54 @@ export function HealthConnectImportSection() {
         }
       }
 
+      // 2. Import Heart Rate Samples (intraday HR data)
+      try {
+        await healthConnectImportService.extractAndStoreAllHeartRateSamples();
+      } catch (err) {
+        console.error('Failed to import heart rate samples:', err);
+      }
+
+      // 3. Import Body Composition (FitDays weight data)
+      let weightsImported = 0;
+      let weightsUpdated = 0;
+      let weightsSkipped = 0;
+
+      try {
+        const bodyCompositionData = await healthConnectImportService.extractFitDaysBodyComposition();
+
+        if (bodyCompositionData.length > 0) {
+          const weightResult = await weightsService.importFitDaysWeights(bodyCompositionData);
+          weightsImported = weightResult.imported;
+          weightsUpdated = weightResult.updated;
+          weightsSkipped = weightResult.skipped;
+        }
+      } catch (err) {
+        console.error('Failed to import body composition:', err);
+      }
+
       setImportSuccess(true);
       setError('');
 
       // Show summary
-      alert(`Import succesvol!\n\n${imported} nieuwe dagen toegevoegd\n${skipped} bestaande dagen samengevoegd`);
+      const summary = [
+        `✅ Import succesvol!`,
+        ``,
+        `📊 Activiteiten:`,
+        `  • ${imported} nieuwe dagen toegevoegd`,
+        `  • ${skipped} bestaande dagen samengevoegd`,
+      ];
+
+      if (weightsImported > 0 || weightsUpdated > 0 || weightsSkipped > 0) {
+        summary.push(
+          ``,
+          `🏋️ Gewicht & Lichaamssamenstelling:`,
+          `  • ${weightsImported} nieuwe metingen toegevoegd`,
+          `  • ${weightsUpdated} metingen bijgewerkt`,
+          `  • ${weightsSkipped} overgeslagen (oudere data)`
+        );
+      }
+
+      alert(summary.join('\n'));
 
       // Reset
       setFile(null);
