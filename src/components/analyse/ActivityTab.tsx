@@ -140,11 +140,11 @@ export function ActivityTab() {
         if (!hrSample) return 'bg-gray-200';
         const avgHR = hrSample.avgBpm || 0;
         if (avgHR === 0) return 'bg-gray-200';
-        // Color based on average resting heart rate ranges
-        if (avgHR <= 60) return 'bg-green-500';  // Excellent (athlete level)
-        if (avgHR <= 70) return 'bg-yellow-500'; // Good
-        if (avgHR <= 80) return 'bg-orange-400'; // Average
-        return 'bg-red-400';                     // Above average
+        // Color based on average daily heart rate (including all activities)
+        if (avgHR <= 75) return 'bg-green-500';  // Excellent - low average
+        if (avgHR <= 85) return 'bg-yellow-500'; // Good - normal range
+        if (avgHR <= 95) return 'bg-orange-400'; // Average - slightly elevated
+        return 'bg-red-400';                     // High - consistently elevated (>95)
       }
       case 'steps': {
         if (!activity) return 'bg-gray-200';
