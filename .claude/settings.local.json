@@ -20,7 +20,8 @@
       "Bash(for file in src/hooks/useProducts.ts src/hooks/useWeights.ts src/hooks/usePortions.ts src/hooks/useTemplates.ts)",
       "Bash(do:*)",
       "Bash(echo:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []
