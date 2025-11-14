@@ -36,8 +36,16 @@ export function useSettings() {
 
     loadSettings();
 
+    // Listen for sync events to refresh data (fix for cloud sync overwriting local changes)
+    const handleSync = () => {
+      console.log('🔄 useSettings: Reloading after sync');
+      loadSettings();
+    };
+    window.addEventListener('data-synced', handleSync);
+
     return () => {
       mounted = false;
+      window.removeEventListener('data-synced', handleSync);
     };
   }, []);
 
