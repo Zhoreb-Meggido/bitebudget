@@ -1050,7 +1050,7 @@ npm run build
 
 ## 📝 Version History
 
-### v1.7.0 (November 2024) - Current
+### v1.7.0 (November 2025) - Current
 **Heart Rate Visualization - Intraday Charts with Zones & Statistics**
 - ✅ Intraday heart rate visualization with ~680 samples per day
 - ✅ Heart rate zones with colored backgrounds (5 zones based on max HR)
@@ -1064,7 +1064,7 @@ npm run build
 - ✅ useHeartRateSamples hook and HeartRateChart component
 - ✅ TypeScript type definitions (HeartRateSample, DayHeartRateSamples)
 
-### v1.6.2 (November 2024)
+### v1.6.2 (January 2025)
 **Mobile UX Improvements - Swipe Gestures & Table Overflow Fixes**
 - ✅ Swipe left/right to navigate between tabs (Analyze & Data pages)
 - ✅ useSwipeTabs hook with conflict prevention (50px min distance)
@@ -1072,7 +1072,7 @@ npm run build
 - ✅ react-swipeable library integration
 - ✅ Native app-like navigation experience
 
-### v1.6.1 (November 2024)
+### v1.6.1 (January 2025)
 **Critical Sync Bugfixes & Search Performance**
 - ✅ Fixed duplicate entries bug (ID preservation during sync)
 - ✅ Fixed soft-deleted items cleanup (getAllEntriesIncludingDeleted)
@@ -1080,7 +1080,7 @@ npm run build
 - ✅ Fixed infinite update loop (preserve cloud timestamps)
 - ✅ Search debouncing (useDebounce hook, 300ms delay)
 
-### v1.6.0 (November 2024)
+### v1.6.0 (January 2025)
 **Automatic OAuth Token Refresh + HRV Tracking**
 - ✅ Authorization Code Flow with Supabase Edge Functions
 - ✅ Automatic token refresh every 50 minutes
@@ -1088,28 +1088,28 @@ npm run build
 - ✅ Enhanced CSV import with Garmin format support
 - ✅ Zero user interaction for token management
 
-### v1.5.0 (November 2024)
+### v1.5.0 (January 2025)
 **Templates, Integrations & Smart Sync**
 - ✅ Meal templates with favorites and quick add
 - ✅ Garmin Connect CSV import
 - ✅ Smart token management with proactive warnings
 - ✅ Sync service fixes (duplicate barcode, entry conflicts)
 
-### v1.4.0 (November 2024)
+### v1.4.0 (January 2025)
 **Data Management Page**
 - ✅ Data page met 3 tabs (Producten & Porties, Templates, Import/Export)
 - ✅ Full CRUD modals voor producten, porties en templates
 - ✅ Inline portie weergave en default portie support
 - ✅ Uniforme emoji button stijl (⭐✏️🗑️)
 
-### v1.3.0 (November 2024)
+### v1.3.0 (January 2025)
 **Porties & Templates**
 - ✅ Portie templates database (50+ producten)
 - ✅ Meal templates met categorieën en favorites
 - ✅ Quick add sectie voor snelle maaltijd logging
 - ✅ Cloud sync v1.3 met portions/templates support
 
-### v1.2.1 (November 2024)
+### v1.2.1 (January 2025)
 **Cloud Sync Fixes & Mobile UX**
 - ✅ Auto-sync voor products en settings
 - ✅ Offline changes sync bij reconnect
@@ -1163,6 +1163,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** November 14, 2024
+**Last Updated:** November 14, 2025
 **Status:** v1.7.0 - Heart Rate Visualization (Intraday Charts with Zones & Statistics)
 **Next:** Performance optimizations (memoization) & Chart.js config deduplication
