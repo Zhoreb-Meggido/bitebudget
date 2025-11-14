@@ -1,10 +1,10 @@
-# BiteBudget (Voedseljournaal) v1.6.2
+# BiteBudget (Voedseljournaal) v1.7.0
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.6.2:** Mobile UX Improvements - Swipe gestures voor tab navigatie & betere table overflow handling!
+**🎉 Nieuw in v1.7.0:** Heart Rate Visualization - Intraday hartslag grafieken met zones, collapsible statistics panel en heatmap integratie!
 
 ---
 
@@ -48,7 +48,49 @@ npm run build
 
 ---
 
-## ✨ v1.4.0 - Data Management Page (Huidige Versie)
+## ✨ v1.7.0 - Heart Rate Visualization (Huidige Versie)
+
+### **Intraday Heart Rate Charts** 💓
+
+#### **Comprehensive HR Tracking**
+- ✅ **Intraday Visualization** - ~680 heart rate measurements per day (every ~2 minutes)
+- ✅ **Heart Rate Zones** - 5 colored zones based on max HR (Rust, Vet, Cardio, Anaërobe, Max)
+- ✅ **Zone Statistics** - Time spent percentage and sample count per zone
+- ✅ **Collapsible Panel** - Compact view (percentages only) or expanded (full details)
+- ✅ **Responsive SVG Chart** - Scales to container width with fixed 300px height
+- ✅ **Hand-Coded SVG** - No external charting library dependencies
+
+#### **Activity Tab Integration** 📊
+- ✅ **Resting HR Heatmap** - 8-week calendar showing resting heart rate (fitness indicator)
+- ✅ **Color-Coded Fitness** - Green (≤55 bpm) to Red (>65 bpm) for quick visual assessment
+- ✅ **Clickable Days** - Click any day with HR data to view detailed intraday chart
+- ✅ **Heart Indicators** - 💓 icon on days with full intraday sample data
+- ✅ **HR Stats Cards** - 2 new cards showing Ø Rust HR and Ø Max HR across all days
+
+#### **Technical Implementation** 🔧
+- ✅ **Database v9** - New heartRateSamples table with date as primary key
+- ✅ **useHeartRateSamples Hook** - Custom hook for loading and managing HR samples
+- ✅ **HeartRateChart Component** - SVG-based visualization with zones and statistics
+- ✅ **Health Connect Ready** - Schema supports import from Health Connect API
+- ✅ **TypeScript Types** - HeartRateSample and DayHeartRateSamples interfaces
+
+#### **UX Features** 🎨
+- ✅ **Zone Color Progression** - Purple → Blue → Green → Orange → Red (visual hierarchy)
+- ✅ **Smooth Animations** - 300ms transitions for panel expand/collapse
+- ✅ **Semi-Transparent Panel** - bg-white/95 with backdrop-blur for modern look
+- ✅ **Minimal Space Usage** - Panel floats over chart when expanded (48px → 224px)
+- ✅ **Mobile Optimized** - Responsive layout with full-width support
+
+**Use Cases:**
+- Track daily fitness level through resting HR trends
+- Identify lifestyle impact (alcohol, sleep) on resting HR
+- Analyze workout intensity and time spent in different HR zones
+- Monitor recovery through HR patterns
+- Visualize activity intensity distribution throughout the day
+
+---
+
+## ✨ v1.4.0 - Data Management Page
 
 ### **Nieuwe Data Page met 3 Tabs** 📊
 
@@ -807,6 +849,26 @@ public/
 }
 ```
 
+**HeartRateSamples** (Intraday HR Data - v1.7+)
+```typescript
+{
+  date: string;                    // Primary key: YYYY-MM-DD
+  samples: HeartRateSample[];      // Array of ~680 intraday samples
+  sampleCount: number;             // Number of samples
+  minBpm: number;                  // Minimum BPM for the day
+  maxBpm: number;                  // Maximum BPM for the day
+  avgBpm: number;                  // Average BPM for the day
+  created_at: string;              // ISO timestamp
+  updated_at: string;              // ISO timestamp
+  deleted?: boolean;               // Soft delete flag
+}
+
+interface HeartRateSample {
+  timestamp: number;               // Unix timestamp (milliseconds)
+  bpm: number;                     // Heart rate in beats per minute
+}
+```
+
 **Settings** (Gebruikersinstellingen)
 ```typescript
 {
@@ -988,7 +1050,21 @@ npm run build
 
 ## 📝 Version History
 
-### v1.6.2 (January 2025) - Current
+### v1.7.0 (January 2025) - Current
+**Heart Rate Visualization - Intraday Charts with Zones & Statistics**
+- ✅ Intraday heart rate visualization with ~680 samples per day
+- ✅ Heart rate zones with colored backgrounds (5 zones based on max HR)
+- ✅ Collapsible statistics panel (compact/expanded views)
+- ✅ Resting HR heatmap integration (8-week calendar)
+- ✅ Clickable heatmap days to show detailed intraday charts
+- ✅ Heart indicators (💓) on days with intraday sample data
+- ✅ 2 new HR stats cards (Ø Rust HR, Ø Max HR)
+- ✅ Responsive SVG chart with dynamic width scaling
+- ✅ Database v9 with heartRateSamples table
+- ✅ useHeartRateSamples hook and HeartRateChart component
+- ✅ TypeScript type definitions (HeartRateSample, DayHeartRateSamples)
+
+### v1.6.2 (January 2025)
 **Mobile UX Improvements - Swipe Gestures & Table Overflow Fixes**
 - ✅ Swipe left/right to navigate between tabs (Analyze & Data pages)
 - ✅ useSwipeTabs hook with conflict prevention (50px min distance)
@@ -1087,6 +1163,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** January 11, 2025
-**Status:** v1.6.2 - Mobile UX Improvements (Swipe Gestures + Table Overflow)
+**Last Updated:** January 14, 2025
+**Status:** v1.7.0 - Heart Rate Visualization (Intraday Charts with Zones & Statistics)
 **Next:** Performance optimizations (memoization) & Chart.js config deduplication

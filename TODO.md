@@ -117,6 +117,19 @@
 
 ## Completed ✅
 
+### Heart Rate Visualization (v1.7.0) ✅
+- [x] Intraday heart rate chart with ~680 samples per day
+- [x] Heart rate zone visualization with colored backgrounds
+- [x] Collapsible statistics panel showing time spent per zone
+- [x] Responsive SVG chart that scales to container width
+- [x] Resting HR heatmap integration (fitness indicator)
+- [x] Clickable heatmap days to show detailed intraday chart
+- [x] Heart indicator (💓) on days with intraday samples
+- [x] 2 new HR stats cards (Ø Rust HR, Ø Max HR)
+- [x] Database schema v9 with heartRateSamples table
+- [x] useHeartRateSamples hook for data management
+- [x] HeartRateChart component with zones and statistics
+
 ### CloudSync Settings Fix (v1.6.8) ✅
 - [x] Fix settings merge logic to use timestamps instead of format check
 - [x] Settings updates from other devices no longer get lost during sync
