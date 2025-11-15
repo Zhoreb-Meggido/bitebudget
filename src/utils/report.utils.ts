@@ -1213,3 +1213,167 @@ function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): voi
   const fileName = `voedseljournaal_maandrapport_${new Date().toISOString().split('T')[0]}.pdf`;
   doc.save(fileName);
 }
+
+/**
+ * Export weekly aggregates to CSV
+ */
+export function exportWeeklyAggregatesToCSV(weeklyAggregates: any[]): void {
+  if (weeklyAggregates.length === 0) {
+    alert('Geen data om te exporteren');
+    return;
+  }
+
+  // CSV Header
+  const headers = [
+    'Week',
+    'Jaar',
+    'Van',
+    'Tot',
+    'Dagen',
+    'Ø Cal (kcal)',
+    'Ø Eiwit (g)',
+    'Ø Koolhydraten (g)',
+    'Ø Suikers (g)',
+    'Ø Vetten (g)',
+    'Ø Verz. vet (g)',
+    'Ø Vezels (g)',
+    'Ø Natrium (mg)',
+    'Dagen onder doel',
+    'Dagen binnen bereik',
+    'Dagen boven doel',
+    'Ø Stappen',
+    'Ø Actieve Cal (kcal)',
+    'Ø Intensiteit (min)',
+    'Ø Slaap (uur)',
+    'Ø Rust HR (bpm)',
+    'Ø Max HR (bpm)',
+  ];
+
+  // CSV Rows
+  const rows = weeklyAggregates.map(week => {
+    const activity = week.activity || {};
+
+    return [
+      week.weekNumber,
+      week.year,
+      week.weekStart,
+      week.weekEnd,
+      week.daysTracked,
+      week.nutrition.avgCalories,
+      week.nutrition.avgProtein,
+      week.nutrition.avgCarbs,
+      week.nutrition.avgSugars,
+      week.nutrition.avgFat,
+      week.nutrition.avgSaturatedFat,
+      week.nutrition.avgFiber,
+      week.nutrition.avgSodium,
+      week.nutrition.daysUnderCalorieTarget,
+      week.nutrition.daysInRange,
+      week.nutrition.daysOverCalorieTarget,
+      activity.avgSteps || '',
+      activity.avgActiveCalories || '',
+      activity.avgIntensityMinutes || '',
+      activity.avgSleepSeconds ? (activity.avgSleepSeconds / 3600).toFixed(1) : '',
+      activity.avgHeartRateResting || '',
+      activity.avgHeartRateMax || '',
+    ];
+  });
+
+  // Build CSV content
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.join(',')),
+  ].join('\n');
+
+  // Download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `week_overzicht_${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+/**
+ * Export monthly aggregates to CSV
+ */
+export function exportMonthlyAggregatesToCSV(monthlyAggregates: any[]): void {
+  if (monthlyAggregates.length === 0) {
+    alert('Geen data om te exporteren');
+    return;
+  }
+
+  // CSV Header
+  const headers = [
+    'Maand',
+    'Jaar',
+    'Maandnaam',
+    'Van',
+    'Tot',
+    'Dagen',
+    'Weken',
+    'Ø Cal (kcal)',
+    'Ø Eiwit (g)',
+    'Ø Koolhydraten (g)',
+    'Ø Suikers (g)',
+    'Ø Vetten (g)',
+    'Ø Verz. vet (g)',
+    'Ø Vezels (g)',
+    'Ø Natrium (mg)',
+    'Beste week',
+    'Slechtste week',
+    'Ø Stappen',
+    'Ø Actieve Cal (kcal)',
+    'Ø Intensiteit (min)',
+    'Ø Slaap (uur)',
+  ];
+
+  // CSV Rows
+  const rows = monthlyAggregates.map(month => {
+    const activity = month.activity || {};
+
+    return [
+      month.month,
+      month.year,
+      month.monthName,
+      month.monthStart,
+      month.monthEnd,
+      month.daysTracked,
+      month.weeksInMonth.length,
+      month.nutrition.avgCalories,
+      month.nutrition.avgProtein,
+      month.nutrition.avgCarbs,
+      month.nutrition.avgSugars,
+      month.nutrition.avgFat,
+      month.nutrition.avgSaturatedFat,
+      month.nutrition.avgFiber,
+      month.nutrition.avgSodium,
+      month.nutrition.bestWeek,
+      month.nutrition.worstWeek,
+      activity.avgSteps || '',
+      activity.avgActiveCalories || '',
+      activity.avgIntensityMinutes || '',
+      activity.avgSleepSeconds ? (activity.avgSleepSeconds / 3600).toFixed(1) : '',
+    ];
+  });
+
+  // Build CSV content
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.join(',')),
+  ].join('\n');
+
+  // Download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `maand_overzicht_${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}

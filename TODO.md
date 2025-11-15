@@ -126,6 +126,14 @@
   - Collapsible weekly breakdown per month
   - Gradient backgrounds for visual hierarchy
 
+- **Phase 4: Comparison & Export**
+  - ComparisonView with side-by-side period analysis
+  - Period split (first half vs second half)
+  - Change metrics with percentage calculations
+  - CSV export for weekly aggregates
+  - CSV export for monthly aggregates
+  - Export button in header
+
 **Features:**
 - Period selector (4/8/12 weeks, 6/12 months)
 - Tab navigation (Week/Month/Compare)
@@ -133,12 +141,10 @@
 - Settings integration for calorie targets
 - Full mobile responsiveness
 - Performance optimized with React.memo/useMemo
+- Side-by-side period comparison
+- CSV export functionality
 
-**Future enhancements (Phase 4):**
-- Comparison view for side-by-side analysis
-- Export functionality (CSV/PDF)
-
-**Effort:** ~5.5 uur
+**Effort:** ~7 uur (all phases complete)
 
 ### OAuth & Heart Rate Sync Improvements (v1.7.1) ✅
 - [x] Heart rate samples cloud sync with 75-day retention
