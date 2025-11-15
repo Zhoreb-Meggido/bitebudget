@@ -100,51 +100,45 @@
 
 ---
 
-### 7. Weekly/Monthly Aggregate Views ⏳ IN PROGRESS
-**Feature:** Overzicht van nutrition en activity data per week/maand.
-
-**Branch:** `feature/weekly-monthly-aggregates`
-
-**Status - Phase 1: Foundation ✅ COMPLETED**
-- [x] Created TypeScript types (aggregates.types.ts)
-- [x] Created aggregation.service.ts with week calculation logic
-- [x] Created useAggregates hook with memoization
-- [x] Created AggregatesTab container component
-- [x] Integrated new tab into Analyse page
-
-**Status - Phase 2: Week View ✅ COMPLETED**
-- [x] Build WeekAggregateCard component with rich metrics
-- [x] Add nutrition metrics display (all macros + micronutrients)
-- [x] Add activity metrics display (steps, calories, HR, sleep, etc.)
-- [x] Add calorie adherence visualization (progress bar with legend)
-- [x] Add "days tracked" indicator
-- [x] Make cards responsive for mobile (grid layout adapts)
-- [x] Add sort toggle (newest/oldest first)
-- [x] Proper empty states
-
-**Status - Phase 3: Month View ✅ COMPLETED**
-- [x] Implement calculateMonthlyAggregates in service
-- [x] Build MonthAggregateCard component with collapsible weeks
-- [x] Group weeks by month (automatic grouping by month boundary)
-- [x] Show best/worst week indicators based on calorie adherence
-- [x] Monthly nutrition and activity summaries
-- [x] Collapsible weekly breakdown within each month
-- [x] Proper empty states
-
-**Status - Phase 4: Comparison & Export**
-- [ ] Build ComparisonView with side-by-side periods
-- [ ] Extend report.utils.ts with aggregate export
-- [ ] Add CSV export for weekly data
-- [ ] Add PDF export option
-- [ ] Add share/download buttons
-
-**Voordeel:** Beter inzicht in lange termijn trends
-
-**Total Effort:** ~6-8 uur (5.5 uur spent, 0.5-2.5 uur remaining)
-
----
-
 ## Completed ✅
+
+### Weekly/Monthly Aggregate Views (v1.8.0) ✅
+**Feature:** Comprehensive weekly and monthly overview of nutrition and activity data.
+
+**Implemented:**
+- **Phase 1: Foundation**
+  - TypeScript types for aggregates (WeekAggregate, MonthAggregate)
+  - aggregation.service.ts with week/month calculation logic
+  - useAggregates hook with memoization
+  - New "Overzicht" tab in Analyse page
+
+- **Phase 2: Week View**
+  - WeekAggregateCard with rich nutrition & activity metrics
+  - All macros + micronutrients display
+  - Calorie adherence visualization (progress bar, color coding)
+  - Sort toggle (newest/oldest first)
+  - Mobile responsive layouts
+
+- **Phase 3: Month View**
+  - calculateMonthlyAggregates service function
+  - MonthAggregateCard with monthly summaries
+  - Best/worst week indicators based on adherence
+  - Collapsible weekly breakdown per month
+  - Gradient backgrounds for visual hierarchy
+
+**Features:**
+- Period selector (4/8/12 weeks, 6/12 months)
+- Tab navigation (Week/Month/Compare)
+- Empty states with helpful messaging
+- Settings integration for calorie targets
+- Full mobile responsiveness
+- Performance optimized with React.memo/useMemo
+
+**Future enhancements (Phase 4):**
+- Comparison view for side-by-side analysis
+- Export functionality (CSV/PDF)
+
+**Effort:** ~5.5 uur
 
 ### OAuth & Heart Rate Sync Improvements (v1.7.1) ✅
 - [x] Heart rate samples cloud sync with 75-day retention
