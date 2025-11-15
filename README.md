@@ -380,7 +380,7 @@ npm run build
 
 ## 📋 Changelog
 
-### **v1.8.2 - Redesigned Analyse Overzicht Tab** (2025-01-15)
+### **v1.8.2 - Redesigned Analyse Overzicht Tab** (2025-11-15)
 
 #### **3 Powerful Charts voor Aggregated Data** 📊
 
@@ -419,7 +419,7 @@ npm run build
 
 ---
 
-### **v1.8.1 - Journal Date Navigation Improvement** (2025-01-15)
+### **v1.8.1 - Journal Date Navigation Improvement** (2025-11-15)
 
 #### **Compact Date Navigation** 📅
 - ✅ **Clean Layout** - Angle bracket buttons (‹ ›) instead of text labels
@@ -439,7 +439,7 @@ npm run build
 
 ---
 
-### **v1.8.0 - Weekly/Monthly Aggregate Views** (2025-01-15)
+### **v1.8.0 - Weekly/Monthly Aggregate Views** (2025-11-15)
 
 #### **Comprehensive Aggregate Analysis** 📊
 - ✅ **Week View** - Detailed weekly nutrition and activity summaries
@@ -1197,7 +1197,7 @@ npm run build
 
 ## 📝 Version History
 
-### v1.8.2 (January 2025) - Current
+### v1.8.2 (November 2025) - Current
 **Redesigned Analyse Overzicht Tab**
 - ✅ Chart 1: Voeding gemiddelden met 8 metrics en doellijnen
 - ✅ Chart 2: Activiteit gemiddelden met 7 metrics
@@ -1206,7 +1206,7 @@ npm run build
 - ✅ Cross-metric correlatie (nutrition + activity)
 - ✅ Statistische feedback (correlatie coëfficiënt)
 
-### v1.8.1 (January 2025)
+### v1.8.1 (November 2025)
 **Journal Date Navigation Improvement**
 - ✅ Compact date navigation with angle bracket buttons (‹ ›)
 - ✅ Removed "Vandaag" button for cleaner interface
@@ -1214,7 +1214,7 @@ npm run build
 - ✅ Fixed button widths and flexible date input
 - ✅ Better visual hierarchy and touch targets
 
-### v1.8.0 (January 2025)
+### v1.8.0 (November 2025)
 **Weekly/Monthly Aggregate Views**
 - ✅ Week view with comprehensive nutrition and activity metrics
 - ✅ Month view with best/worst week indicators
@@ -1344,6 +1344,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** January 15, 2025
+**Last Updated:** November 15, 2025
 **Status:** v1.8.2 - Redesigned Analyse Overzicht Tab met 3 Charts
 **Next:** Performance optimizations (memoization) & Chart.js config deduplication
