@@ -102,6 +102,46 @@
 
 ## Completed ✅
 
+### Redesigned Analyse Overzicht Tab (v1.8.2) ✅
+**Feature:** Complete redesign van de Overzicht tab met 3 krachtige charts voor aggregated data analyse.
+
+**Implemented:**
+- **Chart 1: Voeding Gemiddelden Over Tijd** 📊
+  - Line chart met alle 8 nutrition metrics (Calories, Protein, Carbs, Sugars, Fat, SatFat, Fiber, Sodium)
+  - Doellijnen voor metrics met targets (calories, protein, saturatedFat, fiber, sodium)
+  - Multiple Y-axes voor verschillende schalen (grammen, kcal, mg)
+  - Toggle buttons voor metric selectie
+  - Week/Maand aggregatie selector
+
+- **Chart 2: Activiteit Gemiddelden Over Tijd** 🏃
+  - Line chart met 7 activity metrics (Steps, Active Cal, Total Cal, Intensity, Sleep, HR Rust, HR Max)
+  - Multiple Y-axes (stappen, calorieën, hartslag bpm, minuten/uren)
+  - Week/Maand aggregatie niveau
+  - Toggle buttons voor metric selectie
+  - Empty state voor ontbrekende activity data
+
+- **Chart 3: Correlatie Analyse** 📈
+  - Scatter plot voor geaggregeerde data
+  - Cross-metric analyse (nutrition + activity metrics combineerbaar)
+  - Trend lijn met lineaire regressie
+  - Correlatie coëfficiënt berekening
+  - Visuele feedback (✅ sterke / ⚠️ matige / ❌ zwakke correlatie)
+  - Positief/negatief relatie indicatie
+
+**Features:**
+- Aggregatie level selector (Per Week / Per Maand)
+- Periode selector (4/8/12 weken, 6/12 maanden)
+- Responsive design (mobile + desktop)
+- Loading states
+- Empty states met informatieve berichten
+- Consistent design met andere tabs
+
+**Impact:** Krachtige inzichten in langetermijn patronen en correlaties tussen voeding en activiteit!
+
+**Effort:** ~3 uur
+
+---
+
 ### Journal Date Navigation Improvement (v1.8.1) ✅
 **Feature:** Compact date navigation with angle bracket buttons.
 

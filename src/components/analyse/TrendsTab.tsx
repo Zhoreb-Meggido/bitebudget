@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useActivities } from '@/hooks';
 import { Line, Scatter } from 'react-chartjs-2';
+import type { DailyActivity } from '@/types';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -48,11 +49,11 @@ function calculateCorrelation(x: number[], y: number[]): number {
   if (x.length !== y.length || x.length === 0) return 0;
 
   const n = x.length;
-  const sumX = x.reduce((a, b) => a + b, 0);
-  const sumY = y.reduce((a, b) => a + b, 0);
-  const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
-  const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
-  const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+  const sumX = x.reduce((a: number, b: number) => a + b, 0);
+  const sumY = y.reduce((a: number, b: number) => a + b, 0);
+  const sumXY = x.reduce((sum: number, xi: number, i: number) => sum + xi * y[i], 0);
+  const sumX2 = x.reduce((sum: number, xi: number) => sum + xi * xi, 0);
+  const sumY2 = y.reduce((sum: number, yi: number) => sum + yi * yi, 0);
 
   const numerator = n * sumXY - sumX * sumY;
   const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
@@ -77,8 +78,8 @@ export function TrendsTab() {
     const cutoff = cutoffDate.toISOString().split('T')[0];
 
     return activities
-      .filter(a => a.date >= cutoff)
-      .sort((a, b) => a.date.localeCompare(b.date));
+      .filter((a: DailyActivity) => a.date >= cutoff)
+      .sort((a: DailyActivity, b: DailyActivity) => a.date.localeCompare(b.date));
   }, [activities, period]);
 
   // Calculate stats for the period
@@ -97,7 +98,18 @@ export function TrendsTab() {
       };
     }
 
-    const sum = filteredActivities.reduce((acc, day) => ({
+    interface SumAcc {
+      steps: number;
+      calories: number;
+      intensityMinutes: number;
+      restingHR: number;
+      stress: number;
+      sleep: number;
+      hrvOvernight: number;
+      hrv7Day: number;
+    }
+
+    const sum = filteredActivities.reduce((acc: SumAcc, day: DailyActivity): SumAcc => ({
       steps: acc.steps + (day.steps || 0),
       calories: acc.calories + (day.totalCalories || 0),
       intensityMinutes: acc.intensityMinutes + (day.intensityMinutes || 0),
@@ -134,52 +146,52 @@ export function TrendsTab() {
 
   // Prepare chart data with multiple Y-axes
   const chartData = useMemo(() => {
-    const labels = filteredActivities.map(a => {
+    const labels = filteredActivities.map((a: DailyActivity) => {
       const date = new Date(a.date);
       return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
     });
 
     const datasets = METRICS
-      .filter(metric => selectedMetrics.has(metric.key))
-      .map(metric => {
+      .filter((metric: MetricConfig) => selectedMetrics.has(metric.key))
+      .map((metric: MetricConfig) => {
         let data: number[];
         let yAxisID: string;
 
         switch (metric.key) {
           case 'steps':
-            data = filteredActivities.map(a => a.steps || 0);
+            data = filteredActivities.map((a: DailyActivity) => a.steps || 0);
             yAxisID = 'y-steps';
             break;
           case 'calories':
-            data = filteredActivities.map(a => a.totalCalories || 0);
+            data = filteredActivities.map((a: DailyActivity) => a.totalCalories || 0);
             yAxisID = 'y-calories';
             break;
           case 'intensityMinutes':
-            data = filteredActivities.map(a => a.intensityMinutes || 0);
+            data = filteredActivities.map((a: DailyActivity) => a.intensityMinutes || 0);
             yAxisID = 'y-minutes';
             break;
           case 'restingHeartRate':
-            data = filteredActivities.map(a => a.heartRateResting || 0);
+            data = filteredActivities.map((a: DailyActivity) => a.heartRateResting || 0);
             yAxisID = 'y-heartrate';
             break;
           case 'maxHeartRate':
-            data = filteredActivities.map(a => a.heartRateMax || 0);
+            data = filteredActivities.map((a: DailyActivity) => a.heartRateMax || 0);
             yAxisID = 'y-heartrate';
             break;
           case 'stressLevel':
-            data = filteredActivities.map(a => a.stressLevel || 0);
+            data = filteredActivities.map((a: DailyActivity) => a.stressLevel || 0);
             yAxisID = 'y-stress';
             break;
           case 'sleepDuration':
-            data = filteredActivities.map(a => (a.sleepSeconds || 0) / 3600); // Convert to hours
+            data = filteredActivities.map((a: DailyActivity) => (a.sleepSeconds || 0) / 3600); // Convert to hours
             yAxisID = 'y-sleep';
             break;
           case 'hrvOvernight':
-            data = filteredActivities.map(a => a.hrvOvernight || 0);
+            data = filteredActivities.map((a: DailyActivity) => a.hrvOvernight || 0);
             yAxisID = 'y-hrv';
             break;
           case 'hrv7DayAvg':
-            data = filteredActivities.map(a => a.hrv7DayAvg || 0);
+            data = filteredActivities.map((a: DailyActivity) => a.hrv7DayAvg || 0);
             yAxisID = 'y-hrv';
             break;
           default:
@@ -409,7 +421,7 @@ export function TrendsTab() {
   }, [selectedMetrics]);
 
   const toggleMetric = (key: MetricKey) => {
-    setSelectedMetrics(prev => {
+    setSelectedMetrics((prev: Set<MetricKey>) => {
       const newSet = new Set(prev);
       if (newSet.has(key)) {
         newSet.delete(key);
@@ -421,7 +433,7 @@ export function TrendsTab() {
   };
 
   // Get metric value from activity
-  const getMetricValue = (activity: typeof activities[0], metric: MetricKey): number => {
+  const getMetricValue = (activity: DailyActivity, metric: MetricKey): number => {
     switch (metric) {
       case 'steps':
         return activity.steps || 0;
@@ -452,7 +464,7 @@ export function TrendsTab() {
     const yData: number[] = [];
     const labels: string[] = [];
 
-    filteredActivities.forEach(activity => {
+    filteredActivities.forEach((activity: DailyActivity) => {
       const xValue = getMetricValue(activity, correlationMetricX);
       const yValue = getMetricValue(activity, correlationMetricY);
 
@@ -469,14 +481,14 @@ export function TrendsTab() {
     const correlation = calculateCorrelation(xData, yData);
 
     // Create scatter plot data points
-    const scatterData = xData.map((x, i) => ({ x, y: yData[i] }));
+    const scatterData = xData.map((x: number, i: number) => ({ x, y: yData[i] }));
 
     // Calculate regression line (best fit)
     const n = xData.length;
-    const sumX = xData.reduce((a, b) => a + b, 0);
-    const sumY = yData.reduce((a, b) => a + b, 0);
-    const sumXY = xData.reduce((sum, xi, i) => sum + xi * yData[i], 0);
-    const sumX2 = xData.reduce((sum, xi) => sum + xi * xi, 0);
+    const sumX = xData.reduce((a: number, b: number) => a + b, 0);
+    const sumY = yData.reduce((a: number, b: number) => a + b, 0);
+    const sumXY = xData.reduce((sum: number, xi: number, i: number) => sum + xi * yData[i], 0);
+    const sumX2 = xData.reduce((sum: number, xi: number) => sum + xi * xi, 0);
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
@@ -499,8 +511,8 @@ export function TrendsTab() {
   const scatterChartData = useMemo(() => {
     if (!correlationData) return null;
 
-    const xMetric = METRICS.find(m => m.key === correlationMetricX);
-    const yMetric = METRICS.find(m => m.key === correlationMetricY);
+    const _xMetric = METRICS.find((m: MetricConfig) => m.key === correlationMetricX);
+    const _yMetric = METRICS.find((m: MetricConfig) => m.key === correlationMetricY);
 
     return {
       datasets: [
@@ -625,7 +637,7 @@ export function TrendsTab() {
 
             {/* Period Selector */}
             <div className="flex gap-2">
-              {[7, 14, 30, 90].map((days) => (
+              {[7, 14, 30, 90].map((days: number) => (
                 <button
                   key={days}
                   onClick={() => setPeriod(days as typeof period)}
@@ -645,7 +657,7 @@ export function TrendsTab() {
 
           {/* Metric Toggles */}
           <div className="mt-4 flex flex-wrap gap-2">
-            {METRICS.map(metric => (
+            {METRICS.map((metric: MetricConfig) => (
               <button
                 key={metric.key}
                 onClick={() => toggleMetric(metric.key)}
@@ -708,10 +720,10 @@ export function TrendsTab() {
               </label>
               <select
                 value={correlationMetricX}
-                onChange={(e) => setCorrelationMetricX(e.target.value as MetricKey)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCorrelationMetricX(e.target.value as MetricKey)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {METRICS.map(metric => (
+                {METRICS.map((metric: MetricConfig) => (
                   <option key={metric.key} value={metric.key}>{metric.label}</option>
                 ))}
               </select>
@@ -723,10 +735,10 @@ export function TrendsTab() {
               </label>
               <select
                 value={correlationMetricY}
-                onChange={(e) => setCorrelationMetricY(e.target.value as MetricKey)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCorrelationMetricY(e.target.value as MetricKey)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {METRICS.map(metric => (
+                {METRICS.map((metric: MetricConfig) => (
                   <option key={metric.key} value={metric.key}>{metric.label}</option>
                 ))}
               </select>

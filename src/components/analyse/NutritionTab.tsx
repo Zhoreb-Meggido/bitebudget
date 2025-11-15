@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useEntries, useSettings, useWeights } from '@/hooks';
 import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
+import type { Entry, Weight } from '@/types';
 
 type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
 
@@ -51,7 +52,7 @@ export function NutritionTab() {
 
   // Get most recent weight for protein calculation
   const currentWeight = useMemo(() => {
-    const validWeights = weights.filter(w => !w.deleted && w.weight > 0);
+    const validWeights = weights.filter((w: Weight) => !w.deleted && w.weight > 0);
     if (validWeights.length === 0) return settings.targetWeight;
 
     // Sort by date descending and get the most recent
@@ -63,7 +64,7 @@ export function NutritionTab() {
   const dailyData = useMemo(() => {
     const days: Map<string, DayData> = new Map();
 
-    entries.forEach(entry => {
+    entries.forEach((entry: Entry) => {
       const existing = days.get(entry.date) || {
         date: entry.date,
         calories: 0,
@@ -103,8 +104,8 @@ export function NutritionTab() {
 
     // Filter and group by week (Monday as start)
     dailyData
-      .filter(d => d.date >= cutoffDate)
-      .forEach(day => {
+      .filter((d: DayData) => d.date >= cutoffDate)
+      .forEach((day: DayData) => {
         const date = new Date(day.date + 'T12:00:00'); // Use noon to avoid timezone issues
         const dayOfWeek = date.getDay();
         const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Monday as start
@@ -269,7 +270,7 @@ export function NutritionTab() {
     const weeks: Array<Array<{ date: string; data?: DayData }>> = [];
 
     // Create data map for quick lookup
-    const dataMap = new Map(dailyData.map(d => [d.date, d]));
+    const dataMap = new Map(dailyData.map((d: DayData) => [d.date, d]));
 
     // Generate 8 weeks
     for (let weekIndex = 0; weekIndex < 8; weekIndex++) {
@@ -321,8 +322,8 @@ export function NutritionTab() {
     const cutoffDate = sixtyDaysAgo.toISOString().split('T')[0];
 
     dailyData
-      .filter(d => d.date >= cutoffDate)
-      .forEach(day => {
+      .filter((d: DayData) => d.date >= cutoffDate)
+      .forEach((day: DayData) => {
         const date = new Date(day.date + 'T12:00:00');
         const dayOfWeek = date.getDay();
         weekdays[dayOfWeek as keyof typeof weekdays].days.push(day);
@@ -393,7 +394,7 @@ export function NutritionTab() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {weekData.map((week) => {
+                {weekData.map((week: WeekData) => {
                   const startDate = new Date(week.weekStart);
                   const endDate = new Date(week.weekEnd);
 
@@ -451,7 +452,7 @@ export function NutritionTab() {
 
           <select
             value={selectedMetric}
-            onChange={(e) => setSelectedMetric(e.target.value as MetricType)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedMetric(e.target.value as MetricType)}
             className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="overall">Alles (gemiddelde)</option>
@@ -482,7 +483,7 @@ export function NutritionTab() {
                 </div>
 
                 {/* Heatmap grid */}
-                {heatmapData.map((week, weekIndex) => {
+                {heatmapData.map((week: Array<{ date: string; data?: DayData }>, weekIndex: number) => {
                   // Calculate ISO week number for Monday of this week
                   const mondayDate = new Date(week[0].date + 'T12:00:00');
                   const weekNumber = getISOWeekNumber(mondayDate);
@@ -492,7 +493,7 @@ export function NutritionTab() {
                     <div className="w-12 text-xs text-gray-600 flex items-center">
                       W{weekNumber}
                     </div>
-                    {week.map((day, dayIndex) => {
+                    {week.map((day: { date: string; data?: DayData }, dayIndex: number) => {
                       const dayDate = new Date(day.date);
                       const dayNum = dayDate.getDate();
 
@@ -606,17 +607,17 @@ export function NutritionTab() {
               if (weekday.days.length === 0) return null;
 
               const avg = {
-                calories: Math.round(weekday.days.reduce((sum, d) => sum + d.calories, 0) / weekday.days.length),
-                protein: (weekday.days.reduce((sum, d) => sum + d.protein, 0) / weekday.days.length).toFixed(1),
-                carbohydrates: (weekday.days.reduce((sum, d) => sum + d.carbohydrates, 0) / weekday.days.length).toFixed(1),
-                sugars: (weekday.days.reduce((sum, d) => sum + d.sugars, 0) / weekday.days.length).toFixed(1),
-                saturatedFat: (weekday.days.reduce((sum, d) => sum + d.saturatedFat, 0) / weekday.days.length).toFixed(1),
-                fiber: (weekday.days.reduce((sum, d) => sum + d.fiber, 0) / weekday.days.length).toFixed(1),
-                sodium: Math.round(weekday.days.reduce((sum, d) => sum + d.sodium, 0) / weekday.days.length)
+                calories: Math.round(weekday.days.reduce((sum: number, d: DayData) => sum + d.calories, 0) / weekday.days.length),
+                protein: (weekday.days.reduce((sum: number, d: DayData) => sum + d.protein, 0) / weekday.days.length).toFixed(1),
+                carbohydrates: (weekday.days.reduce((sum: number, d: DayData) => sum + d.carbohydrates, 0) / weekday.days.length).toFixed(1),
+                sugars: (weekday.days.reduce((sum: number, d: DayData) => sum + d.sugars, 0) / weekday.days.length).toFixed(1),
+                saturatedFat: (weekday.days.reduce((sum: number, d: DayData) => sum + d.saturatedFat, 0) / weekday.days.length).toFixed(1),
+                fiber: (weekday.days.reduce((sum: number, d: DayData) => sum + d.fiber, 0) / weekday.days.length).toFixed(1),
+                sodium: Math.round(weekday.days.reduce((sum: number, d: DayData) => sum + d.sodium, 0) / weekday.days.length)
               };
 
-              const percentAboveCalories = (weekday.days.filter(d => d.calories > 1900).length / weekday.days.length) * 100;
-              const percentAboveSodium = (weekday.days.filter(d => d.sodium > 2300).length / weekday.days.length) * 100;
+              const percentAboveCalories = (weekday.days.filter((d: DayData) => d.calories > 1900).length / weekday.days.length) * 100;
+              const percentAboveSodium = (weekday.days.filter((d: DayData) => d.sodium > 2300).length / weekday.days.length) * 100;
 
               const badges = [];
               if (percentAboveCalories > 75) {
