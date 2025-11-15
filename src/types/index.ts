@@ -3,3 +3,4 @@
  */
 
 export * from './database.types';
+export * from './aggregates.types';

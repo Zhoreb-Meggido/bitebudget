@@ -100,18 +100,47 @@
 
 ---
 
-### 7. Weekly/Monthly Aggregate Views
+### 7. Weekly/Monthly Aggregate Views ⏳ IN PROGRESS
 **Feature:** Overzicht van nutrition en activity data per week/maand.
 
-**Taken:**
-- [ ] Week view met dagelijkse gemiddelden
-- [ ] Month view met weekly trends
-- [ ] Vergelijking tussen weken/maanden
-- [ ] Export functionaliteit voor aggregates
+**Branch:** `feature/weekly-monthly-aggregates`
+
+**Status - Phase 1: Foundation ✅ COMPLETED**
+- [x] Created TypeScript types (aggregates.types.ts)
+- [x] Created aggregation.service.ts with week calculation logic
+- [x] Created useAggregates hook with memoization
+- [x] Created AggregatesTab container component
+- [x] Integrated new tab into Analyse page
+
+**Status - Phase 2: Week View ✅ COMPLETED**
+- [x] Build WeekAggregateCard component with rich metrics
+- [x] Add nutrition metrics display (all macros + micronutrients)
+- [x] Add activity metrics display (steps, calories, HR, sleep, etc.)
+- [x] Add calorie adherence visualization (progress bar with legend)
+- [x] Add "days tracked" indicator
+- [x] Make cards responsive for mobile (grid layout adapts)
+- [x] Add sort toggle (newest/oldest first)
+- [x] Proper empty states
+
+**Status - Phase 3: Month View ✅ COMPLETED**
+- [x] Implement calculateMonthlyAggregates in service
+- [x] Build MonthAggregateCard component with collapsible weeks
+- [x] Group weeks by month (automatic grouping by month boundary)
+- [x] Show best/worst week indicators based on calorie adherence
+- [x] Monthly nutrition and activity summaries
+- [x] Collapsible weekly breakdown within each month
+- [x] Proper empty states
+
+**Status - Phase 4: Comparison & Export**
+- [ ] Build ComparisonView with side-by-side periods
+- [ ] Extend report.utils.ts with aggregate export
+- [ ] Add CSV export for weekly data
+- [ ] Add PDF export option
+- [ ] Add share/download buttons
 
 **Voordeel:** Beter inzicht in lange termijn trends
 
-**Effort:** ~6-8 uur
+**Total Effort:** ~6-8 uur (5.5 uur spent, 0.5-2.5 uur remaining)
 
 ---
 
