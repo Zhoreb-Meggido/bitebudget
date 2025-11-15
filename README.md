@@ -1,11 +1,11 @@
-# BiteBudget (Voedseljournaal) v1.8.1
+# BiteBudget (Voedseljournaal) v1.8.2
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.8.1:** Compact Date Navigation - Clean angle bracket (‹ ›) buttons for better mobile UX!
-**📊 Recent:** v1.8.0 - Weekly/Monthly Aggregate Views with comprehensive nutrition & activity analysis!
+**🎉 Nieuw in v1.8.2:** Redesigned Analyse Overzicht Tab - 3 powerful charts voor nutrition, activity & correlatie analyse!
+**📊 Recent:** v1.8.1 - Compact Date Navigation met clean angle bracket (‹ ›) buttons!
 
 ---
 
@@ -379,6 +379,45 @@ npm run build
 ---
 
 ## 📋 Changelog
+
+### **v1.8.2 - Redesigned Analyse Overzicht Tab** (2025-01-15)
+
+#### **3 Powerful Charts voor Aggregated Data** 📊
+
+**Chart 1: Voeding Gemiddelden Over Tijd**
+- ✅ **Line Chart met 8 Metrics** - Calories, Protein, Carbs, Sugars, Fat, SatFat, Fiber, Sodium
+- ✅ **Doellijnen** - Target lines voor metrics met ingestelde doelen
+- ✅ **Multiple Y-axes** - Grammen (g), Calorieën (kcal), Natrium (mg)
+- ✅ **Toggle Buttons** - Selecteer welke metrics je wilt zien
+- ✅ **Week/Maand Aggregatie** - Kies tussen wekelijkse of maandelijkse gemiddelden
+
+**Chart 2: Activiteit Gemiddelden Over Tijd**
+- ✅ **Activity Metrics** - Steps, Active Cal, Total Cal, Intensity, Sleep, HR Rust, HR Max
+- ✅ **Multiple Y-axes** - Stappen, Calorieën, Hartslag (bpm), Minuten/Uren
+- ✅ **Week/Maand Aggregatie** - Flexibele aggregatie op verschillende niveaus
+- ✅ **Toggle Buttons** - Selecteer actieve metrics
+- ✅ **Empty States** - Duidelijke feedback wanneer geen activity data beschikbaar is
+
+**Chart 3: Correlatie Analyse**
+- ✅ **Scatter Plot** - Visualiseer verbanden tussen metrics op geaggregeerd niveau
+- ✅ **Cross-Metric Analysis** - Combineer nutrition én activity metrics (bijv. Calories vs Steps)
+- ✅ **Trend Lijn** - Lineaire regressie voor pattern herkenning
+- ✅ **Correlatie Coëfficiënt** - Statistische berekening met visuele feedback
+  - ✅ Sterke correlatie (>0.7): Groen
+  - ⚠️ Matige correlatie (0.4-0.7): Geel
+  - ❌ Zwakke correlatie (<0.4): Grijs
+- ✅ **Interpretatie Hulp** - Positief/negatief relatie indicatie
+
+**Features:**
+- ✅ **Aggregatie Selector** - Toggle tussen Per Week en Per Maand analyse
+- ✅ **Periode Selector** - 4/8/12 weken of 6/12 maanden
+- ✅ **Responsive Design** - Optimaal op mobile en desktop
+- ✅ **Loading States** - Duidelijke feedback tijdens data laden
+- ✅ **Empty States** - Informatieve berichten bij ontbrekende data
+
+**Impact:** Krachtige inzichten in langetermijn patronen en correlaties tussen voeding en activiteit op geaggregeerd niveau!
+
+---
 
 ### **v1.8.1 - Journal Date Navigation Improvement** (2025-01-15)
 
@@ -1158,7 +1197,16 @@ npm run build
 
 ## 📝 Version History
 
-### v1.8.1 (January 2025) - Current
+### v1.8.2 (January 2025) - Current
+**Redesigned Analyse Overzicht Tab**
+- ✅ Chart 1: Voeding gemiddelden met 8 metrics en doellijnen
+- ✅ Chart 2: Activiteit gemiddelden met 7 metrics
+- ✅ Chart 3: Correlatie analyse met scatter plot en trend lijn
+- ✅ Week/Maand aggregatie selector
+- ✅ Cross-metric correlatie (nutrition + activity)
+- ✅ Statistische feedback (correlatie coëfficiënt)
+
+### v1.8.1 (January 2025)
 **Journal Date Navigation Improvement**
 - ✅ Compact date navigation with angle bracket buttons (‹ ›)
 - ✅ Removed "Vandaag" button for cleaner interface
@@ -1297,5 +1345,5 @@ Personal project - All rights reserved
 ---
 
 **Last Updated:** January 15, 2025
-**Status:** v1.8.1 - Compact Date Navigation + Weekly/Monthly Aggregate Views
+**Status:** v1.8.2 - Redesigned Analyse Overzicht Tab met 3 Charts
 **Next:** Performance optimizations (memoization) & Chart.js config deduplication
