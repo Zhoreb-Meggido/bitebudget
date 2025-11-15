@@ -600,6 +600,23 @@ class GoogleDriveService {
   }
 
   /**
+   * Check if initialization is in progress (including auto-refresh on startup)
+   */
+  isInitializing(): boolean {
+    return this.initializationPromise !== null;
+  }
+
+  /**
+   * Wait for initialization to complete
+   * This includes auto-refresh on startup if token was expired
+   */
+  async waitForInitialization(): Promise<void> {
+    if (this.initializationPromise) {
+      await this.initializationPromise;
+    }
+  }
+
+  /**
    * Get access token
    */
   private getAccessToken(): string | null {

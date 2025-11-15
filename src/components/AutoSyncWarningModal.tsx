@@ -119,8 +119,11 @@ export function useAutoSyncWarning() {
   const [shouldShowWarning, setShouldShowWarning] = useState(false);
 
   useEffect(() => {
-    // Check on mount
-    const checkAutoSyncStatus = () => {
+    // Check on mount - wait for GoogleDriveService initialization first
+    const checkAutoSyncStatus = async () => {
+      // Wait for initialization to complete (including auto-refresh on startup)
+      await googleDriveService.waitForInitialization();
+
       const autoSyncEnabled = syncService.isAutoSyncEnabled();
       const isSignedIn = googleDriveService.isSignedIn();
 
@@ -130,8 +133,8 @@ export function useAutoSyncWarning() {
       }
     };
 
-    // Small delay to ensure services are initialized
-    const timer = setTimeout(checkAutoSyncStatus, 500);
+    // Start check immediately (no delay needed since we wait for initialization)
+    checkAutoSyncStatus();
 
     // Listen for runtime token expiry events
     const handleTokenExpiry = () => {
@@ -151,7 +154,6 @@ export function useAutoSyncWarning() {
     window.addEventListener('google-drive-reconnected', handleOAuthSuccess);
 
     return () => {
-      clearTimeout(timer);
       window.removeEventListener('google-drive-token-expired', handleTokenExpiry);
       window.removeEventListener('google-oauth-success', handleOAuthSuccess);
       window.removeEventListener('google-drive-reconnected', handleOAuthSuccess);

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { useProducts, usePortions, useDebounce } from '@/hooks';
 import type { Product, ProductPortion } from '@/types';
 import { ProductEditModal } from './ProductEditModal';
@@ -37,23 +37,23 @@ export function ProductsPortionsTab() {
   const [showJsonImport, setShowJsonImport] = useState(false);
   const [jsonInput, setJsonInput] = useState('');
 
-  // Handlers
-  const handleAddProduct = () => {
+  // Handlers (memoized to prevent re-renders of child components)
+  const handleAddProduct = useCallback(() => {
     setEditingProduct(null);
     setShowProductModal(true);
-  };
+  }, []);
 
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = useCallback((product: Product) => {
     setEditingProduct(product);
     setShowProductModal(true);
-  };
+  }, []);
 
-  const handleDeleteProduct = async (product: Product) => {
+  const handleDeleteProduct = useCallback(async (product: Product) => {
     if (!confirm(`Weet je zeker dat je "${product.name}" wilt verwijderen?`)) {
       return;
     }
     await deleteProduct(product.id!);
-  };
+  }, [deleteProduct]);
 
   const handleSaveProduct = async (data: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
     if (editingProduct) {
@@ -63,28 +63,28 @@ export function ProductsPortionsTab() {
     }
   };
 
-  const handleAddPortion = (productName: string) => {
+  const handleAddPortion = useCallback((productName: string) => {
     setPortionProductName(productName);
     setEditingPortion(null);
     setShowPortionModal(true);
-  };
+  }, []);
 
-  const handleEditPortion = (portion: ProductPortion) => {
+  const handleEditPortion = useCallback((portion: ProductPortion) => {
     setPortionProductName(portion.productName);
     setEditingPortion(portion);
     setShowPortionModal(true);
-  };
+  }, []);
 
-  const handleDeletePortion = async (portion: ProductPortion) => {
+  const handleDeletePortion = useCallback(async (portion: ProductPortion) => {
     if (!confirm(`Weet je zeker dat je portie "${portion.portionName}" wilt verwijderen?`)) {
       return;
     }
     await deletePortion(portion.id!);
-  };
+  }, [deletePortion]);
 
-  const handleSetDefaultPortion = async (portion: ProductPortion) => {
+  const handleSetDefaultPortion = useCallback(async (portion: ProductPortion) => {
     await setDefaultPortion(portion.id!);
-  };
+  }, [setDefaultPortion]);
 
   const handleSavePortion = async (data: Omit<ProductPortion, 'id' | 'created_at' | 'updated_at'>) => {
     if (editingPortion) {
@@ -391,6 +391,7 @@ export function ProductsPortionsTab() {
 }
 
 // Sub-component for product with portions
+// Memoized to prevent unnecessary re-renders when parent re-renders
 interface ProductWithPortionsProps {
   product: Product;
   allPortions: ProductPortion[];
@@ -402,7 +403,7 @@ interface ProductWithPortionsProps {
   onSetDefaultPortion: (portion: ProductPortion) => void;
 }
 
-function ProductWithPortions({
+const ProductWithPortions = memo(function ProductWithPortions({
   product,
   allPortions,
   onEditProduct,
@@ -412,7 +413,11 @@ function ProductWithPortions({
   onDeletePortion,
   onSetDefaultPortion,
 }: ProductWithPortionsProps) {
-  const productPortions = allPortions.filter(p => p.productName === product.name);
+  // Memoize portion filtering to avoid recalculating on every render
+  const productPortions = useMemo(
+    () => allPortions.filter(p => p.productName === product.name),
+    [allPortions, product.name]
+  );
 
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -527,4 +532,4 @@ function ProductWithPortions({
       )}
     </div>
   );
-}
+});
