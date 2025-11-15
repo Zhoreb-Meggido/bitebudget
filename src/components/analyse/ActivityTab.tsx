@@ -1,8 +1,21 @@
 import { useMemo, useState } from 'react';
 import { useActivities, useHeartRateSamples } from '@/hooks';
 import { HeartRateChart } from './HeartRateChart';
+import type { DailyActivity } from '@/types';
 
 type ActivityMetric = 'heartRate' | 'steps' | 'calories' | 'intensityMinutes' | 'sleep' | 'bodyBattery' | 'stress';
+
+interface ActivityTotal {
+  steps: number;
+  calories: number;
+  activeCalories: number;
+  intensityMinutes: number;
+  sleepSeconds: number;
+  restingHR: number;
+  maxHR: number;
+  restingHRCount: number;
+  maxHRCount: number;
+}
 
 // Helper function to calculate ISO week number
 function getISOWeekNumber(date: Date): number {
@@ -19,7 +32,7 @@ function getISOWeekNumber(date: Date): number {
 
 export function ActivityTab() {
   const { activities, isLoading: loading } = useActivities();
-  const { samples: hrSamples, isLoading: hrLoading, getSamplesMap } = useHeartRateSamples();
+  const { samples: hrSamples, getSamplesMap } = useHeartRateSamples();
   const [selectedMetric, setSelectedMetric] = useState<ActivityMetric>('heartRate');
   const [showTable, setShowTable] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -27,7 +40,7 @@ export function ActivityTab() {
   const stats = useMemo(() => {
     if (activities.length === 0) return null;
 
-    const total = activities.reduce((acc, activity) => ({
+    const total = activities.reduce((acc: ActivityTotal, activity: DailyActivity): ActivityTotal => ({
       steps: acc.steps + (activity.steps || 0),
       calories: acc.calories + (activity.totalCalories || 0),
       activeCalories: acc.activeCalories + (activity.activeCalories || 0),
@@ -80,8 +93,8 @@ export function ActivityTab() {
     const cutoffDate = sixtyDaysAgo.toISOString().split('T')[0];
 
     activities
-      .filter(a => a.date >= cutoffDate)
-      .forEach(activity => {
+      .filter((a: DailyActivity) => a.date >= cutoffDate)
+      .forEach((activity: DailyActivity) => {
         const date = new Date(activity.date + 'T12:00:00');
         const dayOfWeek = date.getDay();
         weekdays[dayOfWeek as keyof typeof weekdays].activities.push(activity);
@@ -97,7 +110,7 @@ export function ActivityTab() {
     const weeks: Array<Array<{ date: string; activity?: typeof activities[0]; hrSample?: typeof hrSamples[0] }>> = [];
 
     // Create data maps for quick lookup
-    const dataMap = new Map(activities.map(a => [a.date, a]));
+    const dataMap = new Map(activities.map((a: DailyActivity) => [a.date, a]));
     const hrMap = getSamplesMap();
 
     // Generate 8 weeks
@@ -134,7 +147,7 @@ export function ActivityTab() {
   }, [activities, hrSamples, getSamplesMap]);
 
   // Get color for metric value
-  const getColor = (metric: ActivityMetric, activity?: typeof activities[0], hrSample?: typeof hrSamples[0]): string => {
+  const getColor = (metric: ActivityMetric, activity?: typeof activities[0], _hrSample?: typeof hrSamples[0]): string => {
     switch (metric) {
       case 'heartRate': {
         if (!activity) return 'bg-gray-200';
@@ -210,16 +223,6 @@ export function ActivityTab() {
     }
   };
 
-  const metricLabels: Record<ActivityMetric, string> = {
-    heartRate: 'Hartslag',
-    steps: 'Stappen',
-    calories: 'Calorieën',
-    intensityMinutes: 'Intensity Minutes',
-    sleep: 'Slaap',
-    bodyBattery: 'Body Battery',
-    stress: 'Stress Level',
-  };
-
   if (loading) {
     return <div className="p-6 text-center text-gray-500">Laden...</div>;
   }
@@ -288,7 +291,7 @@ export function ActivityTab() {
 
           <select
             value={selectedMetric}
-            onChange={(e) => {
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               setSelectedMetric(e.target.value as ActivityMetric);
               setSelectedDate(null); // Reset selected date when switching metrics
             }}
@@ -322,7 +325,7 @@ export function ActivityTab() {
               </div>
 
               {/* Heatmap grid */}
-              {heatmapData.map((week, weekIndex) => {
+              {heatmapData.map((week: Array<{ date: string; activity?: DailyActivity; hrSample?: any }>, weekIndex: number) => {
                 const mondayDate = new Date(week[0].date + 'T12:00:00');
                 const weekNumber = getISOWeekNumber(mondayDate);
 
@@ -331,7 +334,7 @@ export function ActivityTab() {
                     <div className="w-12 text-xs text-gray-600 flex items-center">
                       W{weekNumber}
                     </div>
-                    {week.map((day, dayIndex) => {
+                    {week.map((day: { date: string; activity?: DailyActivity; hrSample?: any }, dayIndex: number) => {
                       const dayDate = new Date(day.date);
                       const dayNum = dayDate.getDate();
                       const colorClass = getColor(selectedMetric, day.activity, day.hrSample);
@@ -451,10 +454,10 @@ export function ActivityTab() {
             if (weekday.activities.length === 0) return null;
 
             const avg = {
-              steps: Math.round(weekday.activities.reduce((sum, a) => sum + (a.steps || 0), 0) / weekday.activities.length),
-              calories: Math.round(weekday.activities.reduce((sum, a) => sum + (a.totalCalories || 0), 0) / weekday.activities.length),
-              intensityMinutes: Math.round(weekday.activities.reduce((sum, a) => sum + (a.intensityMinutes || 0), 0) / weekday.activities.length),
-              sleep: (weekday.activities.reduce((sum, a) => sum + (a.sleepSeconds || 0), 0) / weekday.activities.length / 3600).toFixed(1),
+              steps: Math.round(weekday.activities.reduce((sum: number, a: DailyActivity) => sum + (a.steps || 0), 0) / weekday.activities.length),
+              calories: Math.round(weekday.activities.reduce((sum: number, a: DailyActivity) => sum + (a.totalCalories || 0), 0) / weekday.activities.length),
+              intensityMinutes: Math.round(weekday.activities.reduce((sum: number, a: DailyActivity) => sum + (a.intensityMinutes || 0), 0) / weekday.activities.length),
+              sleep: (weekday.activities.reduce((sum: number, a: DailyActivity) => sum + (a.sleepSeconds || 0), 0) / weekday.activities.length / 3600).toFixed(1),
             };
 
             const badges = [];
@@ -556,7 +559,7 @@ export function ActivityTab() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {activities.slice(0, 30).map((activity) => (
+                {activities.slice(0, 30).map((activity: DailyActivity) => (
                   <tr key={activity.id} className="hover:bg-gray-50">
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(activity.date).toLocaleDateString('nl-NL', {

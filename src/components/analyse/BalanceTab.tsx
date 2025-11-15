@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useEntries, useActivities, useWeights } from '@/hooks';
 import { Line } from 'react-chartjs-2';
+import type { Entry, DailyActivity, Weight } from '@/types';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -41,13 +42,13 @@ export function BalanceTab() {
     const dailyExpenditure = new Map<string, number>();
 
     // Calculate daily calorie intake
-    entries.forEach(entry => {
+    entries.forEach((entry: Entry) => {
       const current = dailyIntake.get(entry.date) || 0;
       dailyIntake.set(entry.date, current + (entry.calories || 0));
     });
 
     // Calculate daily calorie expenditure
-    activities.forEach(activity => {
+    activities.forEach((activity: DailyActivity) => {
       dailyExpenditure.set(activity.date, activity.totalCalories || 0);
     });
 
@@ -70,14 +71,14 @@ export function BalanceTab() {
     if (balanceData.length === 0) return null;
 
     // Only count days with both intake and expenditure data
-    const completeDays = balanceData.filter(d => d.intake > 0 && d.expenditure > 0);
+    const completeDays = balanceData.filter((d: DayBalance) => d.intake > 0 && d.expenditure > 0);
 
     if (completeDays.length === 0) return null;
 
-    const totalBalance = completeDays.reduce((sum, day) => sum + day.balance, 0);
+    const totalBalance = completeDays.reduce((sum: number, day: DayBalance) => sum + day.balance, 0);
     const avgBalance = totalBalance / completeDays.length;
-    const daysDeficit = completeDays.filter(d => d.balance < 0).length;
-    const daysSurplus = completeDays.filter(d => d.balance > 0).length;
+    const daysDeficit = completeDays.filter((d: DayBalance) => d.balance < 0).length;
+    const daysSurplus = completeDays.filter((d: DayBalance) => d.balance > 0).length;
 
     return {
       avgBalance: Math.round(avgBalance),
@@ -98,8 +99,8 @@ export function BalanceTab() {
     const cutoffDate = sixtyDaysAgo.toISOString().split('T')[0];
 
     const recentWeights = weights
-      .filter(w => w.date >= cutoffDate && w.weight > 0)
-      .sort((a, b) => a.date.localeCompare(b.date));
+      .filter((w: Weight) => w.date >= cutoffDate && w.weight > 0)
+      .sort((a: Weight, b: Weight) => a.date.localeCompare(b.date));
 
     if (recentWeights.length < 2) return null;
 
@@ -116,7 +117,7 @@ export function BalanceTab() {
 
     // Calculate expected weight change based on calorie balance
     // Only for days where we have both intake and expenditure data within the weight measurement period
-    const balanceInPeriod = balanceData.filter(d =>
+    const balanceInPeriod = balanceData.filter((d: DayBalance) =>
       d.date >= firstWeight.date &&
       d.date <= lastWeight.date &&
       d.intake > 0 &&
@@ -125,7 +126,7 @@ export function BalanceTab() {
 
     if (balanceInPeriod.length === 0) return null;
 
-    const totalDeficit = balanceInPeriod.reduce((sum, day) => sum + day.balance, 0);
+    const totalDeficit = balanceInPeriod.reduce((sum: number, day: DayBalance) => sum + day.balance, 0);
     // 7700 kcal deficit = 1 kg weight loss (approximately)
     const expectedWeightChange = totalDeficit / 7700;
 
@@ -156,12 +157,12 @@ export function BalanceTab() {
     const cutoffDate = sixtyDaysAgo.toISOString().split('T')[0];
 
     const recentWeights = weights
-      .filter(w => w.date >= cutoffDate && w.weight > 0)
-      .sort((a, b) => a.date.localeCompare(b.date));
+      .filter((w: Weight) => w.date >= cutoffDate && w.weight > 0)
+      .sort((a: Weight, b: Weight) => a.date.localeCompare(b.date));
 
     if (recentWeights.length === 0) return null;
 
-    const labels = recentWeights.map(w => {
+    const labels = recentWeights.map((w: Weight) => {
       const date = new Date(w.date);
       return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
     });
@@ -169,21 +170,21 @@ export function BalanceTab() {
     // Calculate simple linear trend
     const n = recentWeights.length;
     const sumX = (n * (n - 1)) / 2;
-    const sumY = recentWeights.reduce((sum, w) => sum + w.weight, 0);
-    const sumXY = recentWeights.reduce((sum, w, i) => sum + (i * w.weight), 0);
+    const sumY = recentWeights.reduce((sum: number, w: Weight) => sum + w.weight, 0);
+    const sumXY = recentWeights.reduce((sum: number, w: Weight, i: number) => sum + (i * w.weight), 0);
     const sumX2 = (n * (n - 1) * (2 * n - 1)) / 6;
 
     const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
     const intercept = (sumY - slope * sumX) / n;
 
-    const trendLine = recentWeights.map((_, i) => slope * i + intercept);
+    const trendLine = recentWeights.map((_: Weight, i: number) => slope * i + intercept);
 
     return {
       labels,
       datasets: [
         {
           label: 'Gewicht (kg)',
-          data: recentWeights.map(w => w.weight),
+          data: recentWeights.map((w: Weight) => w.weight),
           borderColor: 'rgb(59, 130, 246)',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
           tension: 0.3,
@@ -215,10 +216,10 @@ export function BalanceTab() {
     const cutoff = cutoffDate.toISOString().split('T')[0];
 
     const filteredData = balanceData
-      .filter(d => d.date >= cutoff && d.intake > 0 && d.expenditure > 0)
-      .sort((a, b) => a.date.localeCompare(b.date)); // Oldest first for chart
+      .filter((d: DayBalance) => d.date >= cutoff && d.intake > 0 && d.expenditure > 0)
+      .sort((a: DayBalance, b: DayBalance) => a.date.localeCompare(b.date)); // Oldest first for chart
 
-    const labels = filteredData.map(d => {
+    const labels = filteredData.map((d: DayBalance) => {
       const date = new Date(d.date);
       return date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' });
     });
@@ -228,7 +229,7 @@ export function BalanceTab() {
       datasets: [
         {
           label: 'Inname (kcal)',
-          data: filteredData.map(d => d.intake),
+          data: filteredData.map((d: DayBalance) => d.intake),
           borderColor: 'rgb(59, 130, 246)',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
           tension: 0.3,
@@ -237,7 +238,7 @@ export function BalanceTab() {
         },
         {
           label: 'Verbruik (kcal)',
-          data: filteredData.map(d => d.expenditure),
+          data: filteredData.map((d: DayBalance) => d.expenditure),
           borderColor: 'rgb(249, 115, 22)',
           backgroundColor: 'rgba(249, 115, 22, 0.1)',
           tension: 0.3,
@@ -565,7 +566,7 @@ export function BalanceTab() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {balanceData.slice(0, 30).map((day) => {
+              {balanceData.slice(0, 30).map((day: DayBalance) => {
                 const isComplete = day.intake > 0 && day.expenditure > 0;
                 const isDeficit = day.balance < 0;
 

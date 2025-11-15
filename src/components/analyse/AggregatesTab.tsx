@@ -114,7 +114,7 @@ export function AggregatesTab() {
 
   // Toggle nutrition metric
   const toggleNutritionMetric = (key: NutritionMetricKey) => {
-    setSelectedNutritionMetrics(prev => {
+    setSelectedNutritionMetrics((prev: Set<NutritionMetricKey>) => {
       const newSet = new Set(prev);
       if (newSet.has(key)) {
         if (newSet.size > 1) newSet.delete(key);
@@ -127,7 +127,7 @@ export function AggregatesTab() {
 
   // Toggle activity metric
   const toggleActivityMetric = (key: ActivityMetricKey) => {
-    setSelectedActivityMetrics(prev => {
+    setSelectedActivityMetrics((prev: Set<ActivityMetricKey>) => {
       const newSet = new Set(prev);
       if (newSet.has(key)) {
         if (newSet.size > 1) newSet.delete(key);
@@ -456,10 +456,6 @@ export function AggregatesTab() {
   const scatterChartData = useMemo(() => {
     if (!correlationData) return null;
 
-    const allMetrics = [...NUTRITION_METRICS, ...ACTIVITY_METRICS];
-    const xMetric = allMetrics.find(m => m.key === correlationMetricX);
-    const yMetric = allMetrics.find(m => m.key === correlationMetricY);
-
     return {
       datasets: [
         {
@@ -548,7 +544,7 @@ export function AggregatesTab() {
               <select
                 id="period-select"
                 value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value as AggregatePeriod)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedPeriod(e.target.value as AggregatePeriod)}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {periodOptions.map((option) => (
@@ -684,7 +680,7 @@ export function AggregatesTab() {
                   </label>
                   <select
                     value={correlationMetricX}
-                    onChange={(e) => setCorrelationMetricX(e.target.value as any)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCorrelationMetricX(e.target.value as any)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <optgroup label="Voeding">
@@ -706,7 +702,7 @@ export function AggregatesTab() {
                   </label>
                   <select
                     value={correlationMetricY}
-                    onChange={(e) => setCorrelationMetricY(e.target.value as any)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCorrelationMetricY(e.target.value as any)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <optgroup label="Voeding">
