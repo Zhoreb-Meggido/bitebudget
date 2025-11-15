@@ -1,24 +1,97 @@
 /**
- * AggregatesTab - Weekly and Monthly Aggregate Views
+ * AggregatesTab - Aggregated Nutrition & Activity Overview
  *
- * Provides overview of nutrition and activity data aggregated by week or month.
- * Allows comparing different time periods and exporting data.
+ * Displays three main sections:
+ * 1. Nutrition Averages Over Time - Line chart with all 8 nutrition metrics
+ * 2. Activity Averages Over Time - Line chart with activity metrics
+ * 3. Correlation Analysis - Scatter plots for aggregated data
  */
 
 import React, { useState, useMemo } from 'react';
+import { Line, Scatter } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { useAggregates } from '@/hooks/useAggregates';
 import { useSettings } from '@/hooks/useSettings';
-import { WeekAggregateCard } from './WeekAggregateCard';
-import { MonthAggregateCard } from './MonthAggregateCard';
-import { exportWeeklyAggregatesToCSV, exportMonthlyAggregatesToCSV } from '@/utils/report.utils';
 import type { AggregatePeriod } from '@/types';
 
-type AggregateView = 'week' | 'month' | 'compare';
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+type AggregationLevel = 'week' | 'month';
+type NutritionMetricKey = 'calories' | 'protein' | 'carbs' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium';
+type ActivityMetricKey = 'steps' | 'activeCalories' | 'totalCalories' | 'intensityMinutes' | 'sleep' | 'restingHR' | 'maxHR';
+
+interface NutritionMetricConfig {
+  key: NutritionMetricKey;
+  label: string;
+  color: string;
+  unit: string;
+  targetField?: keyof typeof defaultSettings;
+}
+
+interface ActivityMetricConfig {
+  key: ActivityMetricKey;
+  label: string;
+  color: string;
+  unit: string;
+}
+
+const defaultSettings = {
+  calories: 2000,
+  protein: 150,
+  saturatedFat: 20,
+  fiber: 28,
+  sodium: 2300,
+};
+
+const NUTRITION_METRICS: NutritionMetricConfig[] = [
+  { key: 'calories', label: 'Calorieën', color: 'rgb(59, 130, 246)', unit: 'kcal', targetField: 'calories' },
+  { key: 'protein', label: 'Eiwit', color: 'rgb(147, 51, 234)', unit: 'g', targetField: 'protein' },
+  { key: 'carbs', label: 'Koolhydraten', color: 'rgb(245, 158, 11)', unit: 'g' },
+  { key: 'sugars', label: 'Suikers', color: 'rgb(251, 191, 36)', unit: 'g' },
+  { key: 'fat', label: 'Vet', color: 'rgb(156, 163, 175)', unit: 'g' },
+  { key: 'saturatedFat', label: 'Verzadigd Vet', color: 'rgb(239, 68, 68)', unit: 'g', targetField: 'saturatedFat' },
+  { key: 'fiber', label: 'Vezels', color: 'rgb(34, 197, 94)', unit: 'g', targetField: 'fiber' },
+  { key: 'sodium', label: 'Natrium', color: 'rgb(249, 115, 22)', unit: 'mg', targetField: 'sodium' },
+];
+
+const ACTIVITY_METRICS: ActivityMetricConfig[] = [
+  { key: 'steps', label: 'Stappen', color: 'rgb(59, 130, 246)', unit: '' },
+  { key: 'activeCalories', label: 'Actieve Cal', color: 'rgb(239, 68, 68)', unit: 'kcal' },
+  { key: 'totalCalories', label: 'Totaal Cal', color: 'rgb(220, 38, 38)', unit: 'kcal' },
+  { key: 'intensityMinutes', label: 'Intensiteit', color: 'rgb(147, 51, 234)', unit: 'min' },
+  { key: 'sleep', label: 'Slaap', color: 'rgb(34, 197, 94)', unit: 'uur' },
+  { key: 'restingHR', label: 'HR Rust', color: 'rgb(14, 165, 233)', unit: 'bpm' },
+  { key: 'maxHR', label: 'HR Max', color: 'rgb(220, 38, 38)', unit: 'bpm' },
+];
 
 export function AggregatesTab() {
-  const [activeView, setActiveView] = useState<AggregateView>('week');
+  const [aggregationLevel, setAggregationLevel] = useState<AggregationLevel>('week');
   const [selectedPeriod, setSelectedPeriod] = useState<AggregatePeriod>('12weeks');
-  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // Most recent first
+  const [selectedNutritionMetrics, setSelectedNutritionMetrics] = useState<Set<NutritionMetricKey>>(
+    new Set(['calories', 'protein', 'carbs'])
+  );
+  const [selectedActivityMetrics, setSelectedActivityMetrics] = useState<Set<ActivityMetricKey>>(
+    new Set(['steps', 'activeCalories', 'sleep'])
+  );
+  const [correlationMetricX, setCorrelationMetricX] = useState<NutritionMetricKey | ActivityMetricKey>('calories');
+  const [correlationMetricY, setCorrelationMetricY] = useState<NutritionMetricKey | ActivityMetricKey>('steps');
 
   const { weeklyAggregates, monthlyAggregates, isLoading } = useAggregates({
     period: selectedPeriod,
@@ -27,17 +100,10 @@ export function AggregatesTab() {
 
   const { settings } = useSettings();
 
-  // Sort aggregates based on sortOrder
-  const sortedWeeklyAggregates = useMemo(() => {
-    return [...weeklyAggregates].sort((a, b) => {
-      if (sortOrder === 'desc') {
-        return b.weekStart.localeCompare(a.weekStart);
-      }
-      return a.weekStart.localeCompare(b.weekStart);
-    });
-  }, [weeklyAggregates, sortOrder]);
+  // Use current aggregates based on level
+  const currentAggregates = aggregationLevel === 'week' ? weeklyAggregates : monthlyAggregates;
 
-  // Period options for dropdown
+  // Period options
   const periodOptions: { value: AggregatePeriod; label: string }[] = [
     { value: '4weeks', label: 'Laatste 4 weken' },
     { value: '8weeks', label: 'Laatste 8 weken' },
@@ -46,16 +112,434 @@ export function AggregatesTab() {
     { value: '12months', label: 'Laatste 12 maanden' },
   ];
 
+  // Toggle nutrition metric
+  const toggleNutritionMetric = (key: NutritionMetricKey) => {
+    setSelectedNutritionMetrics(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        if (newSet.size > 1) newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
+
+  // Toggle activity metric
+  const toggleActivityMetric = (key: ActivityMetricKey) => {
+    setSelectedActivityMetrics(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        if (newSet.size > 1) newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
+
+  // Prepare nutrition chart data
+  const nutritionChartData = useMemo(() => {
+    const labels = currentAggregates.map(agg => {
+      if (aggregationLevel === 'week') {
+        return `W${agg.weekNumber} ${agg.year}`;
+      } else {
+        return `${agg.monthName} ${agg.year}`;
+      }
+    });
+
+    const datasets = NUTRITION_METRICS
+      .filter(metric => selectedNutritionMetrics.has(metric.key))
+      .map(metric => {
+        const data = currentAggregates.map(agg => {
+          const nutritionData = agg.nutrition;
+          switch (metric.key) {
+            case 'calories': return nutritionData.avgCalories;
+            case 'protein': return nutritionData.avgProtein;
+            case 'carbs': return nutritionData.avgCarbs;
+            case 'sugars': return nutritionData.avgSugars;
+            case 'fat': return nutritionData.avgFat;
+            case 'saturatedFat': return nutritionData.avgSaturatedFat;
+            case 'fiber': return nutritionData.avgFiber;
+            case 'sodium': return nutritionData.avgSodium;
+            default: return 0;
+          }
+        });
+
+        return {
+          label: `${metric.label} (${metric.unit})`,
+          data,
+          borderColor: metric.color,
+          backgroundColor: metric.color + '20',
+          tension: 0.3,
+          borderWidth: 2,
+          yAxisID: metric.key === 'calories' ? 'y-calories' : metric.key === 'sodium' ? 'y-sodium' : 'y',
+        };
+      });
+
+    // Add target lines if applicable
+    NUTRITION_METRICS.forEach(metric => {
+      if (selectedNutritionMetrics.has(metric.key) && metric.targetField) {
+        const targetValue = settings[metric.targetField] || (defaultSettings as any)[metric.targetField] || 0;
+        if (targetValue > 0) {
+          datasets.push({
+            label: `${metric.label} doel`,
+            data: currentAggregates.map(() => targetValue),
+            borderColor: metric.color,
+            backgroundColor: 'transparent',
+            borderDash: [5, 5],
+            tension: 0,
+            borderWidth: 1,
+            pointRadius: 0,
+            yAxisID: metric.key === 'calories' ? 'y-calories' : metric.key === 'sodium' ? 'y-sodium' : 'y',
+          });
+        }
+      }
+    });
+
+    return { labels, datasets };
+  }, [currentAggregates, selectedNutritionMetrics, aggregationLevel, settings]);
+
+  // Prepare activity chart data
+  const activityChartData = useMemo(() => {
+    const labels = currentAggregates.map(agg => {
+      if (aggregationLevel === 'week') {
+        return `W${agg.weekNumber} ${agg.year}`;
+      } else {
+        return `${agg.monthName} ${agg.year}`;
+      }
+    });
+
+    const datasets = ACTIVITY_METRICS
+      .filter(metric => selectedActivityMetrics.has(metric.key))
+      .map(metric => {
+        const data = currentAggregates.map(agg => {
+          const activityData = agg.activity;
+          if (!activityData) return 0;
+
+          switch (metric.key) {
+            case 'steps': return activityData.avgSteps;
+            case 'activeCalories': return activityData.avgActiveCalories;
+            case 'totalCalories': return activityData.avgTotalCalories || 0;
+            case 'intensityMinutes': return activityData.avgIntensityMinutes;
+            case 'sleep': return Math.round(activityData.avgSleepSeconds / 3600); // Convert to hours
+            case 'restingHR': return activityData.avgHeartRateResting;
+            case 'maxHR': return activityData.avgHeartRateMax;
+            default: return 0;
+          }
+        });
+
+        let yAxisID = 'y';
+        if (metric.key === 'steps') yAxisID = 'y-steps';
+        else if (metric.key === 'activeCalories' || metric.key === 'totalCalories') yAxisID = 'y-calories';
+        else if (metric.key === 'restingHR' || metric.key === 'maxHR') yAxisID = 'y-hr';
+
+        return {
+          label: `${metric.label} ${metric.unit ? `(${metric.unit})` : ''}`,
+          data,
+          borderColor: metric.color,
+          backgroundColor: metric.color + '20',
+          tension: 0.3,
+          borderWidth: 2,
+          yAxisID,
+        };
+      });
+
+    return { labels, datasets };
+  }, [currentAggregates, selectedActivityMetrics, aggregationLevel]);
+
+  // Nutrition chart options
+  const nutritionChartOptions = useMemo(() => {
+    const scales: any = {
+      x: { grid: { display: false } },
+      y: {
+        type: 'linear',
+        display: selectedNutritionMetrics.has('protein') || selectedNutritionMetrics.has('carbs') ||
+                selectedNutritionMetrics.has('sugars') || selectedNutritionMetrics.has('fat') ||
+                selectedNutritionMetrics.has('saturatedFat') || selectedNutritionMetrics.has('fiber'),
+        position: 'left',
+        beginAtZero: true,
+        title: { display: true, text: 'Grammen (g)' },
+      },
+    };
+
+    if (selectedNutritionMetrics.has('calories')) {
+      scales['y-calories'] = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        beginAtZero: true,
+        title: { display: true, text: 'Calorieën (kcal)' },
+        grid: { drawOnChartArea: false },
+      };
+    }
+
+    if (selectedNutritionMetrics.has('sodium')) {
+      scales['y-sodium'] = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        beginAtZero: true,
+        title: { display: true, text: 'Natrium (mg)' },
+        grid: { drawOnChartArea: false },
+      };
+    }
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index' as const, intersect: false },
+      plugins: {
+        legend: { position: 'bottom' as const, labels: { usePointStyle: true, padding: 15 } },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleColor: '#fff',
+          bodyColor: '#fff',
+        },
+      },
+      scales,
+    };
+  }, [selectedNutritionMetrics]);
+
+  // Activity chart options
+  const activityChartOptions = useMemo(() => {
+    const scales: any = {
+      x: { grid: { display: false } },
+      y: {
+        type: 'linear',
+        display: selectedActivityMetrics.has('intensityMinutes') || selectedActivityMetrics.has('sleep'),
+        position: 'left',
+        beginAtZero: true,
+        title: { display: true, text: 'Min / Uur' },
+      },
+    };
+
+    if (selectedActivityMetrics.has('steps')) {
+      scales['y-steps'] = {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        beginAtZero: true,
+        title: { display: true, text: 'Stappen' },
+      };
+    }
+
+    if (selectedActivityMetrics.has('activeCalories') || selectedActivityMetrics.has('totalCalories')) {
+      scales['y-calories'] = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        beginAtZero: true,
+        title: { display: true, text: 'Calorieën (kcal)' },
+        grid: { drawOnChartArea: false },
+      };
+    }
+
+    if (selectedActivityMetrics.has('restingHR') || selectedActivityMetrics.has('maxHR')) {
+      scales['y-hr'] = {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        min: 40,
+        max: 220,
+        title: { display: true, text: 'Hartslag (bpm)' },
+        grid: { drawOnChartArea: false },
+      };
+    }
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index' as const, intersect: false },
+      plugins: {
+        legend: { position: 'bottom' as const, labels: { usePointStyle: true, padding: 15 } },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleColor: '#fff',
+          bodyColor: '#fff',
+        },
+      },
+      scales,
+    };
+  }, [selectedActivityMetrics]);
+
+  // Correlation calculation helper
+  function calculateCorrelation(x: number[], y: number[]): number {
+    if (x.length !== y.length || x.length === 0) return 0;
+    const n = x.length;
+    const sumX = x.reduce((a, b) => a + b, 0);
+    const sumY = y.reduce((a, b) => a + b, 0);
+    const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+    const sumX2 = x.reduce((sum, xi) => sum + xi * xi, 0);
+    const sumY2 = y.reduce((sum, yi) => sum + yi * yi, 0);
+    const numerator = n * sumXY - sumX * sumY;
+    const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+    if (denominator === 0) return 0;
+    return numerator / denominator;
+  }
+
+  // Get metric value from aggregate
+  const getMetricValue = (agg: any, metric: NutritionMetricKey | ActivityMetricKey): number => {
+    // Nutrition metrics
+    if (NUTRITION_METRICS.find(m => m.key === metric)) {
+      const nutritionData = agg.nutrition;
+      switch (metric) {
+        case 'calories': return nutritionData.avgCalories;
+        case 'protein': return nutritionData.avgProtein;
+        case 'carbs': return nutritionData.avgCarbs;
+        case 'sugars': return nutritionData.avgSugars;
+        case 'fat': return nutritionData.avgFat;
+        case 'saturatedFat': return nutritionData.avgSaturatedFat;
+        case 'fiber': return nutritionData.avgFiber;
+        case 'sodium': return nutritionData.avgSodium;
+        default: return 0;
+      }
+    }
+
+    // Activity metrics
+    const activityData = agg.activity;
+    if (!activityData) return 0;
+
+    switch (metric) {
+      case 'steps': return activityData.avgSteps;
+      case 'activeCalories': return activityData.avgActiveCalories;
+      case 'totalCalories': return activityData.avgTotalCalories || 0;
+      case 'intensityMinutes': return activityData.avgIntensityMinutes;
+      case 'sleep': return Math.round(activityData.avgSleepSeconds / 3600);
+      case 'restingHR': return activityData.avgHeartRateResting;
+      case 'maxHR': return activityData.avgHeartRateMax;
+      default: return 0;
+    }
+  };
+
+  // Correlation data
+  const correlationData = useMemo(() => {
+    const xData: number[] = [];
+    const yData: number[] = [];
+
+    currentAggregates.forEach(agg => {
+      const xValue = getMetricValue(agg, correlationMetricX);
+      const yValue = getMetricValue(agg, correlationMetricY);
+
+      if (xValue > 0 && yValue > 0) {
+        xData.push(xValue);
+        yData.push(yValue);
+      }
+    });
+
+    if (xData.length === 0) return null;
+
+    const correlation = calculateCorrelation(xData, yData);
+    const scatterData = xData.map((x, i) => ({ x, y: yData[i] }));
+
+    // Regression line
+    const n = xData.length;
+    const sumX = xData.reduce((a, b) => a + b, 0);
+    const sumY = yData.reduce((a, b) => a + b, 0);
+    const sumXY = xData.reduce((sum, xi, i) => sum + xi * yData[i], 0);
+    const sumX2 = xData.reduce((sum, xi) => sum + xi * xi, 0);
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    const minX = Math.min(...xData);
+    const maxX = Math.max(...xData);
+    const regressionLine = [
+      { x: minX, y: slope * minX + intercept },
+      { x: maxX, y: slope * maxX + intercept },
+    ];
+
+    return { correlation, scatterData, regressionLine, dataPoints: xData.length };
+  }, [currentAggregates, correlationMetricX, correlationMetricY, aggregationLevel]);
+
+  const scatterChartData = useMemo(() => {
+    if (!correlationData) return null;
+
+    const allMetrics = [...NUTRITION_METRICS, ...ACTIVITY_METRICS];
+    const xMetric = allMetrics.find(m => m.key === correlationMetricX);
+    const yMetric = allMetrics.find(m => m.key === correlationMetricY);
+
+    return {
+      datasets: [
+        {
+          label: 'Data punten',
+          data: correlationData.scatterData,
+          backgroundColor: 'rgba(59, 130, 246, 0.6)',
+          borderColor: 'rgba(59, 130, 246, 1)',
+          pointRadius: 6,
+          pointHoverRadius: 8,
+        },
+        {
+          label: 'Trend lijn',
+          data: correlationData.regressionLine,
+          type: 'line' as const,
+          borderColor: 'rgba(239, 68, 68, 0.8)',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          fill: false,
+          pointRadius: 0,
+        },
+      ],
+    };
+  }, [correlationData, correlationMetricX, correlationMetricY]);
+
+  const scatterChartOptions = useMemo(() => {
+    const allMetrics = [...NUTRITION_METRICS, ...ACTIVITY_METRICS];
+    const xMetric = allMetrics.find(m => m.key === correlationMetricX);
+    const yMetric = allMetrics.find(m => m.key === correlationMetricY);
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' as const, labels: { usePointStyle: true, padding: 15 } },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleColor: '#fff',
+          bodyColor: '#fff',
+        },
+      },
+      scales: {
+        x: { title: { display: true, text: xMetric?.label || '' } },
+        y: { title: { display: true, text: yMetric?.label || '' } },
+      },
+    };
+  }, [correlationMetricX, correlationMetricY]);
+
   return (
     <div className="space-y-6">
       {/* Header with controls */}
       <div className="bg-white rounded-lg shadow-sm p-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-xl font-bold text-gray-900">
-            Week & Maand Overzicht
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900">Geaggregeerd Overzicht</h2>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+            {/* Aggregation level selector */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setAggregationLevel('week')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  aggregationLevel === 'week'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Per Week
+              </button>
+              <button
+                onClick={() => setAggregationLevel('month')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  aggregationLevel === 'month'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Per Maand
+              </button>
+            </div>
+
             {/* Period selector */}
             <div className="flex items-center gap-2">
               <label htmlFor="period-select" className="text-sm font-medium text-gray-700">
@@ -74,63 +558,7 @@ export function AggregatesTab() {
                 ))}
               </select>
             </div>
-
-            {/* Export button */}
-            {!isLoading && (
-              <button
-                onClick={() => {
-                  if (activeView === 'week') {
-                    exportWeeklyAggregatesToCSV(sortedWeeklyAggregates);
-                  } else if (activeView === 'month') {
-                    exportMonthlyAggregatesToCSV(monthlyAggregates);
-                  }
-                }}
-                disabled={
-                  (activeView === 'week' && sortedWeeklyAggregates.length === 0) ||
-                  (activeView === 'month' && monthlyAggregates.length === 0)
-                }
-                className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                title="Export naar CSV"
-              >
-                <span>📥</span>
-                <span>Export CSV</span>
-              </button>
-            )}
           </div>
-        </div>
-
-        {/* View tabs */}
-        <div className="flex gap-2 mt-4 border-b border-gray-200">
-          <button
-            onClick={() => setActiveView('week')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeView === 'week'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Per Week
-          </button>
-          <button
-            onClick={() => setActiveView('month')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeView === 'month'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Per Maand
-          </button>
-          <button
-            onClick={() => setActiveView('compare')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeView === 'compare'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Vergelijk
-          </button>
         </div>
       </div>
 
@@ -142,346 +570,219 @@ export function AggregatesTab() {
         </div>
       )}
 
-      {/* Content area */}
-      {!isLoading && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          {activeView === 'week' && (
-            <WeekView
-              aggregates={sortedWeeklyAggregates}
-              settings={settings}
-              sortOrder={sortOrder}
-              onSortOrderChange={setSortOrder}
-            />
-          )}
-          {activeView === 'month' && (
-            <MonthView aggregates={monthlyAggregates} settings={settings} />
-          )}
-          {activeView === 'compare' && (
-            <CompareView weeklyAggregates={sortedWeeklyAggregates} />
-          )}
+      {/* Content */}
+      {!isLoading && currentAggregates.length === 0 && (
+        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+          <div className="text-5xl mb-4">📊</div>
+          <p className="text-lg text-gray-600 mb-2">Geen data beschikbaar</p>
+          <p className="text-sm text-gray-500">
+            Er zijn geen gegevens gevonden voor de geselecteerde periode.
+          </p>
         </div>
       )}
-    </div>
-  );
-}
 
-/**
- * WeekView - Display weekly aggregates
- */
-interface WeekViewProps {
-  aggregates: any[];
-  settings?: any;
-  sortOrder: 'desc' | 'asc';
-  onSortOrderChange: (order: 'desc' | 'asc') => void;
-}
+      {!isLoading && currentAggregates.length > 0 && (
+        <>
+          {/* Chart 1: Nutrition Averages */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                📊 Voeding Gemiddelden Over Tijd
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Geaggregeerde voedingswaarden {aggregationLevel === 'week' ? 'per week' : 'per maand'}
+              </p>
 
-function WeekView({ aggregates, settings, sortOrder, onSortOrderChange }: WeekViewProps) {
-  if (aggregates.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-5xl mb-4">📅</div>
-        <p className="text-lg text-gray-600 mb-2">Geen data beschikbaar</p>
-        <p className="text-sm text-gray-500">
-          Er zijn geen weekgegevens gevonden voor de geselecteerde periode.
-        </p>
-      </div>
-    );
-  }
+              {/* Metric toggles */}
+              <div className="flex flex-wrap gap-2">
+                {NUTRITION_METRICS.map(metric => (
+                  <button
+                    key={metric.key}
+                    onClick={() => toggleNutritionMetric(metric.key)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      selectedNutritionMetrics.has(metric.key)
+                        ? 'ring-2 shadow-sm'
+                        : 'opacity-50 hover:opacity-75'
+                    }`}
+                    style={{
+                      backgroundColor: selectedNutritionMetrics.has(metric.key) ? metric.color + '15' : '#f3f4f6',
+                      color: selectedNutritionMetrics.has(metric.key) ? metric.color : '#6b7280',
+                      ringColor: metric.color,
+                    }}
+                  >
+                    {metric.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-  return (
-    <div className="space-y-4">
-      {/* Summary header with sorting */}
-      <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-        <p className="text-sm font-medium text-gray-700">
-          {aggregates.length} {aggregates.length === 1 ? 'week' : 'weken'} gevonden
-        </p>
-        <button
-          onClick={() => onSortOrderChange(sortOrder === 'desc' ? 'asc' : 'desc')}
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
-        >
-          {sortOrder === 'desc' ? '↓ Nieuwste eerst' : '↑ Oudste eerst'}
-        </button>
-      </div>
-
-      {/* Week cards */}
-      <div className="space-y-4">
-        {aggregates.map((week, idx) => (
-          <WeekAggregateCard
-            key={`${week.year}-W${week.weekNumber}`}
-            aggregate={week}
-            settings={settings}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/**
- * MonthView - Display monthly aggregates
- */
-interface MonthViewProps {
-  aggregates: any[];
-  settings?: any;
-}
-
-function MonthView({ aggregates, settings }: MonthViewProps) {
-  if (aggregates.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-5xl mb-4">📆</div>
-        <p className="text-lg text-gray-600 mb-2">Geen data beschikbaar</p>
-        <p className="text-sm text-gray-500">
-          Er zijn geen maandgegevens gevonden voor de geselecteerde periode.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Summary header */}
-      <div className="flex items-center justify-between pb-2 border-b border-gray-200">
-        <p className="text-sm font-medium text-gray-700">
-          {aggregates.length} {aggregates.length === 1 ? 'maand' : 'maanden'} gevonden
-        </p>
-      </div>
-
-      {/* Month cards */}
-      <div className="space-y-4">
-        {aggregates.map((month) => (
-          <MonthAggregateCard
-            key={`${month.year}-${month.month}`}
-            aggregate={month}
-            settings={settings}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/**
- * CompareView - Compare different time periods
- */
-interface CompareViewProps {
-  weeklyAggregates: any[];
-}
-
-function CompareView({ weeklyAggregates }: CompareViewProps) {
-  if (weeklyAggregates.length < 2) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-5xl mb-4">📊</div>
-        <p className="text-lg text-gray-600 mb-2">Niet genoeg data om te vergelijken</p>
-        <p className="text-sm text-gray-500">
-          Selecteer een langere periode om weken te kunnen vergelijken.
-        </p>
-      </div>
-    );
-  }
-
-  // Split into two halves for comparison
-  const midpoint = Math.floor(weeklyAggregates.length / 2);
-  const olderWeeks = weeklyAggregates.slice(midpoint);
-  const recentWeeks = weeklyAggregates.slice(0, midpoint);
-
-  // Calculate averages for each period
-  const olderAvg = calculatePeriodAverage(olderWeeks);
-  const recentAvg = calculatePeriodAverage(recentWeeks);
-
-  // Calculate changes
-  const changes = {
-    calories: calculateChange(olderAvg.calories, recentAvg.calories),
-    protein: calculateChange(olderAvg.protein, recentAvg.protein),
-    carbs: calculateChange(olderAvg.carbs, recentAvg.carbs),
-    fat: calculateChange(olderAvg.fat, recentAvg.fat),
-    steps: calculateChange(olderAvg.steps, recentAvg.steps),
-    adherence: calculateChange(olderAvg.adherence, recentAvg.adherence),
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Periode Vergelijking
-        </h3>
-        <p className="text-sm text-gray-600">
-          Vergelijk de eerste helft met de tweede helft van de geselecteerde periode
-        </p>
-      </div>
-
-      {/* Comparison cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Older period */}
-        <div className="bg-gray-50 rounded-lg p-6 border-2 border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-gray-900">Eerste Periode</h4>
-            <span className="text-sm text-gray-600">
-              {olderWeeks.length} {olderWeeks.length === 1 ? 'week' : 'weken'}
-            </span>
+            <div className="h-[400px]">
+              <Line data={nutritionChartData} options={nutritionChartOptions} />
+            </div>
           </div>
-          <PeriodMetrics avg={olderAvg} />
-        </div>
 
-        {/* Recent period */}
-        <div className="bg-blue-50 rounded-lg p-6 border-2 border-blue-200">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-semibold text-gray-900">Tweede Periode</h4>
-            <span className="text-sm text-gray-600">
-              {recentWeeks.length} {recentWeeks.length === 1 ? 'week' : 'weken'}
-            </span>
+          {/* Chart 2: Activity Averages */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                🏃 Activiteit Gemiddelden Over Tijd
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Geaggregeerde activiteit metrics {aggregationLevel === 'week' ? 'per week' : 'per maand'}
+              </p>
+
+              {/* Metric toggles */}
+              <div className="flex flex-wrap gap-2">
+                {ACTIVITY_METRICS.map(metric => (
+                  <button
+                    key={metric.key}
+                    onClick={() => toggleActivityMetric(metric.key)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      selectedActivityMetrics.has(metric.key)
+                        ? 'ring-2 shadow-sm'
+                        : 'opacity-50 hover:opacity-75'
+                    }`}
+                    style={{
+                      backgroundColor: selectedActivityMetrics.has(metric.key) ? metric.color + '15' : '#f3f4f6',
+                      color: selectedActivityMetrics.has(metric.key) ? metric.color : '#6b7280',
+                      ringColor: metric.color,
+                    }}
+                  >
+                    {metric.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {currentAggregates.some(a => a.activity) ? (
+              <div className="h-[400px]">
+                <Line data={activityChartData} options={activityChartOptions} />
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <p className="text-lg mb-2">Geen activity data beschikbaar</p>
+                <p className="text-sm">Importeer Garmin CSV data om activity trends te zien</p>
+              </div>
+            )}
           </div>
-          <PeriodMetrics avg={recentAvg} />
-        </div>
-      </div>
 
-      {/* Changes overview */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h4 className="font-semibold text-gray-900 mb-4">📈 Veranderingen</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          <ChangeMetric label="Calorieën" change={changes.calories} unit="kcal" />
-          <ChangeMetric label="Eiwit" change={changes.protein} unit="g" />
-          <ChangeMetric label="Koolhydraten" change={changes.carbs} unit="g" />
-          <ChangeMetric label="Vetten" change={changes.fat} unit="g" />
-          <ChangeMetric label="Stappen" change={changes.steps} />
-          <ChangeMetric label="Naleving" change={changes.adherence} unit="%" isPercentage />
-        </div>
-      </div>
-    </div>
-  );
-}
+          {/* Chart 3: Correlation Analysis */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                📈 Correlatie Analyse
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Ontdek verbanden tussen metrics op {aggregationLevel === 'week' ? 'week' : 'maand'} niveau
+              </p>
 
-/**
- * Calculate average metrics for a period
- */
-function calculatePeriodAverage(weeks: any[]) {
-  if (weeks.length === 0) {
-    return {
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fat: 0,
-      steps: 0,
-      adherence: 0,
-    };
-  }
+              {/* Metric selectors */}
+              <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    X-as (horizontaal)
+                  </label>
+                  <select
+                    value={correlationMetricX}
+                    onChange={(e) => setCorrelationMetricX(e.target.value as any)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <optgroup label="Voeding">
+                      {NUTRITION_METRICS.map(metric => (
+                        <option key={metric.key} value={metric.key}>{metric.label}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Activiteit">
+                      {ACTIVITY_METRICS.map(metric => (
+                        <option key={metric.key} value={metric.key}>{metric.label}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
 
-  const sum = weeks.reduce((acc, week) => ({
-    calories: acc.calories + week.nutrition.avgCalories,
-    protein: acc.protein + week.nutrition.avgProtein,
-    carbs: acc.carbs + week.nutrition.avgCarbs,
-    fat: acc.fat + week.nutrition.avgFat,
-    steps: acc.steps + (week.activity?.avgSteps || 0),
-    daysInRange: acc.daysInRange + week.nutrition.daysInRange,
-    daysTracked: acc.daysTracked + week.daysTracked,
-  }), {
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0,
-    steps: 0,
-    daysInRange: 0,
-    daysTracked: 0,
-  });
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Y-as (verticaal)
+                  </label>
+                  <select
+                    value={correlationMetricY}
+                    onChange={(e) => setCorrelationMetricY(e.target.value as any)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <optgroup label="Voeding">
+                      {NUTRITION_METRICS.map(metric => (
+                        <option key={metric.key} value={metric.key}>{metric.label}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Activiteit">
+                      {ACTIVITY_METRICS.map(metric => (
+                        <option key={metric.key} value={metric.key}>{metric.label}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+            </div>
 
-  const count = weeks.length;
-  const adherence = sum.daysTracked > 0 ? (sum.daysInRange / sum.daysTracked) * 100 : 0;
+            {correlationData ? (
+              <>
+                {/* Correlation stats */}
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6 mb-6">
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600 mb-2">Correlatie Coëfficiënt</div>
+                      <div className={`text-4xl font-bold ${
+                        Math.abs(correlationData.correlation) > 0.7 ? 'text-green-600' :
+                        Math.abs(correlationData.correlation) > 0.4 ? 'text-yellow-600' :
+                        'text-gray-600'
+                      }`}>
+                        {correlationData.correlation.toFixed(3)}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {Math.abs(correlationData.correlation) > 0.7 ? '✅ Sterke correlatie' :
+                         Math.abs(correlationData.correlation) > 0.4 ? '⚠️ Matige correlatie' :
+                         '❌ Zwakke correlatie'}
+                      </div>
+                    </div>
 
-  return {
-    calories: Math.round(sum.calories / count),
-    protein: Math.round(sum.protein / count),
-    carbs: Math.round(sum.carbs / count),
-    fat: Math.round(sum.fat / count),
-    steps: Math.round(sum.steps / count),
-    adherence: Math.round(adherence),
-  };
-}
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600 mb-2">Data Punten</div>
+                      <div className="text-4xl font-bold text-blue-600">
+                        {correlationData.dataPoints}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {aggregationLevel === 'week' ? 'weken' : 'maanden'}
+                      </div>
+                    </div>
 
-/**
- * Calculate percentage change
- */
-function calculateChange(oldValue: number, newValue: number) {
-  if (oldValue === 0) return { value: newValue, percentage: 0 };
-  const diff = newValue - oldValue;
-  const percentage = (diff / oldValue) * 100;
-  return { value: diff, percentage: Math.round(percentage) };
-}
+                    <div className="text-center">
+                      <div className="text-sm text-gray-600 mb-2">Relatie</div>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {correlationData.correlation > 0 ? '📈 Positief' : '📉 Negatief'}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {correlationData.correlation > 0
+                          ? 'Als X stijgt, stijgt Y ook'
+                          : 'Als X stijgt, daalt Y'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-/**
- * PeriodMetrics - Display metrics for a period
- */
-function PeriodMetrics({ avg }: { avg: any }) {
-  return (
-    <div className="space-y-3">
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-600">Ø Calorieën:</span>
-        <span className="font-semibold">{avg.calories} kcal</span>
-      </div>
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-600">Ø Eiwit:</span>
-        <span className="font-semibold">{avg.protein}g</span>
-      </div>
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-600">Ø Koolhydraten:</span>
-        <span className="font-semibold">{avg.carbs}g</span>
-      </div>
-      <div className="flex justify-between text-sm">
-        <span className="text-gray-600">Ø Vetten:</span>
-        <span className="font-semibold">{avg.fat}g</span>
-      </div>
-      {avg.steps > 0 && (
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">Ø Stappen:</span>
-          <span className="font-semibold">{avg.steps.toLocaleString()}</span>
-        </div>
+                {/* Scatter plot */}
+                <div className="h-[400px]">
+                  <Scatter data={scatterChartData!} options={scatterChartOptions} />
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <p className="text-lg mb-2">Onvoldoende data voor correlatie analyse</p>
+                <p className="text-sm">Zorg voor voldoende data met beide metrics</p>
+              </div>
+            )}
+          </div>
+        </>
       )}
-      <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
-        <span className="text-gray-600">Naleving:</span>
-        <span className="font-semibold">{avg.adherence}%</span>
-      </div>
-    </div>
-  );
-}
-
-/**
- * ChangeMetric - Display a change metric
- */
-interface ChangeMetricProps {
-  label: string;
-  change: { value: number; percentage: number };
-  unit?: string;
-  isPercentage?: boolean;
-}
-
-function ChangeMetric({ label, change, unit = '', isPercentage = false }: ChangeMetricProps) {
-  const isPositive = change.value > 0;
-  const isNegative = change.value < 0;
-  const isNeutral = change.value === 0;
-
-  const colorClass = isPositive
-    ? 'text-green-600'
-    : isNegative
-    ? 'text-red-600'
-    : 'text-gray-600';
-
-  const arrow = isPositive ? '↑' : isNegative ? '↓' : '→';
-
-  return (
-    <div className="text-sm">
-      <div className="text-gray-600 mb-1">{label}</div>
-      <div className={`font-semibold ${colorClass} flex items-center gap-1`}>
-        <span>{arrow}</span>
-        <span>
-          {isPositive && '+'}
-          {isPercentage ? change.percentage : Math.abs(change.value)}
-          {unit}
-        </span>
-        {!isPercentage && change.percentage !== 0 && (
-          <span className="text-xs">({change.percentage > 0 && '+'}{change.percentage}%)</span>
-        )}
-      </div>
     </div>
   );
 }
