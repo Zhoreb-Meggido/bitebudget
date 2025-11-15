@@ -100,18 +100,43 @@
 
 ---
 
-### 7. Weekly/Monthly Aggregate Views
+### 7. Weekly/Monthly Aggregate Views ⏳ IN PROGRESS
 **Feature:** Overzicht van nutrition en activity data per week/maand.
 
-**Taken:**
-- [ ] Week view met dagelijkse gemiddelden
-- [ ] Month view met weekly trends
-- [ ] Vergelijking tussen weken/maanden
-- [ ] Export functionaliteit voor aggregates
+**Branch:** `feature/weekly-monthly-aggregates`
+
+**Status - Phase 1: Foundation ✅ COMPLETED**
+- [x] Created TypeScript types (aggregates.types.ts)
+- [x] Created aggregation.service.ts with week calculation logic
+- [x] Created useAggregates hook with memoization
+- [x] Created AggregatesTab container component
+- [x] Integrated new tab into Analyse page
+
+**Status - Phase 2: Week View (NEXT)**
+- [ ] Build WeekAggregateCard component
+- [ ] Add nutrition metrics display
+- [ ] Add activity metrics display (if available)
+- [ ] Add calorie adherence visualization
+- [ ] Add "days tracked" indicator
+- [ ] Make cards responsive for mobile
+
+**Status - Phase 3: Month View**
+- [ ] Implement calculateMonthlyAggregates in service
+- [ ] Build MonthAggregateCard component
+- [ ] Group weeks by month
+- [ ] Show best/worst week indicators
+- [ ] Add month-over-month comparisons
+
+**Status - Phase 4: Comparison & Export**
+- [ ] Build ComparisonView with side-by-side periods
+- [ ] Extend report.utils.ts with aggregate export
+- [ ] Add CSV export for weekly data
+- [ ] Add PDF export option
+- [ ] Add share/download buttons
 
 **Voordeel:** Beter inzicht in lange termijn trends
 
-**Effort:** ~6-8 uur
+**Total Effort:** ~6-8 uur (2 uur spent, 4-6 uur remaining)
 
 ---
 

@@ -3,9 +3,10 @@ import { NutritionTab } from './NutritionTab';
 import { ActivityTab } from './ActivityTab';
 import { BalanceTab } from './BalanceTab';
 import { TrendsTab } from './TrendsTab';
+import { AggregatesTab } from './AggregatesTab';
 import { useSwipeTabs } from '../../hooks';
 
-type TabType = 'nutrition' | 'activity' | 'balance' | 'trends';
+type TabType = 'nutrition' | 'activity' | 'balance' | 'trends' | 'aggregates';
 
 export function AnalysePageWithTabs() {
   const [activeTab, setActiveTab] = useState<TabType>('nutrition');
@@ -15,6 +16,7 @@ export function AnalysePageWithTabs() {
     { id: 'activity' as TabType, label: 'Activiteit', icon: '🏃' },
     { id: 'balance' as TabType, label: 'Balance', icon: '⚖️' },
     { id: 'trends' as TabType, label: 'Trends', icon: '📊' },
+    { id: 'aggregates' as TabType, label: 'Overzicht', icon: '📅' },
   ];
 
   // Enable swipe gestures for tab navigation
@@ -62,6 +64,7 @@ export function AnalysePageWithTabs() {
           {activeTab === 'activity' && <ActivityTab />}
           {activeTab === 'balance' && <BalanceTab />}
           {activeTab === 'trends' && <TrendsTab />}
+          {activeTab === 'aggregates' && <AggregatesTab />}
         </div>
       </div>
     </div>
