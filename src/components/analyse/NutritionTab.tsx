@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useEntries, useSettings, useWeights } from '@/hooks';
 import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
+import type { Entry, Weight } from '@/types';
 
 type MetricType = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium' | 'overall';
 
@@ -51,7 +52,7 @@ export function NutritionTab() {
 
   // Get most recent weight for protein calculation
   const currentWeight = useMemo(() => {
-    const validWeights = weights.filter(w => !w.deleted && w.weight > 0);
+    const validWeights = weights.filter((w: Weight) => !w.deleted && w.weight > 0);
     if (validWeights.length === 0) return settings.targetWeight;
 
     // Sort by date descending and get the most recent
@@ -63,7 +64,7 @@ export function NutritionTab() {
   const dailyData = useMemo(() => {
     const days: Map<string, DayData> = new Map();
 
-    entries.forEach(entry => {
+    entries.forEach((entry: Entry) => {
       const existing = days.get(entry.date) || {
         date: entry.date,
         calories: 0,
