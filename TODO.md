@@ -122,12 +122,14 @@
 - [x] Add sort toggle (newest/oldest first)
 - [x] Proper empty states
 
-**Status - Phase 3: Month View**
-- [ ] Implement calculateMonthlyAggregates in service
-- [ ] Build MonthAggregateCard component
-- [ ] Group weeks by month
-- [ ] Show best/worst week indicators
-- [ ] Add month-over-month comparisons
+**Status - Phase 3: Month View ✅ COMPLETED**
+- [x] Implement calculateMonthlyAggregates in service
+- [x] Build MonthAggregateCard component with collapsible weeks
+- [x] Group weeks by month (automatic grouping by month boundary)
+- [x] Show best/worst week indicators based on calorie adherence
+- [x] Monthly nutrition and activity summaries
+- [x] Collapsible weekly breakdown within each month
+- [x] Proper empty states
 
 **Status - Phase 4: Comparison & Export**
 - [ ] Build ComparisonView with side-by-side periods
@@ -138,7 +140,7 @@
 
 **Voordeel:** Beter inzicht in lange termijn trends
 
-**Total Effort:** ~6-8 uur (4 uur spent, 2-4 uur remaining)
+**Total Effort:** ~6-8 uur (5.5 uur spent, 0.5-2.5 uur remaining)
 
 ---
 

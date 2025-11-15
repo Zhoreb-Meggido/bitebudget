@@ -71,15 +71,21 @@ export function useAggregates(options: UseAggregatesOptions = {}): UseAggregates
   }, [entries, activities, settings, startDate, endDate, includeActivity, entriesLoading, settingsLoading, activitiesLoading]);
 
   // Calculate monthly aggregates with memoization
-  // TODO: Implement monthly aggregates in Phase 2
   const monthlyAggregates = useMemo(() => {
     if (!entries || !settings || entriesLoading || settingsLoading) {
       return [];
     }
 
-    // Placeholder - will be implemented in next phase
-    return [];
-  }, [entries, settings, entriesLoading, settingsLoading]);
+    const activitiesToUse = includeActivity ? (activities || []) : [];
+
+    return aggregationService.calculateMonthlyAggregates(
+      entries,
+      activitiesToUse,
+      settings,
+      startDate,
+      endDate
+    );
+  }, [entries, activities, settings, startDate, endDate, includeActivity, entriesLoading, settingsLoading, activitiesLoading]);
 
   // Determine loading state
   const isLoading = entriesLoading || settingsLoading || (includeActivity && activitiesLoading);

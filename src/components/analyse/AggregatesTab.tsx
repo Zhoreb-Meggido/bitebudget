@@ -9,6 +9,7 @@ import React, { useState, useMemo } from 'react';
 import { useAggregates } from '@/hooks/useAggregates';
 import { useSettings } from '@/hooks/useSettings';
 import { WeekAggregateCard } from './WeekAggregateCard';
+import { MonthAggregateCard } from './MonthAggregateCard';
 import type { AggregatePeriod } from '@/types';
 
 type AggregateView = 'week' | 'month' | 'compare';
@@ -128,7 +129,7 @@ export function AggregatesTab() {
             />
           )}
           {activeView === 'month' && (
-            <MonthView aggregates={monthlyAggregates} />
+            <MonthView aggregates={monthlyAggregates} settings={settings} />
           )}
           {activeView === 'compare' && (
             <CompareView weeklyAggregates={sortedWeeklyAggregates} />
@@ -193,17 +194,44 @@ function WeekView({ aggregates, settings, sortOrder, onSortOrderChange }: WeekVi
 
 /**
  * MonthView - Display monthly aggregates
- * TODO: Implement in Phase 2
  */
-function MonthView({ aggregates }: { aggregates: any[] }) {
+interface MonthViewProps {
+  aggregates: any[];
+  settings?: any;
+}
+
+function MonthView({ aggregates, settings }: MonthViewProps) {
+  if (aggregates.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-5xl mb-4">📆</div>
+        <p className="text-lg text-gray-600 mb-2">Geen data beschikbaar</p>
+        <p className="text-sm text-gray-500">
+          Er zijn geen maandgegevens gevonden voor de geselecteerde periode.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="text-center py-8">
-      <p className="text-gray-600 mb-2">
-        Maand weergave wordt geïmplementeerd in de volgende fase.
-      </p>
-      <p className="text-sm text-gray-500">
-        Dit zal weken groeperen per maand met vergelijkingen en trends.
-      </p>
+    <div className="space-y-4">
+      {/* Summary header */}
+      <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+        <p className="text-sm font-medium text-gray-700">
+          {aggregates.length} {aggregates.length === 1 ? 'maand' : 'maanden'} gevonden
+        </p>
+      </div>
+
+      {/* Month cards */}
+      <div className="space-y-4">
+        {aggregates.map((month) => (
+          <MonthAggregateCard
+            key={`${month.year}-${month.month}`}
+            aggregate={month}
+            settings={settings}
+          />
+        ))}
+      </div>
     </div>
   );
 }

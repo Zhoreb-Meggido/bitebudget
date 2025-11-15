@@ -324,17 +324,209 @@ function calculateWeekActivityAggregate(activities: DailyActivity[]): WeekActivi
 
 /**
  * Calculate monthly aggregates (groups weeks by month)
- * TODO: Implement in next phase
  */
 export function calculateMonthlyAggregates(
   entries: Entry[],
   activities: DailyActivity[],
   settings: Settings,
-  startMonth: string,
-  endMonth: string
+  startDate: string,
+  endDate: string
 ): MonthAggregate[] {
-  // Placeholder - to be implemented
-  return [];
+  // Step 1: Get weekly aggregates for the entire period
+  const weeklyAggregates = calculateWeeklyAggregates(entries, activities, settings, startDate, endDate);
+
+  if (weeklyAggregates.length === 0) {
+    return [];
+  }
+
+  // Step 2: Group weeks by month
+  const monthsMap = new Map<string, WeekAggregate[]>();
+
+  weeklyAggregates.forEach(week => {
+    // Use the week start date to determine the month
+    const weekStartDate = new Date(week.weekStart + 'T12:00:00');
+    const monthKey = `${weekStartDate.getFullYear()}-${String(weekStartDate.getMonth() + 1).padStart(2, '0')}`;
+
+    if (!monthsMap.has(monthKey)) {
+      monthsMap.set(monthKey, []);
+    }
+    monthsMap.get(monthKey)!.push(week);
+  });
+
+  // Step 3: Calculate aggregates per month
+  const monthNames = [
+    'Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni',
+    'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'
+  ];
+
+  const monthlyAggregates: MonthAggregate[] = Array.from(monthsMap.entries())
+    .map(([monthKey, weeks]) => {
+      const [yearStr, monthStr] = monthKey.split('-');
+      const year = parseInt(yearStr, 10);
+      const month = parseInt(monthStr, 10);
+
+      // Get month boundaries
+      const monthStart = new Date(year, month - 1, 1);
+      const monthEnd = new Date(year, month, 0); // Last day of month
+
+      const monthStartStr = monthStart.toISOString().split('T')[0];
+      const monthEndStr = monthEnd.toISOString().split('T')[0];
+
+      // Aggregate daily nutrition data for the month
+      const dailyNutrition = aggregateEntriesByDate(entries);
+      const daysInMonth: DailyNutrition[] = [];
+
+      for (const [date, nutrition] of dailyNutrition.entries()) {
+        if (date >= monthStartStr && date <= monthEndStr) {
+          daysInMonth.push(nutrition);
+        }
+      }
+
+      // Calculate monthly nutrition aggregate
+      const nutrition = calculateMonthNutritionAggregate(daysInMonth, weeks, settings);
+
+      // Calculate monthly activity aggregate (if activity data exists)
+      const activitiesInMonth = activities.filter(
+        a => !a.deleted && a.date >= monthStartStr && a.date <= monthEndStr
+      );
+      const activity = activitiesInMonth.length > 0
+        ? calculateMonthActivityAggregate(activitiesInMonth)
+        : undefined;
+
+      return {
+        month,
+        year,
+        monthName: monthNames[month - 1],
+        monthStart: monthStartStr,
+        monthEnd: monthEndStr,
+        weeksInMonth: weeks.sort((a, b) => a.weekStart.localeCompare(b.weekStart)),
+        daysTracked: daysInMonth.length,
+        nutrition,
+        activity,
+      };
+    })
+    .sort((a, b) => {
+      // Sort by year, then month (most recent first)
+      if (a.year !== b.year) return b.year - a.year;
+      return b.month - a.month;
+    });
+
+  return monthlyAggregates;
+}
+
+/**
+ * Calculate monthly nutrition aggregate
+ */
+function calculateMonthNutritionAggregate(
+  days: DailyNutrition[],
+  weeks: WeekAggregate[],
+  settings: Settings
+): MonthNutritionAggregate {
+  if (days.length === 0) {
+    return {
+      avgCalories: 0,
+      avgProtein: 0,
+      avgCarbs: 0,
+      avgSugars: 0,
+      avgFat: 0,
+      avgSaturatedFat: 0,
+      avgFiber: 0,
+      avgSodium: 0,
+      bestWeek: 0,
+      worstWeek: 0,
+      totalDaysTracked: 0,
+    };
+  }
+
+  const sum = days.reduce((acc, day) => ({
+    calories: acc.calories + day.calories,
+    protein: acc.protein + day.protein,
+    carbs: acc.carbs + day.carbs,
+    sugars: acc.sugars + day.sugars,
+    fat: acc.fat + day.fat,
+    saturatedFat: acc.saturatedFat + day.saturatedFat,
+    fiber: acc.fiber + day.fiber,
+    sodium: acc.sodium + day.sodium,
+  }), {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    sugars: 0,
+    fat: 0,
+    saturatedFat: 0,
+    fiber: 0,
+    sodium: 0,
+  });
+
+  const count = days.length;
+
+  // Find best/worst week based on calorie adherence
+  let bestWeek = weeks[0];
+  let worstWeek = weeks[0];
+
+  weeks.forEach(week => {
+    const weekAdherence = week.nutrition.daysInRange / week.daysTracked;
+    const bestAdherence = bestWeek.nutrition.daysInRange / bestWeek.daysTracked;
+    const worstAdherence = worstWeek.nutrition.daysInRange / worstWeek.daysTracked;
+
+    if (weekAdherence > bestAdherence) {
+      bestWeek = week;
+    }
+    if (weekAdherence < worstAdherence) {
+      worstWeek = week;
+    }
+  });
+
+  return {
+    avgCalories: Math.round(sum.calories / count),
+    avgProtein: Math.round(sum.protein / count),
+    avgCarbs: Math.round(sum.carbs / count),
+    avgSugars: Math.round(sum.sugars / count),
+    avgFat: Math.round(sum.fat / count),
+    avgSaturatedFat: Math.round(sum.saturatedFat / count),
+    avgFiber: Math.round(sum.fiber / count),
+    avgSodium: Math.round(sum.sodium / count),
+    bestWeek: bestWeek.weekNumber,
+    worstWeek: worstWeek.weekNumber,
+    totalDaysTracked: count,
+  };
+}
+
+/**
+ * Calculate monthly activity aggregate
+ */
+function calculateMonthActivityAggregate(activities: DailyActivity[]): MonthActivityAggregate {
+  if (activities.length === 0) {
+    return {
+      avgSteps: 0,
+      avgActiveCalories: 0,
+      avgSleepSeconds: 0,
+      avgIntensityMinutes: 0,
+      totalDaysWithActivity: 0,
+    };
+  }
+
+  const sum = activities.reduce((acc, activity) => ({
+    steps: acc.steps + (activity.steps || 0),
+    activeCalories: acc.activeCalories + (activity.activeCalories || 0),
+    sleepSeconds: acc.sleepSeconds + (activity.sleepSeconds || 0),
+    intensityMinutes: acc.intensityMinutes + (activity.intensityMinutes || 0),
+  }), {
+    steps: 0,
+    activeCalories: 0,
+    sleepSeconds: 0,
+    intensityMinutes: 0,
+  });
+
+  const count = activities.length;
+
+  return {
+    avgSteps: Math.round(sum.steps / count),
+    avgActiveCalories: Math.round(sum.activeCalories / count),
+    avgSleepSeconds: Math.round(sum.sleepSeconds / count),
+    avgIntensityMinutes: Math.round(sum.intensityMinutes / count),
+    totalDaysWithActivity: count,
+  };
 }
 
 class AggregationService {
