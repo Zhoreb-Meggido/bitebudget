@@ -18,11 +18,6 @@ export function MonthAggregateCard({ aggregate, settings }: MonthAggregateCardPr
   const [showWeeks, setShowWeeks] = useState(false);
   const { monthName, year, daysTracked, nutrition, activity, weeksInMonth } = aggregate;
 
-  // Calculate adherence percentage
-  const adherencePercentage = daysTracked > 0
-    ? Math.round((nutrition.totalDaysTracked / daysTracked) * 100)
-    : 0;
-
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       {/* Main card content */}
