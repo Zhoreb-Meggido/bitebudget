@@ -296,6 +296,7 @@ export interface BackupData {
   productPortions?: ProductPortion[];  // v1.3+
   mealTemplates?: MealTemplate[];      // v1.3+
   dailyActivities?: DailyActivity[];   // v1.5+ (Google Fit integration)
+  heartRateSamples?: DayHeartRateSamples[];  // v1.6+ (Health Connect HR data, 75-day retention)
 }
 
 // ============================================

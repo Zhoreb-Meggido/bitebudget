@@ -117,6 +117,17 @@
 
 ## Completed ✅
 
+### OAuth & Heart Rate Sync Improvements (v1.7.1) ✅
+- [x] Heart rate samples cloud sync with 75-day retention
+- [x] Soft-delete pattern for HR samples (consistent with other data)
+- [x] Smart merge strategy ("newest timestamp wins")
+- [x] Automatic cleanup after Health Connect import
+- [x] Enhanced OAuth debugging with detailed error logging
+- [x] Extended auto-refresh window (24h → 7 days after expiry)
+- [x] UserId tracking for troubleshooting refresh token issues
+- [x] Better Supabase Edge Function error handling
+- [x] Database v10 with updated_at index on weights
+
 ### Heart Rate Visualization (v1.7.0) ✅
 - [x] Intraday heart rate chart with ~680 samples per day
 - [x] Heart rate zone visualization with colored backgrounds

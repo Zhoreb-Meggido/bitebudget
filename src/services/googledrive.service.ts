@@ -60,28 +60,66 @@ class GoogleDriveService {
    */
   private async tryAutoRefreshOnStartup(): Promise<void> {
     const method = localStorage.getItem('google_oauth_method');
-    if (method !== 'authorization_code') return;
-    if (!supabaseService.isAvailable()) return;
+    if (method !== 'authorization_code') {
+      console.log('ℹ️ Skipping auto-refresh: not using authorization code flow');
+      return;
+    }
+    if (!supabaseService.isAvailable()) {
+      console.log('ℹ️ Skipping auto-refresh: Supabase not available');
+      return;
+    }
 
-    // Check if token recently expired (within last 24 hours)
+    // Check if token is expired
     const expiresAt = localStorage.getItem('google_token_expires_at');
-    if (!expiresAt) return;
+    if (!expiresAt) {
+      console.log('ℹ️ Skipping auto-refresh: no expiry timestamp found');
+      return;
+    }
 
-    const expiredMs = Date.now() - parseInt(expiresAt);
-    if (expiredMs > 24 * 60 * 60 * 1000) {
-      // Token expired more than 24 hours ago, don't auto-refresh
+    const expiryTime = parseInt(expiresAt);
+    const now = Date.now();
+
+    // Only auto-refresh if:
+    // 1. Token is expired (or expires within 5 minutes)
+    // 2. Token expired less than 7 days ago (assume refresh token is still valid)
+    const isExpired = now > expiryTime - (5 * 60 * 1000);
+    const expiredMs = now - expiryTime;
+    const maxRefreshAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+    if (!isExpired) {
+      console.log('ℹ️ Token still valid, no refresh needed');
+      return;
+    }
+
+    if (expiredMs > maxRefreshAge) {
+      console.warn(`⚠️ Token expired ${Math.floor(expiredMs / (24 * 60 * 60 * 1000))} days ago, refresh token may be expired. User needs to re-authenticate.`);
       return;
     }
 
     try {
-      console.log('🔄 Token expired, attempting automatic refresh on startup...');
+      const hoursExpired = Math.floor(expiredMs / (60 * 60 * 1000));
+      const minutesExpired = Math.floor((expiredMs % (60 * 60 * 1000)) / (60 * 1000));
+      console.log(`🔄 Token expired ${hoursExpired}h ${minutesExpired}m ago, attempting automatic refresh on startup...`);
+
       await this.automaticRefresh();
 
       // Success! Start the timer
       this.startAutomaticRefreshTimer();
       console.log('✅ Startup auto-refresh successful!');
-    } catch (error) {
-      console.warn('⚠️ Startup auto-refresh failed, user will need to sign in:', error);
+    } catch (error: any) {
+      console.error('❌ Startup auto-refresh failed:', error);
+      console.error('   Error type:', error?.constructor?.name);
+      console.error('   Error message:', error?.message);
+
+      // Check if this is a "no refresh token" error
+      if (error?.message?.includes('No refresh token found')) {
+        console.error('   💡 Refresh token missing from database - user needs to re-authenticate');
+      } else if (error?.message?.includes('expired or revoked')) {
+        console.error('   💡 Refresh token expired/revoked - user needs to re-authenticate');
+      } else {
+        console.error('   💡 Unknown error - may be network issue or Supabase problem');
+      }
+
       // Don't throw - let the app continue, sync will show modal when needed
     }
   }

@@ -1,10 +1,10 @@
-# BiteBudget (Voedseljournaal) v1.7.0
+# BiteBudget (Voedseljournaal) v1.7.1
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.7.0:** Heart Rate Visualization - Intraday hartslag grafieken met zones, collapsible statistics panel en heatmap integratie!
+**🎉 Nieuw in v1.7.1:** OAuth Token Refresh Improvements - Verbeterde error logging en startup refresh logica voor betrouwbaardere cloud sync!
 
 ---
 
@@ -378,6 +378,53 @@ npm run build
 ---
 
 ## 📋 Changelog
+
+### **v1.7.1 - OAuth & Heart Rate Sync Improvements** (2025-01-15)
+
+#### **Heart Rate Samples Cloud Sync** 💓
+- ✅ **Cloud Backup Support** - Heart rate samples now included in cloud sync
+  - 75-day retention policy (enough for 56-day heatmap + buffer)
+  - ~680 samples per day, ~700KB for full 75 days
+- ✅ **Soft-Delete Pattern** - Consistent with other data types
+  - Samples >75 days are soft-deleted (marked as deleted)
+  - Permanent deletion after 14 days of being soft-deleted
+- ✅ **Smart Merge** - "Newest timestamp wins" strategy
+  - Compares updated_at timestamps to resolve conflicts
+  - Preserves most recent HR data across devices
+- ✅ **Automatic Cleanup** - Called after Health Connect import
+  - cleanupOldSamples() removes HR data older than 75 days
+  - cleanupOldDeletedItems() permanently removes 14-day old tombstones
+- ✅ **Database v10** - Added updated_at index to weights for body composition sync
+
+**Impact:** HR visualization data now syncs between devices - view your heart rate trends on any device!
+
+#### **Enhanced OAuth Debugging & Reliability** 🔐
+- ✅ **Extended Startup Refresh Window** - Token auto-refresh now attempts up to 7 days after expiry (was 24 hours)
+- ✅ **Better Error Logging** - Detailed logging for all refresh failures with specific error types
+  - Identifies "no refresh token", "expired/revoked", or "unknown" errors
+  - Shows how long ago token expired (hours and minutes)
+  - Logs partial userId for privacy-safe debugging
+- ✅ **UserId Tracking** - Added logging to detect userId changes that break refresh token lookup
+  - Warns when new userId is generated (means old tokens inaccessible)
+  - Shows whether userId is cached, stored, or newly generated
+- ✅ **Edge Function Improvements** - Better error handling in google-oauth-refresh
+  - Separates database errors from "no token found" errors
+  - Logs Supabase error codes and messages for easier troubleshooting
+- ✅ **Smarter Startup Logic** - Only attempts refresh if:
+  - Token is actually expired (or expires within 5 minutes)
+  - Token expired less than 7 days ago (refresh token likely still valid)
+  - Using authorization code flow and Supabase is available
+
+#### **Technical Implementation** 🔧
+- ✅ **tryAutoRefreshOnStartup()** - Improved with detailed conditional logging
+- ✅ **automaticRefresh()** - Enhanced error classification and logging
+- ✅ **getUserId()** - Now logs userId source (cached/stored/new)
+- ✅ **refreshGoogleToken()** - Added pre/post logging with timestamps
+- ✅ **Edge Function** - Separated dbError from missing token scenarios
+
+**Impact:** Much easier to diagnose OAuth issues when they occur - logs clearly show why refresh failed and what action is needed!
+
+---
 
 ### **v1.6.2 - Mobile UX Improvements** (2025-01-11)
 
@@ -1050,7 +1097,15 @@ npm run build
 
 ## 📝 Version History
 
-### v1.7.0 (November 2025) - Current
+### v1.7.1 (January 2025) - Current
+**OAuth & Heart Rate Sync Improvements**
+- ✅ Heart rate samples cloud sync with 75-day retention
+- ✅ Enhanced OAuth debugging and error logging
+- ✅ Extended auto-refresh window (up to 7 days)
+- ✅ UserId tracking for refresh token troubleshooting
+- ✅ Body composition sync improvements (Database v10)
+
+### v1.7.0 (November 2025)
 **Heart Rate Visualization - Intraday Charts with Zones & Statistics**
 - ✅ Intraday heart rate visualization with ~680 samples per day
 - ✅ Heart rate zones with colored backgrounds (5 zones based on max HR)
@@ -1163,6 +1218,6 @@ Personal project - All rights reserved
 
 ---
 
-**Last Updated:** November 14, 2025
-**Status:** v1.7.0 - Heart Rate Visualization (Intraday Charts with Zones & Statistics)
+**Last Updated:** January 15, 2025
+**Status:** v1.7.1 - OAuth & Heart Rate Sync Improvements
 **Next:** Performance optimizations (memoization) & Chart.js config deduplication

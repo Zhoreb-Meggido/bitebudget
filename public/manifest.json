@@ -1,6 +1,7 @@
 {
   "name": "BiteBudget - Voedseljournaal",
   "short_name": "BiteBudget",
+  "version": "1.7.1",
   "description": "Track your daily food intake, calories, and macros with ease",
   "start_url": "/bitebudget/",
   "scope": "/bitebudget/",

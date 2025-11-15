@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { healthConnectImportService, type ParsedHealthConnectData } from '@/services/health-connect-import.service';
 import { activitiesService } from '@/services/activities.service';
 import { weightsService } from '@/services/weights.service';
+import { heartRateSamplesService } from '@/services/heart-rate-samples.service';
 
 export function HealthConnectImportSection() {
   const [file, setFile] = useState<File | null>(null);
@@ -115,6 +116,12 @@ export function HealthConnectImportSection() {
       // 2. Import Heart Rate Samples (intraday HR data)
       try {
         await healthConnectImportService.extractAndStoreAllHeartRateSamples();
+
+        // Cleanup old HR samples (75-day retention)
+        const deletedDays = await heartRateSamplesService.cleanupOldSamples();
+        if (deletedDays > 0) {
+          console.log(`🗑️ Cleaned up ${deletedDays} days of old HR samples (75-day retention)`);
+        }
       } catch (err) {
         console.error('Failed to import heart rate samples:', err);
       }
