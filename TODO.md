@@ -102,6 +102,26 @@
 
 ## Completed ✅
 
+### Journal Date Navigation Improvement (v1.8.1) ✅
+**Feature:** Compact date navigation with angle bracket buttons.
+
+**Implemented:**
+- Compact layout: `[ ‹ ] [ date input ] [ › ]` (was spread-out with 3 separate buttons)
+- Unicode angle brackets (‹ ›) for clean, minimal appearance
+- Removed "Vandaag" button for simpler interface
+- Fixed button width (w-12) prevents layout shifts
+- Date input with flex-1 and min-w-0 for responsive sizing
+- max-w-sm container prevents excessive width on desktop
+- Perfect mobile responsiveness without jumping or overflow
+- Centered button text with flexbox (items-center justify-center)
+- Larger text size (text-xl) for better symbol visibility
+
+**Impact:** Cleaner, more compact UI that works perfectly on all screen sizes!
+
+**Effort:** ~15 minuten
+
+---
+
 ### Weekly/Monthly Aggregate Views (v1.8.0) ✅
 **Feature:** Comprehensive weekly and monthly overview of nutrition and activity data.
 

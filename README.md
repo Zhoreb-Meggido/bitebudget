@@ -1,10 +1,11 @@
-# BiteBudget (Voedseljournaal) v1.7.1
+# BiteBudget (Voedseljournaal) v1.8.1
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.7.1:** OAuth Token Refresh Improvements - Verbeterde error logging en startup refresh logica voor betrouwbaardere cloud sync!
+**🎉 Nieuw in v1.8.1:** Compact Date Navigation - Clean angle bracket (‹ ›) buttons for better mobile UX!
+**📊 Recent:** v1.8.0 - Weekly/Monthly Aggregate Views with comprehensive nutrition & activity analysis!
 
 ---
 
@@ -378,6 +379,66 @@ npm run build
 ---
 
 ## 📋 Changelog
+
+### **v1.8.1 - Journal Date Navigation Improvement** (2025-01-15)
+
+#### **Compact Date Navigation** 📅
+- ✅ **Clean Layout** - Angle bracket buttons (‹ ›) instead of text labels
+  - Compact design: `[ ‹ ] [ date ---------- ] [ › ]`
+  - Unicode angle brackets for minimal, modern look
+  - Removed "Vandaag" button for cleaner interface
+- ✅ **Perfect Responsiveness** - No layout shifts or overflow
+  - Fixed button width (w-12) with flex-shrink-0
+  - Date input uses flex-1 with min-w-0 for proper sizing
+  - max-w-sm container prevents excessive width on desktop
+- ✅ **Better Mobile UX** - Optimized for touch targets
+  - Centered symbols with flexbox (items-center justify-center)
+  - Larger text size (text-xl) for better visibility
+  - Consistent button sizing across all screen sizes
+
+**Impact:** Cleaner, more compact UI that saves space and looks great on all devices!
+
+---
+
+### **v1.8.0 - Weekly/Monthly Aggregate Views** (2025-01-15)
+
+#### **Comprehensive Aggregate Analysis** 📊
+- ✅ **Week View** - Detailed weekly nutrition and activity summaries
+  - WeekAggregateCard with all macros and micronutrients
+  - Calorie adherence visualization with colored progress bar
+  - Activity metrics (steps, calories, HR, sleep, intensity)
+  - Sort toggle (newest/oldest first)
+- ✅ **Month View** - Monthly summaries with week breakdown
+  - MonthAggregateCard with monthly averages
+  - Best/worst week indicators based on adherence
+  - Collapsible weekly breakdown per month
+  - Gradient backgrounds for visual hierarchy
+- ✅ **Comparison View** - Side-by-side period analysis
+  - Split period into two halves for comparison
+  - Change metrics with percentage calculations
+  - Color-coded improvements (green) and declines (red)
+- ✅ **CSV Export** - Export weekly and monthly data
+  - Complete nutrition and activity metrics
+  - Separate export functions for week and month views
+  - Download via Blob API with proper timestamps
+
+#### **Technical Implementation** 🔧
+- ✅ **aggregation.service.ts** - Business logic for aggregations
+  - ISO week number calculation (Monday-based)
+  - Weekly and monthly rollups
+  - Best/worst week detection
+- ✅ **useAggregates Hook** - Performance-optimized data loading
+  - React.memo and useMemo for efficiency
+  - Automatic period calculation
+  - Loading state management
+- ✅ **New Tab** - "Overzicht" tab in Analyse page
+  - Period selector (4/8/12 weeks, 6/12 months)
+  - Tab navigation (Week/Month/Compare)
+  - Export button with CSV download
+
+**Impact:** Complete overview of nutrition and activity patterns over time - perfect for tracking progress and identifying trends!
+
+---
 
 ### **v1.7.1 - OAuth & Heart Rate Sync Improvements** (2025-01-15)
 
@@ -1097,7 +1158,24 @@ npm run build
 
 ## 📝 Version History
 
-### v1.7.1 (January 2025) - Current
+### v1.8.1 (January 2025) - Current
+**Journal Date Navigation Improvement**
+- ✅ Compact date navigation with angle bracket buttons (‹ ›)
+- ✅ Removed "Vandaag" button for cleaner interface
+- ✅ Perfect mobile responsiveness without layout shifts
+- ✅ Fixed button widths and flexible date input
+- ✅ Better visual hierarchy and touch targets
+
+### v1.8.0 (January 2025)
+**Weekly/Monthly Aggregate Views**
+- ✅ Week view with comprehensive nutrition and activity metrics
+- ✅ Month view with best/worst week indicators
+- ✅ Comparison view for side-by-side period analysis
+- ✅ CSV export for weekly and monthly data
+- ✅ Period selector (4/8/12 weeks, 6/12 months)
+- ✅ New "Overzicht" tab in Analyse page
+
+### v1.7.1 (January 2025)
 **OAuth & Heart Rate Sync Improvements**
 - ✅ Heart rate samples cloud sync with 75-day retention
 - ✅ Enhanced OAuth debugging and error logging
@@ -1219,5 +1297,5 @@ Personal project - All rights reserved
 ---
 
 **Last Updated:** January 15, 2025
-**Status:** v1.7.1 - OAuth & Heart Rate Sync Improvements
+**Status:** v1.8.1 - Compact Date Navigation + Weekly/Monthly Aggregate Views
 **Next:** Performance optimizations (memoization) & Chart.js config deduplication
