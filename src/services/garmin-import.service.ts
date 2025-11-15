@@ -681,32 +681,32 @@ class GarminImportService {
           activity.steps = dayData.steps;
         }
 
-        // Only add other fields if they have data
-        if (dayData.intensityMinutes !== undefined) {
+        // Only add other fields if they have data (> 0 to avoid overwriting with zeros)
+        if (dayData.intensityMinutes !== undefined && dayData.intensityMinutes > 0) {
           activity.intensityMinutes = dayData.intensityMinutes;
         }
-        if (dayData.distance !== undefined) {
+        if (dayData.distance !== undefined && dayData.distance > 0) {
           activity.distanceMeters = dayData.distance;
         }
-        if (dayData.stress !== undefined) {
+        if (dayData.stress !== undefined && dayData.stress > 0) {
           activity.stressLevel = dayData.stress;
         }
-        if (dayData.heartRate?.resting !== undefined) {
+        if (dayData.heartRate?.resting !== undefined && dayData.heartRate.resting > 0) {
           activity.heartRateResting = dayData.heartRate.resting;
         }
-        if (dayData.heartRate?.max !== undefined) {
+        if (dayData.heartRate?.max !== undefined && dayData.heartRate.max > 0) {
           activity.heartRateMax = dayData.heartRate.max;
         }
-        if (dayData.sleepSeconds !== undefined) {
+        if (dayData.sleepSeconds !== undefined && dayData.sleepSeconds > 0) {
           activity.sleepSeconds = dayData.sleepSeconds;
         }
-        if (dayData.bodyBattery !== undefined) {
+        if (dayData.bodyBattery !== undefined && dayData.bodyBattery > 0) {
           activity.bodyBattery = dayData.bodyBattery;
         }
-        if (dayData.hrvOvernight !== undefined) {
+        if (dayData.hrvOvernight !== undefined && dayData.hrvOvernight > 0) {
           activity.hrvOvernight = dayData.hrvOvernight;
         }
-        if (dayData.hrv7DayAvg !== undefined) {
+        if (dayData.hrv7DayAvg !== undefined && dayData.hrv7DayAvg > 0) {
           activity.hrv7DayAvg = dayData.hrv7DayAvg;
         }
 
