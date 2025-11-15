@@ -242,6 +242,41 @@ export function TrackingPage() {
                     {weightDiff > 0 ? '+' : ''}{weightDiff.toFixed(1)} kg
                   </span>
                 </div>
+
+                {/* Body Composition Metrics */}
+                {(latestWeight.bodyFat || latestWeight.boneMass || latestWeight.bmr) && (
+                  <>
+                    <div className="border-t border-gray-200 my-2 pt-2"></div>
+                    <p className="text-xs text-gray-500 mb-1">Lichaamssamenstelling</p>
+                    {latestWeight.bodyFat && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Vetpercentage:</span>
+                        <span className="font-medium">{latestWeight.bodyFat.toFixed(1)}%</span>
+                      </div>
+                    )}
+                    {latestWeight.boneMass && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Botmassa:</span>
+                        <span className="font-medium">{latestWeight.boneMass.toFixed(2)} kg</span>
+                      </div>
+                    )}
+                    {latestWeight.bmr && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">BMR:</span>
+                        <span className="font-medium">{latestWeight.bmr} kcal</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Source indicator */}
+                {latestWeight.source && (
+                  <div className="border-t border-gray-200 my-2 pt-2">
+                    <span className="text-xs text-gray-400">
+                      Bron: {latestWeight.source === 'health_connect' ? 'Health Connect' : 'Handmatig'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -278,19 +313,28 @@ export function TrackingPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Datum
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Gewicht
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Verschil
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Vet %
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Botmassa
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    BMR
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Notitie
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acties
                   </th>
                 </tr>
@@ -302,23 +346,37 @@ export function TrackingPage() {
 
                   return (
                     <tr key={w.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                         {new Date(w.date).toLocaleDateString('nl-NL')}
+                        {w.source && (
+                          <span className="block text-xs text-gray-400 mt-0.5">
+                            {w.source === 'health_connect' ? '📱 HC' : '✍️'}
+                          </span>
+                        )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {w.weight} kg
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm">
                         {prevWeight && (
                           <span className={diff > 0 ? 'text-orange-600' : diff < 0 ? 'text-green-600' : 'text-gray-500'}>
                             {diff > 0 ? '+' : ''}{diff.toFixed(1)} kg
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {w.bodyFat ? `${w.bodyFat.toFixed(1)}%` : '-'}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {w.boneMass ? `${w.boneMass.toFixed(2)} kg` : '-'}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {w.bmr ? `${w.bmr} kcal` : '-'}
+                      </td>
+                      <td className="px-4 py-4 text-sm text-gray-500">
                         {w.note || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
                           onClick={() => handleEdit(w)}
                           className="text-blue-600 hover:text-blue-900 mr-2 text-xl min-w-[44px] min-h-[44px] inline-flex items-center justify-center"

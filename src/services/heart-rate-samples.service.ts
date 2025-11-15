@@ -112,6 +112,13 @@ class HeartRateSamplesService {
   }
 
   /**
+   * Get all heart rate samples including soft-deleted ones (for sync)
+   */
+  async getAllSamplesIncludingDeleted(): Promise<DayHeartRateSamples[]> {
+    return await db.heartRateSamples.toArray();
+  }
+
+  /**
    * Get sample count summary (how many days have HR data)
    */
   async getSampleCountSummary(): Promise<{
@@ -148,8 +155,9 @@ class HeartRateSamplesService {
   }
 
   /**
-   * Permanently delete old samples (for retention policy)
-   * Deletes samples older than the specified number of days
+   * Soft-delete old samples (for retention policy)
+   * Marks samples older than the specified number of days as deleted
+   * Actual permanent deletion happens via sync service cleanup (>14 days soft-deleted)
    */
   async deleteOlderThan(days: number): Promise<number> {
     const cutoffDate = new Date();
@@ -159,16 +167,33 @@ class HeartRateSamplesService {
     const toDelete = await db.heartRateSamples
       .where('date')
       .below(cutoffDateStr)
+      .filter(s => !s.deleted) // Only soft-delete if not already deleted
       .toArray();
 
     if (toDelete.length === 0) {
       return 0;
     }
 
-    await db.heartRateSamples.bulkDelete(toDelete.map(d => d.date));
+    // Soft delete instead of permanent delete (consistent with cloud sync)
+    const now = new Date().toISOString();
+    for (const sample of toDelete) {
+      await db.heartRateSamples.update(sample.date, {
+        deleted: true,
+        deleted_at: now,
+      });
+    }
 
-    console.log(`🗑️ Deleted ${toDelete.length} old HR sample days (older than ${days} days)`);
+    console.log(`🗑️ Soft-deleted ${toDelete.length} old HR sample days (older than ${days} days)`);
     return toDelete.length;
+  }
+
+  /**
+   * Cleanup old HR samples (75-day retention policy)
+   * Called after Health Connect import to prevent unlimited growth
+   */
+  async cleanupOldSamples(): Promise<number> {
+    const RETENTION_DAYS = 75; // Enough for 56-day heatmap + buffer
+    return await this.deleteOlderThan(RETENTION_DAYS);
   }
 
   /**

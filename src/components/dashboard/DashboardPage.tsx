@@ -283,7 +283,7 @@ export function DashboardPage() {
         <PeriodSelector
           entries={entries}
           showExportButtons={false}
-          defaultTimeRange="30"
+          defaultTimeRange="14"
           onPeriodChange={(_, filtered) => setFilteredEntries(filtered)}
         />
       </div>

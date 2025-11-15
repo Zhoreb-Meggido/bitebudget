@@ -32,15 +32,24 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Retrieve encrypted refresh token from database
-    console.log('Retrieving refresh token for user:', userId);
+    console.log('Retrieving refresh token for user:', userId.substring(0, 12) + '...');
     const { data, error: dbError } = await supabase
       .from('oauth_tokens')
       .select('google_refresh_token_encrypted')
       .eq('user_id', userId)
       .single();
 
-    if (dbError || !data?.google_refresh_token_encrypted) {
-      console.error('No refresh token found for user:', userId);
+    if (dbError) {
+      console.error('Database error retrieving refresh token:', dbError);
+      console.error('  Error code:', dbError.code);
+      console.error('  Error message:', dbError.message);
+      console.error('  User ID:', userId.substring(0, 12) + '...');
+      return errorResponse(`Database error: ${dbError.message}. Please re-authenticate.`, 404);
+    }
+
+    if (!data?.google_refresh_token_encrypted) {
+      console.error('No refresh token found in database for user:', userId.substring(0, 12) + '...');
+      console.error('  Data returned:', data);
       return errorResponse('No refresh token found. Please re-authenticate.', 404);
     }
 

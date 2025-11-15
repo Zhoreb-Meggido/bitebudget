@@ -11,9 +11,10 @@ import { settingsService } from './settings.service';
 import { portionsService } from './portions.service';
 import { templatesService } from './templates.service';
 import { activitiesService } from './activities.service';
+import { heartRateSamplesService } from './heart-rate-samples.service';
 import { db } from './database.service';
 import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
-import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples } from '@/types';
 
 export interface SyncData {
   version: string;
@@ -26,6 +27,7 @@ export interface SyncData {
   productPortions?: ProductPortion[];  // v1.3+
   mealTemplates?: MealTemplate[];      // v1.3+
   dailyActivities?: DailyActivity[];   // v1.5+
+  heartRateSamples?: DayHeartRateSamples[];  // v1.6+ - 75 day retention
 }
 
 class SyncService {
@@ -259,6 +261,18 @@ class SyncService {
       if (oldDeletedTemplates.length > 0) {
         console.log(`🗑️ Cleaned up ${oldDeletedTemplates.length} old deleted templates`);
       }
+
+      // Cleanup heart rate samples
+      const hrSamples = await heartRateSamplesService.getAllSamplesIncludingDeleted();
+      const oldDeletedHRSamples = hrSamples.filter(
+        h => h.deleted && h.deleted_at && h.deleted_at < cutoffDate
+      );
+      for (const sample of oldDeletedHRSamples) {
+        await db.heartRateSamples.delete(sample.date);
+      }
+      if (oldDeletedHRSamples.length > 0) {
+        console.log(`🗑️ Cleaned up ${oldDeletedHRSamples.length} old deleted HR sample days`);
+      }
     } catch (error) {
       console.error('❌ Error during cleanup of old deleted items:', error);
     }
@@ -277,6 +291,7 @@ class SyncService {
     const productPortions = await portionsService.getAllPortionsIncludingDeleted();
     const mealTemplates = await templatesService.getAllTemplatesIncludingDeleted();
     const dailyActivities = await activitiesService.getAllActivitiesIncludingDeleted();
+    const heartRateSamples = await heartRateSamplesService.getAllSamplesIncludingDeleted();
 
     // Ensure old rust/sport day fields are removed from settings before export
     const settingsClean = { ...settings } as any;
@@ -293,6 +308,7 @@ class SyncService {
     const portionsDeleted = productPortions.filter(p => p.deleted === true).length;
     const templatesDeleted = mealTemplates.filter(t => t.deleted === true).length;
     const activitiesDeleted = dailyActivities.filter(a => a.deleted === true).length;
+    const hrSamplesDeleted = heartRateSamples.filter(h => h.deleted === true).length;
 
     console.log('📤 Preparing export with:', {
       entries: `${entries.length} (${entriesDeleted} deleted)`,
@@ -302,6 +318,7 @@ class SyncService {
       productPortions: `${productPortions.length} (${portionsDeleted} deleted)`,
       mealTemplates: `${mealTemplates.length} (${templatesDeleted} deleted)`,
       dailyActivities: `${dailyActivities.length} (${activitiesDeleted} deleted)`,
+      heartRateSamples: `${heartRateSamples.length} (${hrSamplesDeleted} deleted)`,
     });
 
     return {
@@ -315,6 +332,7 @@ class SyncService {
       productPortions,
       mealTemplates,
       dailyActivities,
+      heartRateSamples,
     };
   }
 
@@ -331,6 +349,7 @@ class SyncService {
     const cloudPortionsDeleted = cloudData.productPortions?.filter(p => p.deleted === true).length || 0;
     const cloudTemplatesDeleted = cloudData.mealTemplates?.filter(t => t.deleted === true).length || 0;
     const cloudActivitiesDeleted = cloudData.dailyActivities?.filter(a => a.deleted === true).length || 0;
+    const cloudHRSamplesDeleted = cloudData.heartRateSamples?.filter(h => h.deleted === true).length || 0;
 
     console.log('📊 Cloud data contains:', {
       entries: `${cloudData.entries?.length || 0} (${cloudEntriesDeleted} deleted)`,
@@ -339,6 +358,7 @@ class SyncService {
       productPortions: `${cloudData.productPortions?.length || 0} (${cloudPortionsDeleted} deleted)`,
       mealTemplates: `${cloudData.mealTemplates?.length || 0} (${cloudTemplatesDeleted} deleted)`,
       dailyActivities: `${cloudData.dailyActivities?.length || 0} (${cloudActivitiesDeleted} deleted)`,
+      heartRateSamples: `${cloudData.heartRateSamples?.length || 0} (${cloudHRSamplesDeleted} deleted)`,
     });
 
     // Get existing local data (including deleted for proper merge)
@@ -679,6 +699,40 @@ class SyncService {
     } else {
       console.log('ℹ️ No activities in cloud backup (might be older version)');
     }
+
+    // Merge heart rate samples - add cloud samples that don't exist locally or are newer
+    if (cloudData.heartRateSamples && cloudData.heartRateSamples.length > 0) {
+      console.log(`💓 Merging ${cloudData.heartRateSamples.length} HR sample days from cloud...`);
+      const localSamples = await heartRateSamplesService.getAllSamplesIncludingDeleted();
+      const localSamplesMap = new Map(localSamples.map(s => [s.date, s]));
+
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      for (const cloudSample of cloudData.heartRateSamples) {
+        try {
+          const localSample = localSamplesMap.get(cloudSample.date);
+
+          if (!localSample) {
+            // New HR sample day from cloud - use put() which handles primary key (date)
+            await db.heartRateSamples.put(cloudSample);
+            addedCount++;
+          } else if (cloudSample.updated_at && localSample.updated_at &&
+                     new Date(cloudSample.updated_at) > new Date(localSample.updated_at)) {
+            // Cloud sample is newer - replace with cloud data
+            await db.heartRateSamples.put(cloudSample);
+            updatedCount++;
+          }
+        } catch (err) {
+          console.error(`❌ Error processing HR samples ${cloudSample.date}:`, err);
+          throw err;
+        }
+      }
+
+      console.log(`✅ HR Samples: ${addedCount} added, ${updatedCount} updated`);
+    } else {
+      console.log('ℹ️ No HR samples in cloud backup (might be older version)');
+    }
   }
 
   /**
@@ -877,6 +931,7 @@ class SyncService {
       productPortions: data.productPortions?.length || 0,
       mealTemplates: data.mealTemplates?.length || 0,
       dailyActivities: data.dailyActivities?.length || 0,
+      heartRateSamples: data.heartRateSamples?.length || 0,
     });
 
       // Encrypt

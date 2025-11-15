@@ -140,6 +140,25 @@ export class VoedseljournaalDB extends Dexie {
       console.log('💓 Each record stores array of HR samples for one day');
       console.log('ℹ️ Import Health Connect data to populate');
     });
+
+    // Version 10 - Add body composition fields to weights (bodyFat, boneMass, bmr, source, updated_at)
+    // No schema change needed for Dexie (it stores objects as-is), but we add this version
+    // to trigger a migration message and ensure proper indexing
+    this.version(10).stores({
+      entries: 'id, date, created_at, updated_at',
+      products: 'id, name, ean, source, created_at, updated_at',
+      weights: 'id, date, created_at, updated_at',  // Added updated_at index
+      settings: 'key',
+      productPortions: 'id, productName, created_at, updated_at',
+      mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at',
+      dailyActivities: 'id, date, created_at, updated_at',
+      heartRateSamples: 'date, sampleCount, created_at, updated_at'
+    }).upgrade(async tx => {
+      console.log('✅ V10: Added body composition support to weights');
+      console.log('🏋️ New fields: bodyFat, boneMass, bmr, source, updated_at');
+      console.log('💡 Existing weights are preserved, new fields are optional');
+      console.log('📱 Import Health Connect data to populate body composition');
+    });
   }
 }
 

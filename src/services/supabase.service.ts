@@ -38,7 +38,10 @@ class SupabaseService {
    * This is used to identify users without requiring authentication
    */
   async getUserId(): Promise<string> {
-    if (this.userId) return this.userId;
+    if (this.userId) {
+      console.log('🆔 Using cached user ID:', this.userId.substring(0, 12) + '...');
+      return this.userId;
+    }
 
     // Check if we have a stored user ID
     let storedUserId = localStorage.getItem('supabase_user_id');
@@ -47,7 +50,10 @@ class SupabaseService {
       // Generate a unique browser fingerprint
       storedUserId = await this.generateBrowserFingerprint();
       localStorage.setItem('supabase_user_id', storedUserId);
-      console.log('🆔 Generated new user ID:', storedUserId.substring(0, 8) + '...');
+      console.log('🆔 Generated NEW user ID:', storedUserId.substring(0, 12) + '...');
+      console.warn('⚠️ NEW user ID means previous OAuth tokens may not be accessible!');
+    } else {
+      console.log('🆔 Using stored user ID:', storedUserId.substring(0, 12) + '...');
     }
 
     this.userId = storedUserId;
@@ -150,9 +156,18 @@ class SupabaseService {
   async refreshGoogleToken(): Promise<{ access_token: string; expires_in: number; expires_at: string }> {
     const userId = await this.getUserId();
 
-    return await this.callFunction('google-oauth-refresh', {
-      userId,
-    });
+    console.log('🔄 Calling google-oauth-refresh with userId:', userId.substring(0, 12) + '...');
+
+    try {
+      const result = await this.callFunction('google-oauth-refresh', {
+        userId,
+      });
+      console.log('✅ google-oauth-refresh succeeded, token expires at:', result.expires_at);
+      return result;
+    } catch (error: any) {
+      console.error('❌ google-oauth-refresh failed:', error);
+      throw error;
+    }
   }
 
   /**
