@@ -682,7 +682,8 @@ class GarminImportService {
         }
 
         // Only add other fields if they have data (> 0 to avoid overwriting with zeros)
-        if (dayData.intensityMinutes !== undefined && dayData.intensityMinutes > 0) {
+        // Exception: intensityMinutes can be 0 (valid value), so only check for undefined
+        if (dayData.intensityMinutes !== undefined) {
           activity.intensityMinutes = dayData.intensityMinutes;
         }
         if (dayData.distance !== undefined && dayData.distance > 0) {

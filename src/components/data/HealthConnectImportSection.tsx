@@ -82,14 +82,15 @@ export function HealthConnectImportSection() {
           const existing = await activitiesService.getActivityByDate(activity.date);
 
           if (existing) {
-            // Merge with existing data (keep non-zero values from both)
+            // Merge with existing data
+            // Only overwrite if the new value is defined and not 0 (except for intensityMinutes where 0 is valid)
             const merged = {
               ...existing,
               totalCalories: activity.totalCalories || existing.totalCalories,
               activeCalories: activity.activeCalories || existing.activeCalories,
               restingCalories: activity.restingCalories || existing.restingCalories,
               steps: activity.steps || existing.steps,
-              intensityMinutes: activity.intensityMinutes || existing.intensityMinutes,
+              intensityMinutes: activity.intensityMinutes !== undefined ? activity.intensityMinutes : existing.intensityMinutes,
               distanceMeters: activity.distanceMeters || existing.distanceMeters,
               floorsClimbed: activity.floorsClimbed || existing.floorsClimbed,
               heartRateResting: activity.heartRateResting || existing.heartRateResting,

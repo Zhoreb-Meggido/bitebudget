@@ -552,29 +552,34 @@ class HealthConnectImportService {
 
   /**
    * Convert parsed data to DailyActivity objects
+   *
+   * IMPORTANT: Only include fields that have actual values (not undefined, not 0)
+   * Exception: intensityMinutes should keep 0 if it's explicitly 0, but omit if undefined
+   * This prevents overwriting existing data with empty values during merge
    */
   convertToActivities(parsedData: ParsedHealthConnectData[]): DailyActivity[] {
     return parsedData.map(data => {
-      const activity: DailyActivity = {
+      const activity: Partial<DailyActivity> = {
         date: data.date,
-        totalCalories: data.metrics.totalCalories || 0,
-        activeCalories: data.metrics.activeCalories || 0,
-        restingCalories: data.metrics.restingCalories || 0,
-        steps: data.metrics.steps || 0,
-        intensityMinutes: 0, // Not available in Health Connect
-        distanceMeters: data.metrics.distanceMeters || 0,
-        floorsClimbed: data.metrics.floorsClimbed || 0,
-        heartRateResting: data.metrics.heartRateResting || 0,
-        heartRateMax: data.metrics.heartRateMax || 0,
-        stressLevel: 0, // Not available in Health Connect
-        bodyBattery: 0, // Not available in Health Connect
-        sleepSeconds: data.metrics.sleepSeconds || 0,
-        hrvOvernight: 0, // Not available in this export
-        hrv7DayAvg: 0, // Not available in this export
         activities: []
       };
 
-      return activity;
+      // Only add fields if they have valid values (not undefined, not 0)
+      if (data.metrics.totalCalories) activity.totalCalories = data.metrics.totalCalories;
+      if (data.metrics.activeCalories) activity.activeCalories = data.metrics.activeCalories;
+      if (data.metrics.restingCalories) activity.restingCalories = data.metrics.restingCalories;
+      if (data.metrics.steps) activity.steps = data.metrics.steps;
+      if (data.metrics.distanceMeters) activity.distanceMeters = data.metrics.distanceMeters;
+      if (data.metrics.floorsClimbed) activity.floorsClimbed = data.metrics.floorsClimbed;
+      if (data.metrics.heartRateResting) activity.heartRateResting = data.metrics.heartRateResting;
+      if (data.metrics.heartRateMax) activity.heartRateMax = data.metrics.heartRateMax;
+      if (data.metrics.sleepSeconds) activity.sleepSeconds = data.metrics.sleepSeconds;
+
+      // Note: intensityMinutes, stressLevel, bodyBattery, hrvOvernight, hrv7DayAvg
+      // are not available in Health Connect, so we don't set them at all
+      // This allows existing values to be preserved during merge
+
+      return activity as DailyActivity;
     });
   }
 
