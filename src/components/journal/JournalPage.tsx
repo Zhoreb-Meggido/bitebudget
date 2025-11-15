@@ -147,44 +147,35 @@ export function JournalPage() {
           {/* Date Selector */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-1">Datum</label>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex gap-2 items-stretch max-w-sm">
+              <button
+                onClick={() => {
+                  const date = new Date(selectedDate + 'T12:00:00');
+                  date.setDate(date.getDate() - 1);
+                  setSelectedDate(date.toISOString().split('T')[0]);
+                }}
+                className="w-12 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xl font-medium transition-colors flex items-center justify-center flex-shrink-0"
+                title="Vorige dag"
+              >
+                ‹
+              </button>
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    const date = new Date(selectedDate + 'T12:00:00');
-                    date.setDate(date.getDate() - 1);
-                    setSelectedDate(date.toISOString().split('T')[0]);
-                  }}
-                  className="flex-1 sm:flex-none px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
-                  title="Vorige dag"
-                >
-                  ← Vorige
-                </button>
-                <button
-                  onClick={() => setSelectedDate(getTodayDate())}
-                  className="flex-1 sm:flex-none px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-sm font-medium transition-colors"
-                  title="Ga naar vandaag"
-                >
-                  Vandaag
-                </button>
-                <button
-                  onClick={() => {
-                    const date = new Date(selectedDate + 'T12:00:00');
-                    date.setDate(date.getDate() + 1);
-                    setSelectedDate(date.toISOString().split('T')[0]);
-                  }}
-                  className="flex-1 sm:flex-none px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
-                  title="Volgende dag"
-                >
-                  Volgende →
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  const date = new Date(selectedDate + 'T12:00:00');
+                  date.setDate(date.getDate() + 1);
+                  setSelectedDate(date.toISOString().split('T')[0]);
+                }}
+                className="w-12 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xl font-medium transition-colors flex items-center justify-center flex-shrink-0"
+                title="Volgende dag"
+              >
+                ›
+              </button>
             </div>
           </div>
 
