@@ -7,6 +7,8 @@
 
 import React, { useState, useMemo } from 'react';
 import { useAggregates } from '@/hooks/useAggregates';
+import { useSettings } from '@/hooks/useSettings';
+import { WeekAggregateCard } from './WeekAggregateCard';
 import type { AggregatePeriod } from '@/types';
 
 type AggregateView = 'week' | 'month' | 'compare';
@@ -14,11 +16,24 @@ type AggregateView = 'week' | 'month' | 'compare';
 export function AggregatesTab() {
   const [activeView, setActiveView] = useState<AggregateView>('week');
   const [selectedPeriod, setSelectedPeriod] = useState<AggregatePeriod>('12weeks');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc'); // Most recent first
 
   const { weeklyAggregates, monthlyAggregates, isLoading } = useAggregates({
     period: selectedPeriod,
     includeActivity: true,
   });
+
+  const { settings } = useSettings();
+
+  // Sort aggregates based on sortOrder
+  const sortedWeeklyAggregates = useMemo(() => {
+    return [...weeklyAggregates].sort((a, b) => {
+      if (sortOrder === 'desc') {
+        return b.weekStart.localeCompare(a.weekStart);
+      }
+      return a.weekStart.localeCompare(b.weekStart);
+    });
+  }, [weeklyAggregates, sortOrder]);
 
   // Period options for dropdown
   const periodOptions: { value: AggregatePeriod; label: string }[] = [
@@ -105,13 +120,18 @@ export function AggregatesTab() {
       {!isLoading && (
         <div className="bg-white rounded-lg shadow-sm p-6">
           {activeView === 'week' && (
-            <WeekView aggregates={weeklyAggregates} />
+            <WeekView
+              aggregates={sortedWeeklyAggregates}
+              settings={settings}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
+            />
           )}
           {activeView === 'month' && (
             <MonthView aggregates={monthlyAggregates} />
           )}
           {activeView === 'compare' && (
-            <CompareView weeklyAggregates={weeklyAggregates} />
+            <CompareView weeklyAggregates={sortedWeeklyAggregates} />
           )}
         </div>
       )}
@@ -121,52 +141,51 @@ export function AggregatesTab() {
 
 /**
  * WeekView - Display weekly aggregates
- * TODO: Implement in Phase 2
  */
-function WeekView({ aggregates }: { aggregates: any[] }) {
+interface WeekViewProps {
+  aggregates: any[];
+  settings?: any;
+  sortOrder: 'desc' | 'asc';
+  onSortOrderChange: (order: 'desc' | 'asc') => void;
+}
+
+function WeekView({ aggregates, settings, sortOrder, onSortOrderChange }: WeekViewProps) {
   if (aggregates.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        Geen data beschikbaar voor de geselecteerde periode.
+      <div className="text-center py-12">
+        <div className="text-5xl mb-4">📅</div>
+        <p className="text-lg text-gray-600 mb-2">Geen data beschikbaar</p>
+        <p className="text-sm text-gray-500">
+          Er zijn geen weekgegevens gevonden voor de geselecteerde periode.
+        </p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-600">
-        {aggregates.length} weken gevonden
-      </p>
-
-      {/* Placeholder - will be implemented in next phase */}
-      <div className="grid gap-4">
-        {aggregates.slice(0, 3).map((week, idx) => (
-          <div key={idx} className="border border-gray-200 rounded-lg p-4">
-            <div className="font-medium text-gray-900">
-              Week {week.weekNumber}, {week.year}
-            </div>
-            <div className="text-sm text-gray-600">
-              {week.weekStart} tot {week.weekEnd}
-            </div>
-            <div className="mt-2 text-sm text-gray-700">
-              {week.daysTracked} dagen geregistreerd
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-gray-600">Ø Calorieën:</span>{' '}
-                <span className="font-medium">{week.nutrition.avgCalories}</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Ø Eiwit:</span>{' '}
-                <span className="font-medium">{week.nutrition.avgProtein}g</span>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Summary header with sorting */}
+      <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+        <p className="text-sm font-medium text-gray-700">
+          {aggregates.length} {aggregates.length === 1 ? 'week' : 'weken'} gevonden
+        </p>
+        <button
+          onClick={() => onSortOrderChange(sortOrder === 'desc' ? 'asc' : 'desc')}
+          className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+        >
+          {sortOrder === 'desc' ? '↓ Nieuwste eerst' : '↑ Oudste eerst'}
+        </button>
       </div>
 
-      <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
-        📊 Gedetailleerde week weergave wordt geïmplementeerd in de volgende fase.
+      {/* Week cards */}
+      <div className="space-y-4">
+        {aggregates.map((week, idx) => (
+          <WeekAggregateCard
+            key={`${week.year}-W${week.weekNumber}`}
+            aggregate={week}
+            settings={settings}
+          />
+        ))}
       </div>
     </div>
   );

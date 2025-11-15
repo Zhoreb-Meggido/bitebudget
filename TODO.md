@@ -112,13 +112,15 @@
 - [x] Created AggregatesTab container component
 - [x] Integrated new tab into Analyse page
 
-**Status - Phase 2: Week View (NEXT)**
-- [ ] Build WeekAggregateCard component
-- [ ] Add nutrition metrics display
-- [ ] Add activity metrics display (if available)
-- [ ] Add calorie adherence visualization
-- [ ] Add "days tracked" indicator
-- [ ] Make cards responsive for mobile
+**Status - Phase 2: Week View ✅ COMPLETED**
+- [x] Build WeekAggregateCard component with rich metrics
+- [x] Add nutrition metrics display (all macros + micronutrients)
+- [x] Add activity metrics display (steps, calories, HR, sleep, etc.)
+- [x] Add calorie adherence visualization (progress bar with legend)
+- [x] Add "days tracked" indicator
+- [x] Make cards responsive for mobile (grid layout adapts)
+- [x] Add sort toggle (newest/oldest first)
+- [x] Proper empty states
 
 **Status - Phase 3: Month View**
 - [ ] Implement calculateMonthlyAggregates in service
@@ -136,7 +138,7 @@
 
 **Voordeel:** Beter inzicht in lange termijn trends
 
-**Total Effort:** ~6-8 uur (2 uur spent, 4-6 uur remaining)
+**Total Effort:** ~6-8 uur (4 uur spent, 2-4 uur remaining)
 
 ---
 
