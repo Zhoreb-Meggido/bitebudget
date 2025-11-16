@@ -11,5 +11,6 @@ export { usePortions } from './usePortions';
 export { useTemplates } from './useTemplates';
 export { useActivities } from './useActivities';
 export { useHeartRateSamples } from './useHeartRateSamples';
+export { useSleepStages } from './useSleepStages';
 export { useDebounce } from './useDebounce';
 export { useSwipeTabs } from './useSwipeTabs';
