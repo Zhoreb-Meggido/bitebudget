@@ -5,8 +5,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useEntries, useProducts, useSettings, useTemplates } from '@/hooks';
 import { getTodayDate, calculateTotals, calculateProductNutrition } from '@/utils';
-import type { MealTemplate } from '@/types';
+import type { Entry, MealTemplate } from '@/types';
 import { AddMealModal } from './AddMealModal';
+import { MacroBreakdownModal } from './MacroBreakdownModal';
 
 export function JournalPage() {
   const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
@@ -18,6 +19,12 @@ export function JournalPage() {
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
   const [quickAddTemplate, setQuickAddTemplate] = useState<MealTemplate | null>(null);
+  const [breakdownModal, setBreakdownModal] = useState<{
+    macroType: 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium';
+    macroLabel: string;
+    totalValue: number;
+    unit: string;
+  } | null>(null);
 
   // Collapsible sections state - load from localStorage
   const [showHistoricalData, setShowHistoricalData] = useState(() => {
@@ -182,8 +189,19 @@ export function JournalPage() {
           {/* Compact 2x4 Grid - All Metrics (also on mobile) */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             {/* Calorieën */}
-            <div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Calorieën</div>
+            <div
+              onClick={() => setBreakdownModal({
+                macroType: 'calories',
+                macroLabel: 'Calorieën',
+                totalValue: totals.calories,
+                unit: '',
+              })}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              title="Klik voor breakdown"
+            >
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Calorieën
+              </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.calories > goals.calories ? 'bg-red-500' : 'bg-blue-500'}`}
@@ -198,8 +216,19 @@ export function JournalPage() {
             </div>
 
             {/* Eiwit */}
-            <div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Eiwit</div>
+            <div
+              onClick={() => setBreakdownModal({
+                macroType: 'protein',
+                macroLabel: 'Eiwit',
+                totalValue: totals.protein,
+                unit: 'g',
+              })}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              title="Klik voor breakdown"
+            >
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Eiwit
+              </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.protein < goals.protein ? 'bg-orange-500' : 'bg-green-500'}`}
@@ -214,8 +243,19 @@ export function JournalPage() {
             </div>
 
             {/* Koolhydraten */}
-            <div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Koolhydraten</div>
+            <div
+              onClick={() => setBreakdownModal({
+                macroType: 'carbohydrates',
+                macroLabel: 'Koolhydraten',
+                totalValue: totals.carbohydrates,
+                unit: 'g',
+              })}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              title="Klik voor breakdown"
+            >
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Koolhydraten
+              </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.carbohydrates > limits.carbohydrates ? 'bg-red-500' : 'bg-amber-500'}`}
@@ -230,8 +270,19 @@ export function JournalPage() {
             </div>
 
             {/* Suikers */}
-            <div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Suikers</div>
+            <div
+              onClick={() => setBreakdownModal({
+                macroType: 'sugars',
+                macroLabel: 'Suikers',
+                totalValue: totals.sugars,
+                unit: 'g',
+              })}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              title="Klik voor breakdown"
+            >
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Suikers
+              </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.sugars > limits.sugars ? 'bg-red-500' : 'bg-yellow-500'}`}
@@ -246,8 +297,19 @@ export function JournalPage() {
             </div>
 
             {/* Totaal vet */}
-            <div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Totaal vet</div>
+            <div
+              onClick={() => setBreakdownModal({
+                macroType: 'fat',
+                macroLabel: 'Totaal vet',
+                totalValue: totals.fat,
+                unit: 'g',
+              })}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              title="Klik voor breakdown"
+            >
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Totaal vet
+              </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.fat > limits.fat ? 'bg-red-500' : 'bg-gray-500'}`}
@@ -262,8 +324,19 @@ export function JournalPage() {
             </div>
 
             {/* Verzadigd vet */}
-            <div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Verzadigd vet</div>
+            <div
+              onClick={() => setBreakdownModal({
+                macroType: 'saturatedFat',
+                macroLabel: 'Verzadigd vet',
+                totalValue: totals.saturatedFat,
+                unit: 'g',
+              })}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              title="Klik voor breakdown"
+            >
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Verzadigd vet
+              </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.saturatedFat > limits.saturatedFat ? 'bg-red-500' : 'bg-green-500'}`}
@@ -278,8 +351,19 @@ export function JournalPage() {
             </div>
 
             {/* Vezels */}
-            <div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Vezels</div>
+            <div
+              onClick={() => setBreakdownModal({
+                macroType: 'fiber',
+                macroLabel: 'Vezels',
+                totalValue: totals.fiber,
+                unit: 'g',
+              })}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              title="Klik voor breakdown"
+            >
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Vezels
+              </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.fiber < limits.fiber ? 'bg-orange-500' : 'bg-green-500'}`}
@@ -294,8 +378,19 @@ export function JournalPage() {
             </div>
 
             {/* Natrium */}
-            <div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Natrium</div>
+            <div
+              onClick={() => setBreakdownModal({
+                macroType: 'sodium',
+                macroLabel: 'Natrium',
+                totalValue: totals.sodium,
+                unit: 'mg',
+              })}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              title="Klik voor breakdown"
+            >
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Natrium
+              </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.sodium > limits.sodium ? 'bg-red-500' : 'bg-green-500'}`}
@@ -482,6 +577,19 @@ export function JournalPage() {
           selectedDate={selectedDate}
           quickAddTemplate={quickAddTemplate}
         />
+
+        {/* Macro Breakdown Modal */}
+        {breakdownModal && (
+          <MacroBreakdownModal
+            isOpen={true}
+            onClose={() => setBreakdownModal(null)}
+            entries={todayEntries}
+            macroType={breakdownModal.macroType}
+            macroLabel={breakdownModal.macroLabel}
+            totalValue={breakdownModal.totalValue}
+            unit={breakdownModal.unit}
+          />
+        )}
       </div>
     </div>
   );

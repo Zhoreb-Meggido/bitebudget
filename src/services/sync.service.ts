@@ -455,7 +455,7 @@ class SyncService {
     let productsSkipped = 0;
 
     for (const cloudProduct of cloudData.products) {
-      // Check for existing product by name OR by EAN (barcode)
+      // Check for existing product by name OR by EAN (barcode) OR by ID
       let localProduct = localProductsMap.get(cloudProduct.name);
 
       // If not found by name, check by EAN (barcode)
@@ -463,8 +463,18 @@ class SyncService {
         localProduct = localProductsByEan.get(cloudProduct.ean);
       }
 
+      // If still not found by name or EAN, check by ID
+      // This handles cases where a product was renamed but has the same ID
+      if (!localProduct && cloudProduct.id) {
+        localProduct = localProducts.find(p => p.id === cloudProduct.id);
+
+        if (localProduct) {
+          console.log(`⚠️ Found product by ID with different name: "${localProduct.name}" → "${cloudProduct.name}"`);
+        }
+      }
+
       if (!localProduct) {
-        // New product from cloud - doesn't exist by name or barcode
+        // New product from cloud - doesn't exist by name, barcode, or ID
         try {
           // Use db.products.add directly to preserve cloud ID (don't generate new ID)
           await db.products.add(cloudProduct);
@@ -475,7 +485,7 @@ class SyncService {
         }
       } else if (cloudProduct.updated_at && localProduct.updated_at &&
                  new Date(cloudProduct.updated_at) > new Date(localProduct.updated_at)) {
-        // Cloud product is newer - propagate all changes including deletion
+        // Cloud product is newer - propagate all changes including deletion (including name changes)
         // Use db.products.update directly to preserve cloud timestamp (don't create new one)
         const { id, ...cloudData } = cloudProduct;
         if (typeof localProduct.id === 'number') {
