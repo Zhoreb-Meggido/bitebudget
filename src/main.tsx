@@ -14,6 +14,7 @@ import { registerServiceWorker, setupInstallPrompt } from '@/utils/pwa'
 import { AppFooter } from '@/components/AppFooter'
 import { AutoSyncWarningModal, useAutoSyncWarning } from '@/components/AutoSyncWarningModal'
 import { TokenExpiringModal } from '@/components/TokenExpiringModal'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 
 // App component met database initialisatie
 function App() {
@@ -158,12 +159,12 @@ function App() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
-        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-red-50 dark:bg-red-950">
+        <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md">
+          <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">
             Database Error
           </h1>
-          <p className="text-gray-700">{error.message}</p>
+          <p className="text-gray-700 dark:text-gray-300">{error.message}</p>
         </div>
       </div>
     );
@@ -171,10 +172,10 @@ function App() {
 
   if (!isInitialized || oauthProcessing) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">
             {oauthProcessing ? 'Google Drive wordt verbonden...' : 'Database wordt geïnitialiseerd...'}
           </p>
         </div>
@@ -183,31 +184,33 @@ function App() {
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
-      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="flex-1 overflow-y-auto py-4">
-        {activeTab === 'journaal' && <JournalPage />}
-        {activeTab === 'tracking' && <TrackingPage />}
-        {activeTab === 'dashboard' && <DashboardPage />}
-        {activeTab === 'analyse' && <AnalysePage />}
-        {activeTab === 'data' && <DataPage />}
-        {activeTab === 'instellingen' && <SettingsPage />}
+    <ThemeProvider>
+      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
+        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+        <div className="flex-1 overflow-y-auto py-4">
+          {activeTab === 'journaal' && <JournalPage />}
+          {activeTab === 'tracking' && <TrackingPage />}
+          {activeTab === 'dashboard' && <DashboardPage />}
+          {activeTab === 'analyse' && <AnalysePage />}
+          {activeTab === 'data' && <DataPage />}
+          {activeTab === 'instellingen' && <SettingsPage />}
+        </div>
+        <AppFooter />
+
+        {/* Auto-Sync Warning Modal */}
+        {shouldShowWarning && (
+          <AutoSyncWarningModal onClose={dismissWarning} />
+        )}
+
+        {/* Token Expiring Warning Modal */}
+        {tokenExpiringMinutes !== null && (
+          <TokenExpiringModal
+            minutesRemaining={tokenExpiringMinutes}
+            onClose={() => setTokenExpiringMinutes(null)}
+          />
+        )}
       </div>
-      <AppFooter />
-
-      {/* Auto-Sync Warning Modal */}
-      {shouldShowWarning && (
-        <AutoSyncWarningModal onClose={dismissWarning} />
-      )}
-
-      {/* Token Expiring Warning Modal */}
-      {tokenExpiringMinutes !== null && (
-        <TokenExpiringModal
-          minutesRemaining={tokenExpiringMinutes}
-          onClose={() => setTokenExpiringMinutes(null)}
-        />
-      )}
-    </div>
+    </ThemeProvider>
   );
 }
 

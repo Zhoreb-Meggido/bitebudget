@@ -76,7 +76,7 @@ export function TemplatesTab() {
   );
 
   if (isLoading) {
-    return <div className="text-center py-8 text-gray-500">Laden...</div>;
+    return <div className="text-center py-8 text-gray-500 dark:text-gray-400">Laden...</div>;
   }
 
   return (
@@ -89,35 +89,35 @@ export function TemplatesTab() {
             placeholder="Zoek templates..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           />
         </div>
-        <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+        <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
           <input
             type="checkbox"
             checked={showOnlyFavorites}
             onChange={(e) => setShowOnlyFavorites(e.target.checked)}
             className="rounded"
           />
-          <span className="text-sm text-gray-700">Alleen favorieten</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">Alleen favorieten</span>
         </label>
       </div>
 
       {/* Templates Count */}
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-gray-600 dark:text-gray-400">
         {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} gevonden
       </div>
 
       {/* Templates List by Category */}
       <div className="space-y-6">
         {Object.keys(templatesByCategory).length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             Geen templates gevonden
           </div>
         ) : (
           Object.entries(templatesByCategory).map(([category, categoryTemplates]) => (
             <div key={category}>
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
                 {category} ({categoryTemplates.length})
               </h3>
               <div className="space-y-3">
@@ -137,7 +137,7 @@ export function TemplatesTab() {
       </div>
 
       {/* Add New Template Button */}
-      <div className="pt-4 border-t border-gray-200">
+      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={handleAddTemplate}
           className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
@@ -167,16 +167,16 @@ interface TemplateCardProps {
 
 function TemplateCard({ template, onEdit, onToggleFavorite, onDelete }: TemplateCardProps) {
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+    <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       {/* Template Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <h4 className="text-lg font-semibold text-gray-900">
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {template.isFavorite && '⭐ '}
             {template.name}
           </h4>
           {template.category && (
-            <span className="inline-block mt-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">
+            <span className="inline-block mt-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded">
               {template.category}
             </span>
           )}
@@ -209,17 +209,17 @@ function TemplateCard({ template, onEdit, onToggleFavorite, onDelete }: Template
       {/* Template Items */}
       {template.products && template.products.length > 0 && (
         <div className="space-y-2">
-          <h5 className="text-sm font-medium text-gray-700">
+          <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Producten ({template.products.length}):
           </h5>
           <div className="space-y-1">
             {template.products.map((product, index) => (
-              <div key={index} className="flex items-center justify-between bg-white px-3 py-2 rounded text-sm">
-                <span className="text-gray-900">{product.name}</span>
-                <span className="text-gray-600">
+              <div key={index} className="flex items-center justify-between bg-white dark:bg-gray-800 px-3 py-2 rounded text-sm">
+                <span className="text-gray-900 dark:text-gray-100">{product.name}</span>
+                <span className="text-gray-600 dark:text-gray-400">
                   {product.grams}g
                   {product.portionName && (
-                    <span className="text-gray-500 ml-1">({product.portionName})</span>
+                    <span className="text-gray-500 dark:text-gray-400 ml-1">({product.portionName})</span>
                   )}
                 </span>
               </div>
@@ -230,8 +230,8 @@ function TemplateCard({ template, onEdit, onToggleFavorite, onDelete }: Template
 
       {/* Usage Stats */}
       {template.useCount !== undefined && template.useCount > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-300">
-          <div className="text-xs text-gray-500">
+        <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
+          <div className="text-xs text-gray-500 dark:text-gray-400">
             Gebruikt: {template.useCount}x
             {template.lastUsed && (
               <span className="ml-2">

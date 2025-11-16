@@ -240,15 +240,15 @@ export function CloudSyncSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">☁️ Cloud Synchronisatie</h3>
-        <p className="text-sm text-gray-600">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">☁️ Cloud Synchronisatie</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Sync je data veilig (encrypted) naar Google Drive. Werkt automatisch tussen al je apparaten.
         </p>
       </div>
 
       {!isConnected ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-sm text-gray-700 mb-3">
+        <div className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
             Verbind met Google Drive om je data veilig te synchroniseren tussen apparaten.
           </p>
           <button
@@ -264,18 +264,18 @@ export function CloudSyncSettings() {
       ) : (
         <div className="space-y-4">
           {/* Connected Status */}
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex justify-between items-center">
+          <div className="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg p-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <span className="text-green-600 font-medium">✓ Verbonden met Google Drive</span>
+              <span className="text-green-600 dark:text-green-300 font-medium">✓ Verbonden met Google Drive</span>
               {cloudInfo && (
-                <span className="text-xs text-gray-600">
+                <span className="text-xs text-gray-600 dark:text-gray-400">
                   ({(cloudInfo.size / 1024).toFixed(1)} KB)
                 </span>
               )}
             </div>
             <button
               onClick={handleDisconnect}
-              className="text-sm text-gray-600 hover:text-gray-800"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300"
             >
               Ontkoppelen
             </button>
@@ -283,7 +283,7 @@ export function CloudSyncSettings() {
 
           {/* Encryption Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Encryptie Wachtwoord
             </label>
             <input
@@ -291,7 +291,7 @@ export function CloudSyncSettings() {
               value={encryptionPassword}
               onChange={(e) => setEncryptionPassword(e.target.value)}
               placeholder="Kies een sterk wachtwoord"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <div className="mt-2 flex items-center gap-2">
               <input
@@ -306,11 +306,11 @@ export function CloudSyncSettings() {
                 }}
                 className="rounded"
               />
-              <label htmlFor="remember-password" className="text-sm text-gray-600">
+              <label htmlFor="remember-password" className="text-sm text-gray-600 dark:text-gray-400">
                 Onthoud wachtwoord op dit apparaat
               </label>
             </div>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
               ⚠️ Belangrijk: Als je dit wachtwoord vergeet, kun je je backup niet meer herstellen!
             </p>
           </div>
@@ -352,12 +352,12 @@ export function CloudSyncSettings() {
           </div>
 
           {/* Force Push Button */}
-          <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-4">
+          <div className="bg-orange-50 dark:bg-orange-900 border-2 border-orange-300 dark:border-orange-700 rounded-lg p-4">
             <div className="mb-3">
-              <h4 className="text-sm font-semibold text-orange-900 flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-orange-900 dark:text-orange-100 flex items-center gap-2">
                 ⚠️ Geavanceerd: Force Push
               </h4>
-              <p className="text-xs text-orange-700 mt-1">
+              <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
                 Overschrijft cloud data volledig met lokale data (zonder merge). Gebruik alleen als je zeker weet dat je lokale data volledig correct is.
               </p>
             </div>
@@ -375,11 +375,11 @@ export function CloudSyncSettings() {
           </div>
 
           {/* Auto-Sync Toggle */}
-          <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <h4 className="text-sm font-semibold text-gray-900">🔄 Automatische Synchronisatie</h4>
-                <p className="text-xs text-gray-600 mt-1">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">🔄 Automatische Synchronisatie</h4>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                   Synchroniseer automatisch elke 5 minuten (bidirectioneel)
                 </p>
               </div>
@@ -398,7 +398,7 @@ export function CloudSyncSettings() {
               </button>
             </div>
             {autoSyncEnabled && (
-              <div className="mt-2 text-xs text-green-700">
+              <div className="mt-2 text-xs text-green-700 dark:text-green-300">
                 ✓ Auto-sync actief - Wijzigingen worden automatisch gesynchroniseerd
               </div>
             )}
@@ -406,32 +406,32 @@ export function CloudSyncSettings() {
 
           {/* Last Sync Info */}
           {lastSync && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
               Laatste sync: {lastSync.toLocaleString('nl-NL')}
             </div>
           )}
 
           {cloudInfo && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
               Cloud backup: {cloudInfo.date.toLocaleString('nl-NL')}
             </div>
           )}
 
           {/* Error/Success Messages */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+            <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-lg p-3 text-sm text-red-700 dark:text-red-300">
               {error}
             </div>
           )}
 
           {success && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700">
+            <div className="bg-green-50 dark:bg-green-900 border border-green-200 dark:border-green-700 rounded-lg p-3 text-sm text-green-700 dark:text-green-300">
               {success}
             </div>
           )}
 
           {/* Info */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-xs text-gray-600">
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-xs text-gray-600 dark:text-gray-400">
             <p className="font-medium mb-2">ℹ️ Hoe het werkt:</p>
             <ul className="space-y-1 list-disc list-inside">
               <li>Je data wordt encrypted met jouw wachtwoord</li>

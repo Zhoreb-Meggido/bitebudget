@@ -161,13 +161,13 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="bg-white border-b p-4 flex justify-between items-center rounded-t-xl">
-          <h3 className="text-xl font-bold">Barcode Scanner</h3>
+    <div className="fixed inset-0 bg-black bg-opacity-75 dark:bg-opacity-85 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center rounded-t-xl">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Barcode Scanner</h3>
           <button
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-2xl"
           >
             ✕
           </button>
@@ -175,7 +175,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
 
         <div className="p-6">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
@@ -183,11 +183,11 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
           {!isScanning && cameras.length > 0 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Selecteer Camera</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Selecteer Camera</label>
                 <select
                   value={selectedCamera}
                   onChange={(e) => setSelectedCamera(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
                   {cameras.map((camera) => (
                     <option key={camera.id} value={camera.id}>
@@ -210,7 +210,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
             <div className="space-y-4">
               <div
                 id="barcode-reader"
-                className="w-full rounded-lg overflow-hidden border-4 border-blue-500"
+                className="w-full rounded-lg overflow-hidden border-4 border-blue-500 dark:border-blue-600"
               ></div>
 
               <button
@@ -220,7 +220,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
                 ⏹️ Stop Scannen
               </button>
 
-              <p className="text-sm text-gray-600 text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                 Richt de camera op een barcode (EAN-13)
               </p>
             </div>

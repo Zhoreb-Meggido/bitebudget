@@ -220,7 +220,7 @@ export function ProductsPortionsTab() {
   );
 
   if (isLoading) {
-    return <div className="text-center py-8 text-gray-500">Laden...</div>;
+    return <div className="text-center py-8 text-gray-500 dark:text-gray-400">Laden...</div>;
   }
 
   return (
@@ -258,11 +258,11 @@ export function ProductsPortionsTab() {
 
       {/* JSON Import Section */}
       {showJsonImport && (
-        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <textarea
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg font-mono text-sm h-32 mb-2"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm h-32 mb-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             placeholder='{"name": "Product", "calories": 100, ...} of [...]'
           />
           <div className="flex gap-2">
@@ -277,7 +277,7 @@ export function ProductsPortionsTab() {
                 setShowJsonImport(false);
                 setJsonInput('');
               }}
-              className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 font-medium"
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium"
             >
               Annuleer
             </button>
@@ -287,7 +287,7 @@ export function ProductsPortionsTab() {
 
       {/* Loading indicator */}
       {isLoadingFromOff && (
-        <div className="text-sm text-blue-600 bg-blue-50 px-4 py-2 rounded-lg">
+        <div className="text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-lg">
           Bezig met ophalen product uit OpenFoodFacts...
         </div>
       )}
@@ -302,14 +302,14 @@ export function ProductsPortionsTab() {
               placeholder="Zoek producten..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
           </div>
 
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           >
             <option value="favorite">Favorieten eerst</option>
             <option value="name-asc">A-Z</option>
@@ -318,27 +318,27 @@ export function ProductsPortionsTab() {
             <option value="protein">Eiwit (hoog-laag)</option>
           </select>
 
-          <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 whitespace-nowrap">
+          <label className="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 whitespace-nowrap">
             <input
               type="checkbox"
               checked={showOnlyWithPortions}
               onChange={(e) => setShowOnlyWithPortions(e.target.checked)}
               className="rounded"
             />
-            <span className="text-sm text-gray-700">Alleen met porties</span>
+            <span className="text-sm text-gray-700 dark:text-gray-300">Alleen met porties</span>
           </label>
         </div>
       </div>
 
       {/* Products Count */}
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-gray-600 dark:text-gray-400">
         {filteredProducts.length} product{filteredProducts.length !== 1 ? 'en' : ''} gevonden
       </div>
 
       {/* Products List */}
       <div className="space-y-4">
         {filteredProducts.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             Geen producten gevonden
           </div>
         ) : (
@@ -420,14 +420,14 @@ const ProductWithPortions = memo(function ProductWithPortions({
   );
 
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+    <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
       {/* Product Header */}
       <div className="mb-3">
         <div className="flex items-start justify-between mb-2">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {product.favorite && '⭐ '}
             {product.name}
-            {product.brand && <span className="text-sm text-gray-500 ml-2">({product.brand})</span>}
+            {product.brand && <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">({product.brand})</span>}
           </h3>
           <div className="flex gap-1">
             <button
@@ -448,7 +448,7 @@ const ProductWithPortions = memo(function ProductWithPortions({
         </div>
 
         {/* Nutrition Info */}
-        <div className="text-sm text-gray-600 overflow-x-auto">
+        <div className="text-sm text-gray-600 dark:text-gray-400 overflow-x-auto">
           <div className="whitespace-nowrap">
             📊 Per 100{product.calories > 0 ? 'g' : 'ml'}: {product.calories} kcal, {product.protein}g eiwit, {product.fat}g vet
             {product.carbohydrates !== undefined && `, ${product.carbohydrates}g koolhydraten`}
@@ -460,9 +460,9 @@ const ProductWithPortions = memo(function ProductWithPortions({
           <div className="flex items-center gap-2 flex-wrap">
             {/* Source Badge */}
             <span className={`text-xs px-2 py-0.5 rounded ${
-              product.source === 'barcode' ? 'bg-blue-100 text-blue-700' :
-              product.source === 'search' ? 'bg-purple-100 text-purple-700' :
-              'bg-gray-100 text-gray-700'
+              product.source === 'barcode' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+              product.source === 'search' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+              'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
             }`}>
               {product.source === 'barcode' ? '📷 Barcode' : product.source === 'search' ? '🔍 Search' : '✏️ Manual'}
             </span>
@@ -482,7 +482,7 @@ const ProductWithPortions = memo(function ProductWithPortions({
           {/* Add Portion Button - Aligned right with edit/delete buttons */}
           <button
             onClick={() => onAddPortion(product.name)}
-            className="text-sm text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium whitespace-nowrap"
           >
             + Nieuwe portie
           </button>
@@ -491,14 +491,14 @@ const ProductWithPortions = memo(function ProductWithPortions({
 
       {/* Portions Section */}
       {productPortions.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-gray-300">
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">
+        <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
+          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Porties ({productPortions.length}):
           </h4>
           <div className="space-y-1">
             {productPortions.map(portion => (
-              <div key={portion.id} className="flex items-center justify-between bg-white px-3 py-2 rounded">
-                <span className="text-sm">
+              <div key={portion.id} className="flex items-center justify-between bg-white dark:bg-gray-800 px-3 py-2 rounded">
+                <span className="text-sm text-gray-900 dark:text-gray-100">
                   {portion.isDefault && '⭐ '}
                   {portion.portionName} ({portion.grams}g)
                 </span>

@@ -5,6 +5,31 @@
 
 /* Custom styles voor Voedseljournaal App */
 
+/* Dark mode color variables */
+:root {
+  /* Light mode colors (default) */
+  --color-bg-primary: rgb(249, 250, 251);
+  --color-bg-secondary: rgb(255, 255, 255);
+  --color-bg-tertiary: rgb(243, 244, 246);
+  --color-text-primary: rgb(17, 24, 39);
+  --color-text-secondary: rgb(75, 85, 99);
+  --color-text-tertiary: rgb(107, 114, 128);
+  --color-border: rgb(229, 231, 235);
+  --color-border-light: rgb(243, 244, 246);
+}
+
+.dark {
+  /* Dark mode colors */
+  --color-bg-primary: rgb(17, 24, 39);
+  --color-bg-secondary: rgb(31, 41, 55);
+  --color-bg-tertiary: rgb(55, 65, 81);
+  --color-text-primary: rgb(243, 244, 246);
+  --color-text-secondary: rgb(209, 213, 219);
+  --color-text-tertiary: rgb(156, 163, 175);
+  --color-border: rgb(75, 85, 99);
+  --color-border-light: rgb(55, 65, 81);
+}
+
 .app-section {
   display: none;
 }

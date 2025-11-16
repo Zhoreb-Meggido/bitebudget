@@ -66,13 +66,13 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="bg-white border-b p-4 flex justify-between items-center">
-          <h3 className="text-xl font-bold">OpenFoodFacts Zoeken</h3>
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">OpenFoodFacts Zoeken</h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-2xl"
           >
             ✕
           </button>
@@ -80,7 +80,7 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
 
         <div className="p-6">
           {/* Browser compatibility warning */}
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-sm text-yellow-800 dark:text-yellow-400">
             ℹ️ <strong>Let op:</strong> Zoeken werkt mogelijk niet in Firefox vanwege API beperkingen.
             Barcode scannen werkt wel in alle browsers!
           </div>
@@ -92,14 +92,14 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Zoek product op naam..."
-              className="flex-1 px-4 py-2 border rounded-lg"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               autoFocus
               disabled={isSearching}
             />
             <button
               onClick={handleSearch}
               disabled={isSearching || !searchQuery.trim()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
             >
               {isSearching ? (
                 <span className="flex items-center gap-2">
@@ -112,19 +112,19 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
           </div>
 
           {isSearching && (
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <div className="flex items-center gap-3">
                 <span className="text-2xl animate-spin">⏳</span>
                 <div>
-                  <div className="font-semibold text-blue-900">Zoeken in OpenFoodFacts...</div>
-                  <div className="text-sm text-blue-700">Dit kan enkele seconden duren</div>
+                  <div className="font-semibold text-blue-900 dark:text-blue-300">Zoeken in OpenFoodFacts...</div>
+                  <div className="text-sm text-blue-700 dark:text-blue-400">Dit kan enkele seconden duren</div>
                 </div>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
@@ -135,7 +135,7 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
                 {searchResults.map((product, idx) => (
                   <div
                     key={idx}
-                    className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer border border-gray-200"
+                    className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border border-gray-200 dark:border-gray-700"
                     onClick={() => handleSelectProduct(product)}
                   >
                     <div className="flex gap-3">
@@ -147,11 +147,11 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
                         />
                       )}
                       <div className="flex-1">
-                        <div className="font-semibold text-lg">{product.name}</div>
+                        <div className="font-semibold text-lg text-gray-900 dark:text-gray-100">{product.name}</div>
                         {product.brand && (
-                          <div className="text-sm text-gray-600 mb-1">{product.brand}</div>
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{product.brand}</div>
                         )}
-                        <div className="text-xs text-gray-600">
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
                           {product.calories} kcal • {product.protein}g eiw • {product.fat}g vet •{' '}
                           {product.saturatedFat}g v.vet • {product.fiber}g vez •{' '}
                           {product.sodium}mg natr
@@ -186,7 +186,7 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
             )}
 
             {!isSearching && searchResults.length === 0 && searchQuery && (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-gray-500 dark:text-gray-400 py-8">
                 Voer een zoekopdracht in en klik op Zoek
               </div>
             )}

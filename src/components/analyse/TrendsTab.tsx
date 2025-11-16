@@ -577,63 +577,63 @@ export function TrendsTab() {
   return (
     <div>
       {/* Quick Stats Cards */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-          <div className="text-sm text-blue-600 font-medium mb-1">Ø Stappen</div>
-          <div className="text-2xl font-bold text-blue-900">{stats.avgSteps.toLocaleString()}</div>
-          <div className="text-xs text-blue-600 mt-1">per dag</div>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+          <div className="text-sm text-blue-600 dark:text-blue-400 font-medium mb-1">Ø Stappen</div>
+          <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.avgSteps.toLocaleString()}</div>
+          <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">per dag</div>
         </div>
 
-        <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
-          <div className="text-sm text-red-600 font-medium mb-1">Ø Calorieën</div>
-          <div className="text-2xl font-bold text-red-900">{stats.avgCalories.toLocaleString()}</div>
-          <div className="text-xs text-red-600 mt-1">kcal/dag</div>
+        <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
+          <div className="text-sm text-red-600 dark:text-red-400 font-medium mb-1">Ø Calorieën</div>
+          <div className="text-2xl font-bold text-red-900 dark:text-red-100">{stats.avgCalories.toLocaleString()}</div>
+          <div className="text-xs text-red-600 dark:text-red-400 mt-1">kcal/dag</div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-          <div className="text-sm text-purple-600 font-medium mb-1">Ø Intensity Min</div>
-          <div className="text-2xl font-bold text-purple-900">{stats.avgIntensityMinutes}</div>
-          <div className="text-xs text-purple-600 mt-1">min/dag</div>
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+          <div className="text-sm text-purple-600 dark:text-purple-400 font-medium mb-1">Ø Intensity Min</div>
+          <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.avgIntensityMinutes}</div>
+          <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">min/dag</div>
         </div>
 
-        <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-4 border border-pink-200">
-          <div className="text-sm text-pink-600 font-medium mb-1">Ø Rustpols</div>
-          <div className="text-2xl font-bold text-pink-900">{stats.avgRestingHR}</div>
-          <div className="text-xs text-pink-600 mt-1">bpm</div>
+        <div className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 rounded-lg p-4 border border-pink-200 dark:border-pink-800">
+          <div className="text-sm text-pink-600 dark:text-pink-400 font-medium mb-1">Ø Rustpols</div>
+          <div className="text-2xl font-bold text-pink-900 dark:text-pink-100">{stats.avgRestingHR}</div>
+          <div className="text-xs text-pink-600 dark:text-pink-400 mt-1">bpm</div>
         </div>
 
-        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200">
-          <div className="text-sm text-amber-600 font-medium mb-1">Ø Stress</div>
-          <div className="text-2xl font-bold text-amber-900">{stats.avgStress}</div>
-          <div className="text-xs text-amber-600 mt-1">gemiddeld</div>
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+          <div className="text-sm text-amber-600 dark:text-amber-400 font-medium mb-1">Ø Stress</div>
+          <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">{stats.avgStress}</div>
+          <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">gemiddeld</div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-          <div className="text-sm text-green-600 font-medium mb-1">Ø Slaap</div>
-          <div className="text-2xl font-bold text-green-900">{stats.avgSleep}</div>
-          <div className="text-xs text-green-600 mt-1">uur/nacht</div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+          <div className="text-sm text-green-600 dark:text-green-400 font-medium mb-1">Ø Slaap</div>
+          <div className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.avgSleep}</div>
+          <div className="text-xs text-green-600 dark:text-green-400 mt-1">uur/nacht</div>
         </div>
 
-        <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-lg p-4 border border-sky-200">
-          <div className="text-sm text-sky-600 font-medium mb-1">Ø HRV</div>
-          <div className="text-2xl font-bold text-sky-900">{stats.avgHrvOvernight || '-'}</div>
-          <div className="text-xs text-sky-600 mt-1">ms (overnight)</div>
+        <div className="bg-gradient-to-br from-sky-50 to-sky-100 dark:from-sky-900/20 dark:to-sky-800/20 rounded-lg p-4 border border-sky-200 dark:border-sky-800">
+          <div className="text-sm text-sky-600 dark:text-sky-400 font-medium mb-1">Ø HRV</div>
+          <div className="text-2xl font-bold text-sky-900 dark:text-sky-100">{stats.avgHrvOvernight || '-'}</div>
+          <div className="text-xs text-sky-600 dark:text-sky-400 mt-1">ms (overnight)</div>
         </div>
 
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
-          <div className="text-sm text-gray-600 font-medium mb-1">Dagen Data</div>
-          <div className="text-2xl font-bold text-gray-900">{stats.daysWithData}</div>
-          <div className="text-xs text-gray-600 mt-1">van {period}</div>
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-1">Dagen Data</div>
+          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.daysWithData}</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">van {period}</div>
         </div>
         </div>
       </div>
 
       {/* Chart Section */}
       <div>
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h2 className="text-xl font-semibold text-gray-900">Activity Trends</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Activity Trends</h2>
 
             {/* Period Selector */}
             <div className="flex gap-2">
@@ -645,7 +645,7 @@ export function TrendsTab() {
                     px-4 py-2 rounded-lg font-medium text-sm transition-colors
                     ${period === days
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }
                   `}
                 >
@@ -665,14 +665,14 @@ export function TrendsTab() {
                   px-4 py-2 rounded-lg text-sm font-medium transition-all
                   ${selectedMetrics.has(metric.key)
                     ? 'ring-2 shadow-sm'
-                    : 'opacity-50 hover:opacity-75'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }
                 `}
-                style={{
-                  backgroundColor: selectedMetrics.has(metric.key) ? metric.color + '15' : '#f3f4f6',
-                  color: selectedMetrics.has(metric.key) ? metric.color : '#6b7280',
+                style={selectedMetrics.has(metric.key) ? {
+                  backgroundColor: metric.color + '15',
+                  color: metric.color,
                   ringColor: metric.color,
-                }}
+                } : {}}
               >
                 {metric.label}
               </button>
@@ -681,12 +681,12 @@ export function TrendsTab() {
         </div>
 
         {filteredActivities.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
             <p className="text-lg mb-2">Geen activity data beschikbaar</p>
             <p className="text-sm">Importeer Garmin CSV data om trends te zien</p>
           </div>
         ) : selectedMetrics.size === 0 ? (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
             <p className="text-lg mb-2">Selecteer minimaal één metric</p>
             <p className="text-sm">Klik op de metric buttons hierboven</p>
           </div>
@@ -698,7 +698,7 @@ export function TrendsTab() {
               </div>
             </div>
             {/* Mobile hint */}
-            <div className="px-6 pb-6 text-xs text-gray-500 text-center sm:hidden">
+            <div className="px-6 pb-6 text-xs text-gray-500 dark:text-gray-400 text-center sm:hidden">
               💡 Tip: Tik op de grafiek voor details per datum
             </div>
           </>
@@ -707,21 +707,21 @@ export function TrendsTab() {
 
       {/* Correlation Analysis */}
       <div>
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Correlatie Analyse</h2>
-          <p className="text-sm text-gray-600 mt-1">Ontdek verbanden tussen verschillende metrics</p>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Correlatie Analyse</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Ontdek verbanden tussen verschillende metrics</p>
         </div>
 
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 X-as (horizontaal)
               </label>
               <select
                 value={correlationMetricX}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCorrelationMetricX(e.target.value as MetricKey)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {METRICS.map((metric: MetricConfig) => (
                   <option key={metric.key} value={metric.key}>{metric.label}</option>
@@ -730,13 +730,13 @@ export function TrendsTab() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Y-as (verticaal)
               </label>
               <select
                 value={correlationMetricY}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCorrelationMetricY(e.target.value as MetricKey)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {METRICS.map((metric: MetricConfig) => (
                   <option key={metric.key} value={metric.key}>{metric.label}</option>
@@ -749,19 +749,19 @@ export function TrendsTab() {
         {correlationData ? (
           <>
             {/* Correlation Stats */}
-            <div className="p-6 border-b border-gray-200">
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6">
                 <div className="grid md:grid-cols-3 gap-6">
                   <div className="text-center">
-                    <div className="text-sm text-gray-600 mb-2">Correlatie Coëfficiënt</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Correlatie Coëfficiënt</div>
                     <div className={`text-4xl font-bold ${
-                      Math.abs(correlationData.correlation) > 0.7 ? 'text-green-600' :
-                      Math.abs(correlationData.correlation) > 0.4 ? 'text-yellow-600' :
-                      'text-gray-600'
+                      Math.abs(correlationData.correlation) > 0.7 ? 'text-green-600 dark:text-green-400' :
+                      Math.abs(correlationData.correlation) > 0.4 ? 'text-yellow-600 dark:text-yellow-400' :
+                      'text-gray-600 dark:text-gray-400'
                     }`}>
                       {correlationData.correlation.toFixed(3)}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {Math.abs(correlationData.correlation) > 0.7 ? '✅ Sterke correlatie' :
                        Math.abs(correlationData.correlation) > 0.4 ? '⚠️ Matige correlatie' :
                        '❌ Zwakke correlatie'}
@@ -769,21 +769,21 @@ export function TrendsTab() {
                   </div>
 
                   <div className="text-center">
-                    <div className="text-sm text-gray-600 mb-2">Data Punten</div>
-                    <div className="text-4xl font-bold text-blue-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Data Punten</div>
+                    <div className="text-4xl font-bold text-blue-600 dark:text-blue-400">
                       {correlationData.dataPoints}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Laatste {period} dagen
                     </div>
                   </div>
 
                   <div className="text-center">
-                    <div className="text-sm text-gray-600 mb-2">Relatie</div>
-                    <div className="text-2xl font-bold text-purple-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Relatie</div>
+                    <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                       {correlationData.correlation > 0 ? '📈 Positief' : '📉 Negatief'}
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {correlationData.correlation > 0
                         ? 'Als X stijgt, stijgt Y ook'
                         : 'Als X stijgt, daalt Y'}
@@ -791,7 +791,7 @@ export function TrendsTab() {
                   </div>
                 </div>
 
-                <div className="mt-6 text-sm text-gray-700 bg-white rounded p-4">
+                <div className="mt-6 text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded p-4">
                   <strong>💡 Interpretatie:</strong>
                   <ul className="mt-2 space-y-1 list-disc list-inside">
                     {Math.abs(correlationData.correlation) > 0.7 && (
@@ -803,7 +803,7 @@ export function TrendsTab() {
                     {Math.abs(correlationData.correlation) <= 0.4 && (
                       <li>Er is <strong>weinig tot geen</strong> direct verband tussen deze metrics.</li>
                     )}
-                    <li className="text-xs text-gray-500 mt-2">
+                    <li className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                       Correlatie betekent niet altijd causatie. Andere factoren kunnen ook een rol spelen.
                     </li>
                   </ul>
@@ -816,13 +816,13 @@ export function TrendsTab() {
               <div className="h-[400px] sm:h-[500px]">
                 <Scatter data={scatterChartData!} options={scatterChartOptions} />
               </div>
-              <div className="mt-4 text-xs text-gray-500 text-center">
+              <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
                 💡 Elk punt is één dag. De rode lijn toont de algemene trend.
               </div>
             </div>
           </>
         ) : (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
             <p className="text-lg mb-2">Onvoldoende data voor correlatie analyse</p>
             <p className="text-sm">Zorg dat je meerdere dagen met beide metrics hebt geregistreerd</p>
           </div>

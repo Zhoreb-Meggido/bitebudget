@@ -241,6 +241,8 @@ export interface DayHeartRateSamples {
 // SETTINGS
 // ============================================
 
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 export interface UserSettings {
   calories: number;
   protein: number;
@@ -252,6 +254,7 @@ export interface UserSettings {
   sodiumMax: number;
   targetWeight: number;
   autoRefreshOAuth?: boolean; // Enable automatic OAuth token refresh (default: true)
+  theme?: ThemeMode;           // Theme preference (default: 'system')
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -264,6 +267,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   fiberMin: 35,
   sodiumMax: 2300,
   targetWeight: 78,
+  theme: 'system',
 };
 
 export interface SettingsRecord {

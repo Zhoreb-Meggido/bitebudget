@@ -30,17 +30,17 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
   }, []);
   if (!data || !data.samples || data.samples.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Hartslag Details</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Hartslag Details</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
           >
             ×
           </button>
         </div>
-        <p className="text-gray-500">Geen hartslag data beschikbaar voor deze dag.</p>
+        <p className="text-gray-500 dark:text-gray-400">Geen hartslag data beschikbaar voor deze dag.</p>
       </div>
     );
   }
@@ -132,7 +132,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
     <div className="w-full">
       <div className="flex justify-between items-center mb-2">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
             💓 Hartslag - {new Date(data.date).toLocaleDateString('nl-NL', {
               weekday: 'long',
               day: 'numeric',
@@ -140,13 +140,13 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
               year: 'numeric'
             })}
           </h3>
-          <p className="text-xs text-gray-600 mt-0.5">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
             {data.sampleCount} metingen • Gem: {data.avgBpm} bpm • Min: {data.minBpm} bpm • Max: {data.maxBpm} bpm
           </p>
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
         >
           ×
         </button>
@@ -293,14 +293,14 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
 
         {/* Collapsible Zone Statistics Panel */}
         <div
-          className={`absolute top-0 right-0 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg transition-all duration-300 ${
+          className={`absolute top-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 ${
             isExpanded ? 'w-56 p-3' : 'w-12 p-2'
           }`}
         >
           {/* Toggle Button */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full flex items-center justify-center text-gray-600 hover:text-gray-900 mb-2"
+            className="w-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-2"
             title={isExpanded ? 'Inklappen' : 'Uitklappen'}
           >
             <span className="text-lg">{isExpanded ? '→' : '←'}</span>
@@ -309,18 +309,18 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
           {isExpanded ? (
             /* Expanded: Full details */
             <div>
-              <h4 className="text-xs font-semibold text-gray-700 mb-2">Tijd per Zone</h4>
+              <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Tijd per Zone</h4>
               <div className="space-y-2">
                 {zoneStats.map((zone, i) => (
                   <div key={i} className="space-y-0.5">
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1.5">
                         <div className="w-2 h-2 rounded" style={{ backgroundColor: zone.color, opacity: 1 }}></div>
-                        <span className="font-medium text-gray-700 text-[10px]">{zone.name}</span>
+                        <span className="font-medium text-gray-700 dark:text-gray-300 text-[10px]">{zone.name}</span>
                       </div>
-                      <span className="font-semibold text-gray-900 text-xs">{zone.percentage.toFixed(1)}%</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100 text-xs">{zone.percentage.toFixed(1)}%</span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-1">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
                       <div
                         className="h-1 rounded-full transition-all"
                         style={{
@@ -330,7 +330,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
                         }}
                       ></div>
                     </div>
-                    <div className="text-[9px] text-gray-500">
+                    <div className="text-[9px] text-gray-500 dark:text-gray-400">
                       {Math.round(zone.min)}-{Math.round(zone.max)} bpm
                     </div>
                   </div>
@@ -343,7 +343,7 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
               {zoneStats.map((zone, i) => (
                 <div key={i} className="flex flex-col items-center">
                   <div className="w-3 h-3 rounded mb-0.5" style={{ backgroundColor: zone.color, opacity: 1 }}></div>
-                  <span className="text-[9px] font-semibold text-gray-900">{zone.percentage.toFixed(0)}%</span>
+                  <span className="text-[9px] font-semibold text-gray-900 dark:text-gray-100">{zone.percentage.toFixed(0)}%</span>
                 </div>
               ))}
             </div>

@@ -507,9 +507,9 @@ export function AggregatesTab() {
   return (
     <div className="space-y-6">
       {/* Header with controls */}
-      <div className="bg-white rounded-lg shadow-sm p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-xl font-bold text-gray-900">Geaggregeerd Overzicht</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Geaggregeerd Overzicht</h2>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
             {/* Aggregation level selector */}
@@ -519,7 +519,7 @@ export function AggregatesTab() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   aggregationLevel === 'week'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 Per Week
@@ -529,7 +529,7 @@ export function AggregatesTab() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   aggregationLevel === 'month'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 Per Maand
@@ -538,14 +538,14 @@ export function AggregatesTab() {
 
             {/* Period selector */}
             <div className="flex items-center gap-2">
-              <label htmlFor="period-select" className="text-sm font-medium text-gray-700">
+              <label htmlFor="period-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Periode:
               </label>
               <select
                 id="period-select"
                 value={selectedPeriod}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedPeriod(e.target.value as AggregatePeriod)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {periodOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -560,18 +560,18 @@ export function AggregatesTab() {
 
       {/* Loading state */}
       {isLoading && (
-        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-gray-600">Gegevens laden...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Gegevens laden...</p>
         </div>
       )}
 
       {/* Content */}
       {!isLoading && currentAggregates.length === 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
           <div className="text-5xl mb-4">📊</div>
-          <p className="text-lg text-gray-600 mb-2">Geen data beschikbaar</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">Geen data beschikbaar</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
             Er zijn geen gegevens gevonden voor de geselecteerde periode.
           </p>
         </div>
@@ -580,12 +580,12 @@ export function AggregatesTab() {
       {!isLoading && currentAggregates.length > 0 && (
         <>
           {/* Chart 1: Nutrition Averages */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 📊 Voeding Gemiddelden Over Tijd
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Geaggregeerde voedingswaarden {aggregationLevel === 'week' ? 'per week' : 'per maand'}
               </p>
 
@@ -598,13 +598,13 @@ export function AggregatesTab() {
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                       selectedNutritionMetrics.has(metric.key)
                         ? 'ring-2 shadow-sm'
-                        : 'opacity-50 hover:opacity-75'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
-                    style={{
-                      backgroundColor: selectedNutritionMetrics.has(metric.key) ? metric.color + '15' : '#f3f4f6',
-                      color: selectedNutritionMetrics.has(metric.key) ? metric.color : '#6b7280',
+                    style={selectedNutritionMetrics.has(metric.key) ? {
+                      backgroundColor: metric.color + '15',
+                      color: metric.color,
                       ringColor: metric.color,
-                    }}
+                    } : {}}
                   >
                     {metric.label}
                   </button>
@@ -618,12 +618,12 @@ export function AggregatesTab() {
           </div>
 
           {/* Chart 2: Activity Averages */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 🏃 Activiteit Gemiddelden Over Tijd
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Geaggregeerde activiteit metrics {aggregationLevel === 'week' ? 'per week' : 'per maand'}
               </p>
 
@@ -636,13 +636,13 @@ export function AggregatesTab() {
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                       selectedActivityMetrics.has(metric.key)
                         ? 'ring-2 shadow-sm'
-                        : 'opacity-50 hover:opacity-75'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
                     }`}
-                    style={{
-                      backgroundColor: selectedActivityMetrics.has(metric.key) ? metric.color + '15' : '#f3f4f6',
-                      color: selectedActivityMetrics.has(metric.key) ? metric.color : '#6b7280',
+                    style={selectedActivityMetrics.has(metric.key) ? {
+                      backgroundColor: metric.color + '15',
+                      color: metric.color,
                       ringColor: metric.color,
-                    }}
+                    } : {}}
                   >
                     {metric.label}
                   </button>
@@ -655,7 +655,7 @@ export function AggregatesTab() {
                 <Line data={activityChartData} options={activityChartOptions} />
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                 <p className="text-lg mb-2">Geen activity data beschikbaar</p>
                 <p className="text-sm">Importeer Garmin CSV data om activity trends te zien</p>
               </div>
@@ -663,25 +663,25 @@ export function AggregatesTab() {
           </div>
 
           {/* Chart 3: Correlation Analysis */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                 📈 Correlatie Analyse
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Ontdek verbanden tussen metrics op {aggregationLevel === 'week' ? 'week' : 'maand'} niveau
               </p>
 
               {/* Metric selectors */}
               <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     X-as (horizontaal)
                   </label>
                   <select
                     value={correlationMetricX}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCorrelationMetricX(e.target.value as any)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <optgroup label="Voeding">
                       {NUTRITION_METRICS.map(metric => (
@@ -697,13 +697,13 @@ export function AggregatesTab() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Y-as (verticaal)
                   </label>
                   <select
                     value={correlationMetricY}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCorrelationMetricY(e.target.value as any)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <optgroup label="Voeding">
                       {NUTRITION_METRICS.map(metric => (
@@ -723,18 +723,18 @@ export function AggregatesTab() {
             {correlationData ? (
               <>
                 {/* Correlation stats */}
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6 mb-6">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6 mb-6">
                   <div className="grid md:grid-cols-3 gap-6">
                     <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-2">Correlatie Coëfficiënt</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Correlatie Coëfficiënt</div>
                       <div className={`text-4xl font-bold ${
-                        Math.abs(correlationData.correlation) > 0.7 ? 'text-green-600' :
-                        Math.abs(correlationData.correlation) > 0.4 ? 'text-yellow-600' :
-                        'text-gray-600'
+                        Math.abs(correlationData.correlation) > 0.7 ? 'text-green-600 dark:text-green-400' :
+                        Math.abs(correlationData.correlation) > 0.4 ? 'text-yellow-600 dark:text-yellow-400' :
+                        'text-gray-600 dark:text-gray-400'
                       }`}>
                         {correlationData.correlation.toFixed(3)}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         {Math.abs(correlationData.correlation) > 0.7 ? '✅ Sterke correlatie' :
                          Math.abs(correlationData.correlation) > 0.4 ? '⚠️ Matige correlatie' :
                          '❌ Zwakke correlatie'}
@@ -742,21 +742,21 @@ export function AggregatesTab() {
                     </div>
 
                     <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-2">Data Punten</div>
-                      <div className="text-4xl font-bold text-blue-600">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Data Punten</div>
+                      <div className="text-4xl font-bold text-blue-600 dark:text-blue-400">
                         {correlationData.dataPoints}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         {aggregationLevel === 'week' ? 'weken' : 'maanden'}
                       </div>
                     </div>
 
                     <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-2">Relatie</div>
-                      <div className="text-2xl font-bold text-purple-600">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">Relatie</div>
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                         {correlationData.correlation > 0 ? '📈 Positief' : '📉 Negatief'}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
                         {correlationData.correlation > 0
                           ? 'Als X stijgt, stijgt Y ook'
                           : 'Als X stijgt, daalt Y'}
@@ -771,7 +771,7 @@ export function AggregatesTab() {
                 </div>
               </>
             ) : (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                 <p className="text-lg mb-2">Onvoldoende data voor correlatie analyse</p>
                 <p className="text-sm">Zorg voor voldoende data met beide metrics</p>
               </div>

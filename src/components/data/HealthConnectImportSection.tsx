@@ -196,10 +196,10 @@ export function HealthConnectImportSection() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow mb-6">
-      <div className="p-4 sm:p-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold text-gray-900">Health Connect Import</h2>
-        <p className="text-sm text-gray-600 mt-1">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+      <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Health Connect Import</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           Importeer activiteit data uit Android Health Connect database backup
         </p>
       </div>
@@ -207,21 +207,21 @@ export function HealthConnectImportSection() {
       <div className="p-4 sm:p-6 space-y-4">
         {/* Error Message */}
         {error && (
-          <div className="p-4 rounded-lg bg-red-50 text-red-800">
+          <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400">
             ✗ {error}
           </div>
         )}
 
         {/* Success Message */}
         {importSuccess && (
-          <div className="p-4 rounded-lg bg-green-50 text-green-800">
+          <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400">
             ✓ Data succesvol geïmporteerd!
           </div>
         )}
 
         {/* File Upload */}
         {!parsedData.length && (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center">
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 sm:p-8 text-center hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
             <input
               type="file"
               accept=".db,.sqlite,.sqlite3"
@@ -235,10 +235,10 @@ export function HealthConnectImportSection() {
               className="cursor-pointer"
             >
               <div className="text-4xl mb-4">💚</div>
-              <p className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+              <p className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                 {parsing ? 'Bezig met laden...' : file ? file.name : 'Klik om Health Connect database te selecteren'}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Ondersteund: .db, .sqlite, .sqlite3 bestanden
               </p>
             </label>
@@ -253,7 +253,7 @@ export function HealthConnectImportSection() {
                 </button>
                 <button
                   onClick={handleReset}
-                  className="w-full sm:w-auto ml-0 sm:ml-2 px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                  className="w-full sm:w-auto ml-0 sm:ml-2 px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
                 >
                   Annuleren
                 </button>
@@ -266,12 +266,12 @@ export function HealthConnectImportSection() {
         {parsedData.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-gray-900">
+              <h3 className="font-medium text-gray-900 dark:text-gray-100">
                 Gevonden data: {parsedData.length} dagen
               </h3>
               <button
                 onClick={handleReset}
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
               >
                 Opnieuw
               </button>
@@ -279,88 +279,88 @@ export function HealthConnectImportSection() {
 
             {/* Stats Summary */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-              <div className="bg-blue-50 rounded-lg p-3 sm:p-4">
-                <div className="text-xs sm:text-sm text-blue-600 font-medium">Periode</div>
-                <div className="text-base sm:text-lg font-semibold text-blue-900 mt-1">
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 sm:p-4">
+                <div className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 font-medium">Periode</div>
+                <div className="text-base sm:text-lg font-semibold text-blue-900 dark:text-blue-300 mt-1">
                   {parsedData.length} dagen
                 </div>
               </div>
-              <div className="bg-green-50 rounded-lg p-3 sm:p-4">
-                <div className="text-xs sm:text-sm text-green-600 font-medium">Stappen</div>
-                <div className="text-base sm:text-lg font-semibold text-green-900 mt-1">
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 sm:p-4">
+                <div className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium">Stappen</div>
+                <div className="text-base sm:text-lg font-semibold text-green-900 dark:text-green-300 mt-1">
                   {parsedData.filter(d => d.metrics.steps).length} dagen
                 </div>
               </div>
-              <div className="bg-purple-50 rounded-lg p-3 sm:p-4">
-                <div className="text-xs sm:text-sm text-purple-600 font-medium">Slaap</div>
-                <div className="text-base sm:text-lg font-semibold text-purple-900 mt-1">
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3 sm:p-4">
+                <div className="text-xs sm:text-sm text-purple-600 dark:text-purple-400 font-medium">Slaap</div>
+                <div className="text-base sm:text-lg font-semibold text-purple-900 dark:text-purple-300 mt-1">
                   {parsedData.filter(d => d.metrics.sleepSeconds).length} dagen
                 </div>
               </div>
-              <div className="bg-orange-50 rounded-lg p-3 sm:p-4">
-                <div className="text-xs sm:text-sm text-orange-600 font-medium">Hartslag</div>
-                <div className="text-base sm:text-lg font-semibold text-orange-900 mt-1">
+              <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 sm:p-4">
+                <div className="text-xs sm:text-sm text-orange-600 dark:text-orange-400 font-medium">Hartslag</div>
+                <div className="text-base sm:text-lg font-semibold text-orange-900 dark:text-orange-300 mt-1">
                   {parsedData.filter(d => d.metrics.heartRateResting).length} dagen
                 </div>
               </div>
             </div>
 
             {/* Data Table */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-900">
                     <tr>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap">
                         Datum
                       </th>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap">
                         Stappen
                       </th>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap">
                         Calorieën
                       </th>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap">
                         Afstand
                       </th>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap">
                         Slaap
                       </th>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap">
                         Rust HR
                       </th>
-                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">
+                      <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap">
                         Bron
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {parsedData.map((data) => (
-                      <tr key={data.date} className="hover:bg-gray-50">
-                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
+                      <tr key={data.date} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
                           {data.date}
                         </td>
-                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                           {data.metrics.steps?.toLocaleString() || '-'}
                         </td>
-                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                           {data.metrics.totalCalories ? `${data.metrics.totalCalories} kcal` : '-'}
                         </td>
-                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                           {data.metrics.distanceMeters ? `${(data.metrics.distanceMeters / 1000).toFixed(2)} km` : '-'}
                         </td>
-                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                           {data.metrics.sleepSeconds ? formatDuration(data.metrics.sleepSeconds) : '-'}
                         </td>
-                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
                           {data.metrics.heartRateResting ? `${data.metrics.heartRateResting} bpm` : '-'}
                         </td>
-                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600">
+                        <td className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                           <div className="flex flex-wrap gap-1">
                             {data.sources.map(source => (
                               <span
                                 key={source}
-                                className="inline-block px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded"
+                                className="inline-block px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 rounded"
                               >
                                 {source.replace(' Connect', '')}
                               </span>
@@ -376,9 +376,9 @@ export function HealthConnectImportSection() {
 
             {/* Warnings */}
             {parsedData.some(d => d.warnings.length > 0) && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h4 className="font-medium text-yellow-900 mb-2">⚠️ Waarschuwingen</h4>
-                <ul className="text-sm text-yellow-800 space-y-1">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <h4 className="font-medium text-yellow-900 dark:text-yellow-300 mb-2">⚠️ Waarschuwingen</h4>
+                <ul className="text-sm text-yellow-800 dark:text-yellow-400 space-y-1">
                   {Array.from(new Set(parsedData.flatMap(d => d.warnings))).map((warning, idx) => (
                     <li key={idx}>• {warning}</li>
                   ))}
@@ -387,18 +387,18 @@ export function HealthConnectImportSection() {
             )}
 
             {/* Missing Fields Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">ℹ️ Niet beschikbaar in Health Connect</h4>
-              <p className="text-sm text-blue-800">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">ℹ️ Niet beschikbaar in Health Connect</h4>
+              <p className="text-sm text-blue-800 dark:text-blue-400">
                 De volgende velden worden niet geïmporteerd omdat ze niet beschikbaar zijn in deze backup:
               </p>
-              <ul className="text-sm text-blue-700 mt-2 space-y-1">
+              <ul className="text-sm text-blue-700 dark:text-blue-400 mt-2 space-y-1">
                 <li>• Intensity Minutes (activiteit intensiteit)</li>
                 <li>• Stress Level (stressniveau)</li>
                 <li>• Body Battery (Garmin-specifiek)</li>
                 <li>• HRV (hartslagvariabiliteit)</li>
               </ul>
-              <p className="text-xs text-blue-600 mt-2">
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
                 Deze metrics kun je importeren via Garmin CSV bestanden.
               </p>
             </div>
@@ -415,7 +415,7 @@ export function HealthConnectImportSection() {
               <button
                 onClick={handleReset}
                 disabled={importing}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 disabled:opacity-50"
+                className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
               >
                 Annuleren
               </button>
@@ -424,15 +424,15 @@ export function HealthConnectImportSection() {
         )}
 
         {/* Info Section */}
-        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <h3 className="font-medium text-gray-900 mb-2">💡 Hoe werkt het?</h3>
-          <ol className="text-sm text-gray-700 space-y-2 list-decimal list-inside">
+        <div className="mt-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">💡 Hoe werkt het?</h3>
+          <ol className="text-sm text-gray-700 dark:text-gray-300 space-y-2 list-decimal list-inside">
             <li>Exporteer je Health Connect data via Android instellingen (of via backup app)</li>
             <li>Upload het .db bestand hier</li>
             <li>Preview de data om te zien wat er geïmporteerd wordt</li>
             <li>Klik op "Importeer" om de data toe te voegen aan BiteBudget</li>
           </ol>
-          <p className="text-xs text-gray-600 mt-3">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-3">
             <strong>Ondersteunde apps:</strong> Garmin Connect, FitDays (weegschaal)
           </p>
         </div>

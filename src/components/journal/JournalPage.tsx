@@ -140,13 +140,13 @@ export function JournalPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-green-50 to-blue-50 p-2 sm:p-4">
+    <div className="p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
         {/* Dashboard Card */}
-        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 mb-4 sm:mb-6">
           {/* Date Selector */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Datum</label>
             <div className="flex gap-2 items-stretch max-w-sm">
               <button
                 onClick={() => {
@@ -154,7 +154,7 @@ export function JournalPage() {
                   date.setDate(date.getDate() - 1);
                   setSelectedDate(date.toISOString().split('T')[0]);
                 }}
-                className="w-12 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xl font-medium transition-colors flex items-center justify-center flex-shrink-0"
+                className="w-12 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xl font-medium transition-colors flex items-center justify-center flex-shrink-0"
                 title="Vorige dag"
               >
                 ‹
@@ -163,7 +163,7 @@ export function JournalPage() {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="flex-1 min-w-0 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100"
               />
               <button
                 onClick={() => {
@@ -171,7 +171,7 @@ export function JournalPage() {
                   date.setDate(date.getDate() + 1);
                   setSelectedDate(date.toISOString().split('T')[0]);
                 }}
-                className="w-12 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xl font-medium transition-colors flex items-center justify-center flex-shrink-0"
+                className="w-12 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xl font-medium transition-colors flex items-center justify-center flex-shrink-0"
                 title="Volgende dag"
               >
                 ›
@@ -183,8 +183,8 @@ export function JournalPage() {
           <div className="grid grid-cols-2 gap-3 mb-6">
             {/* Calorieën */}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Calorieën</div>
-              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Calorieën</div>
+              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.calories > goals.calories ? 'bg-red-500' : 'bg-blue-500'}`}
                   style={{ width: `${Math.min((totals.calories / goals.calories) * 100, 100)}%` }}
@@ -199,8 +199,8 @@ export function JournalPage() {
 
             {/* Eiwit */}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Eiwit</div>
-              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Eiwit</div>
+              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.protein < goals.protein ? 'bg-orange-500' : 'bg-green-500'}`}
                   style={{ width: `${Math.min((totals.protein / goals.protein) * 100, 100)}%` }}
@@ -215,8 +215,8 @@ export function JournalPage() {
 
             {/* Koolhydraten */}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Koolhydraten</div>
-              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Koolhydraten</div>
+              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.carbohydrates > limits.carbohydrates ? 'bg-red-500' : 'bg-amber-500'}`}
                   style={{ width: `${Math.min((totals.carbohydrates / limits.carbohydrates) * 100, 100)}%` }}
@@ -231,8 +231,8 @@ export function JournalPage() {
 
             {/* Suikers */}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Suikers</div>
-              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Suikers</div>
+              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.sugars > limits.sugars ? 'bg-red-500' : 'bg-yellow-500'}`}
                   style={{ width: `${Math.min((totals.sugars / limits.sugars) * 100, 100)}%` }}
@@ -247,8 +247,8 @@ export function JournalPage() {
 
             {/* Totaal vet */}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Totaal vet</div>
-              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Totaal vet</div>
+              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.fat > limits.fat ? 'bg-red-500' : 'bg-gray-500'}`}
                   style={{ width: `${Math.min((totals.fat / limits.fat) * 100, 100)}%` }}
@@ -263,8 +263,8 @@ export function JournalPage() {
 
             {/* Verzadigd vet */}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Verzadigd vet</div>
-              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Verzadigd vet</div>
+              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.saturatedFat > limits.saturatedFat ? 'bg-red-500' : 'bg-green-500'}`}
                   style={{ width: `${Math.min((totals.saturatedFat / limits.saturatedFat) * 100, 100)}%` }}
@@ -279,8 +279,8 @@ export function JournalPage() {
 
             {/* Vezels */}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Vezels</div>
-              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Vezels</div>
+              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.fiber < limits.fiber ? 'bg-orange-500' : 'bg-green-500'}`}
                   style={{ width: `${Math.min((totals.fiber / limits.fiber) * 100, 100)}%` }}
@@ -295,8 +295,8 @@ export function JournalPage() {
 
             {/* Natrium */}
             <div>
-              <div className="text-xs font-medium text-gray-600 mb-1">Natrium</div>
-              <div className="relative w-full bg-gray-200 rounded-lg h-8 overflow-hidden">
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Natrium</div>
+              <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
                   className={`absolute inset-0 transition-all ${totals.sodium > limits.sodium ? 'bg-red-500' : 'bg-green-500'}`}
                   style={{ width: `${Math.min((totals.sodium / limits.sodium) * 100, 100)}%` }}
@@ -313,7 +313,7 @@ export function JournalPage() {
           {/* Quick Add Templates */}
           {recentTemplates.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">⚡ Snel toevoegen</h3>
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">⚡ Snel toevoegen</h3>
               <div className="flex gap-2 overflow-x-auto pb-2">
                 {recentTemplates.map(template => {
                   const totals = calculateTemplateTotals(template);
@@ -321,11 +321,11 @@ export function JournalPage() {
                     <button
                       key={template.id}
                       onClick={() => handleQuickAdd(template)}
-                      className="flex-shrink-0 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg p-3 transition min-w-[160px]"
+                      className="flex-shrink-0 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:hover:bg-blue-800 border border-blue-200 dark:border-blue-700 rounded-lg p-3 transition min-w-[160px]"
                     >
-                      <div className="font-medium text-sm text-gray-800 mb-1">{template.name}</div>
-                      <div className="text-xs text-gray-600">{template.category}</div>
-                      <div className="text-xs text-blue-600 mt-1">
+                      <div className="font-medium text-sm text-gray-800 dark:text-gray-100 mb-1">{template.name}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">{template.category}</div>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                         {totals.calories} kcal • {totals.protein.toFixed(0)}g eiw
                       </div>
                     </button>
@@ -344,18 +344,18 @@ export function JournalPage() {
         </div>
 
         {/* Today's Meals */}
-        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Maaltijden</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Maaltijden</h2>
           {todayEntries.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">Nog geen maaltijden toegevoegd</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">Nog geen maaltijden toegevoegd</p>
           ) : (
             <div className="space-y-3">
               {todayEntries.map(entry => (
-                <div key={entry.id} className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100">
+                <div key={entry.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600">
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-800">{entry.time} - {entry.name}</div>
-                      <div className="text-xs text-gray-500 mt-1 break-words">
+                      <div className="font-semibold text-gray-800 dark:text-gray-100">{entry.time} - {entry.name}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words">
                         {entry.calories} kcal • {entry.protein}g eiw • {entry.carbohydrates}g koolh • {entry.sugars}g suik • {entry.saturatedFat}g v.vet • {entry.fiber}g vez • {entry.sodium}mg natr
                       </div>
                     </div>
@@ -390,14 +390,14 @@ export function JournalPage() {
 
           {/* Historical Data Section - Collapsible */}
           {(previousDayData.entries.length > 0 || weekAverage) && (
-            <div className="mt-6 border-t pt-4">
+            <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
               <button
                 onClick={() => setShowHistoricalData(!showHistoricalData)}
-                className="flex items-center justify-between w-full px-3 py-2 mb-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center justify-between w-full px-3 py-2 mb-3 bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors"
                 aria-label="Toggle historische data"
               >
-                <span className="text-sm font-medium text-gray-700">Historische data</span>
-                <span className="text-gray-500 text-lg transition-transform" style={{ transform: showHistoricalData ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Historische data</span>
+                <span className="text-gray-500 dark:text-gray-400 text-lg transition-transform" style={{ transform: showHistoricalData ? 'rotate(180deg)' : 'rotate(0deg)' }}>
                   ▼
                 </span>
               </button>
@@ -406,29 +406,29 @@ export function JournalPage() {
                 <div className="space-y-4">
                   {/* Previous Day */}
                   {previousDayData.entries.length > 0 && (
-                    <div className="bg-blue-50 rounded-lg p-4">
+                    <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-4">
                       <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-semibold text-gray-800">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-100">
                           Gisteren ({new Date(previousDayData.date).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' })})
                         </h4>
-                        <span className="text-sm text-gray-600">{previousDayData.entries.length} maaltijden</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{previousDayData.entries.length} maaltijden</span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                         <div>
-                          <span className="text-gray-600">Calorieën:</span>
-                          <span className="font-semibold ml-1">{previousDayData.totals.calories}</span>
+                          <span className="text-gray-600 dark:text-gray-400">Calorieën:</span>
+                          <span className="font-semibold ml-1 dark:text-gray-100">{previousDayData.totals.calories}</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Eiwit:</span>
-                          <span className="font-semibold ml-1">{previousDayData.totals.protein.toFixed(1)}g</span>
+                          <span className="text-gray-600 dark:text-gray-400">Eiwit:</span>
+                          <span className="font-semibold ml-1 dark:text-gray-100">{previousDayData.totals.protein.toFixed(1)}g</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Koolh.:</span>
-                          <span className="font-semibold ml-1">{previousDayData.totals.carbohydrates.toFixed(1)}g</span>
+                          <span className="text-gray-600 dark:text-gray-400">Koolh.:</span>
+                          <span className="font-semibold ml-1 dark:text-gray-100">{previousDayData.totals.carbohydrates.toFixed(1)}g</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Vezels:</span>
-                          <span className="font-semibold ml-1">{previousDayData.totals.fiber.toFixed(1)}g</span>
+                          <span className="text-gray-600 dark:text-gray-400">Vezels:</span>
+                          <span className="font-semibold ml-1 dark:text-gray-100">{previousDayData.totals.fiber.toFixed(1)}g</span>
                         </div>
                       </div>
                     </div>
@@ -436,27 +436,27 @@ export function JournalPage() {
 
                   {/* Last Week Average */}
                   {weekAverage && (
-                    <div className="bg-green-50 rounded-lg p-4">
+                    <div className="bg-green-50 dark:bg-green-900 rounded-lg p-4">
                       <div className="flex justify-between items-center mb-3">
-                        <h4 className="font-semibold text-gray-800">Gemiddelde afgelopen week</h4>
-                        <span className="text-sm text-gray-600">{weekAverage.daysWithData} van 7 dagen</span>
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-100">Gemiddelde afgelopen week</h4>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{weekAverage.daysWithData} van 7 dagen</span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                         <div>
-                          <span className="text-gray-600">Calorieën:</span>
-                          <span className="font-semibold ml-1">{weekAverage.calories}</span>
+                          <span className="text-gray-600 dark:text-gray-400">Calorieën:</span>
+                          <span className="font-semibold ml-1 dark:text-gray-100">{weekAverage.calories}</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Eiwit:</span>
-                          <span className="font-semibold ml-1">{weekAverage.protein}g</span>
+                          <span className="text-gray-600 dark:text-gray-400">Eiwit:</span>
+                          <span className="font-semibold ml-1 dark:text-gray-100">{weekAverage.protein}g</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Koolh.:</span>
-                          <span className="font-semibold ml-1">{weekAverage.carbohydrates}g</span>
+                          <span className="text-gray-600 dark:text-gray-400">Koolh.:</span>
+                          <span className="font-semibold ml-1 dark:text-gray-100">{weekAverage.carbohydrates}g</span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Vezels:</span>
-                          <span className="font-semibold ml-1">{weekAverage.fiber}g</span>
+                          <span className="text-gray-600 dark:text-gray-400">Vezels:</span>
+                          <span className="font-semibold ml-1 dark:text-gray-100">{weekAverage.fiber}g</span>
                         </div>
                       </div>
                     </div>

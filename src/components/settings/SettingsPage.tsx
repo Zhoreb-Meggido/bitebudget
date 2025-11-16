@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useSettings } from '@/hooks';
-import type { UserSettings } from '@/types/database.types';
+import { useTheme } from '@/contexts/ThemeContext';
+import type { UserSettings, ThemeMode } from '@/types/database.types';
 import { CloudSyncSettings } from './CloudSyncSettings';
 
 export function SettingsPage() {
   const { settings, updateSettings, saveSettings, resetSettings, reloadSettings } = useSettings();
+  const { theme, setTheme } = useTheme();
   const [localSettings, setLocalSettings] = useState<UserSettings>(settings);
   const [hasChanges, setHasChanges] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -63,99 +65,121 @@ export function SettingsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Instellingen</h1>
-        <p className="text-gray-600 mt-2">Pas je dagelijkse doelen en limieten aan</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Instellingen</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">Pas je dagelijkse doelen en limieten aan</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+        {/* Weergave */}
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Weergave</h2>
+          <div className="max-w-xs">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Thema
+            </label>
+            <select
+              value={theme}
+              onChange={(e) => setTheme(e.target.value as ThemeMode)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="light">Licht</option>
+              <option value="dark">Donker</option>
+              <option value="system">Systeem</option>
+            </select>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Systeem volgt automatisch de voorkeuren van je apparaat
+            </p>
+          </div>
+        </div>
+
         {/* Dagelijkse Doelen */}
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Dagelijkse Doelen</h2>
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Dagelijkse Doelen</h2>
 
           {/* All 8 settings in one grid: 4 rows x 2 cols on mobile, 2 rows x 4 cols on desktop */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Calorieën (kcal)</label>
+              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Calorieën (kcal)</label>
               <input
                 type="number"
                 inputMode="decimal"
                 value={localSettings.calories}
                 onChange={(e) => handleChange('calories', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Eiwit (g) min</label>
+              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Eiwit (g) min</label>
               <input
                 type="number"
                 inputMode="decimal"
                 value={localSettings.protein}
                 onChange={(e) => handleChange('protein', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Koolhydraten (g)</label>
+              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Koolhydraten (g)</label>
               <input
                 type="number"
                 value={localSettings.carbohydratesMax}
                 onChange={(e) => handleChange('carbohydratesMax', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Suikers (g)</label>
+              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Suikers (g)</label>
               <input
                 type="number"
                 value={localSettings.sugarsMax}
                 onChange={(e) => handleChange('sugarsMax', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Vet (g)</label>
+              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Vet (g)</label>
               <input
                 type="number"
                 value={localSettings.fatMax}
                 onChange={(e) => handleChange('fatMax', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Verzadigd Vet (g)</label>
+              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Verzadigd Vet (g)</label>
               <input
                 type="number"
                 value={localSettings.saturatedFatMax}
                 onChange={(e) => handleChange('saturatedFatMax', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Vezels (g) min</label>
+              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Vezels (g) min</label>
               <input
                 type="number"
                 value={localSettings.fiberMin}
                 onChange={(e) => handleChange('fiberMin', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Natrium (mg)</label>
+              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Natrium (mg)</label>
               <input
                 type="number"
                 value={localSettings.sodiumMax}
                 onChange={(e) => handleChange('sodiumMax', e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
         </div>
 
         {/* Gewicht Doel */}
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Gewicht</h2>
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Gewicht</h2>
           <div className="max-w-xs">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Streefgewicht (kg)
             </label>
             <input
@@ -163,13 +187,13 @@ export function SettingsPage() {
               step="0.1"
               value={localSettings.targetWeight}
               onChange={(e) => handleChange('targetWeight', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="p-4 sm:p-6 bg-gray-50 border-b border-gray-200">
+        <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex gap-3 flex-wrap">
               <button
@@ -179,7 +203,7 @@ export function SettingsPage() {
                   px-4 py-2 rounded-md font-medium transition-colors
                   ${hasChanges && saveStatus !== 'saving'
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                   }
                 `}
               >
@@ -189,20 +213,20 @@ export function SettingsPage() {
               {hasChanges && (
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   Annuleren
                 </button>
               )}
 
               {saveStatus === 'saved' && (
-                <span className="flex items-center text-green-600 text-sm font-medium">
+                <span className="flex items-center text-green-600 dark:text-green-400 text-sm font-medium">
                   ✓ Opgeslagen
                 </span>
               )}
 
               {saveStatus === 'error' && (
-                <span className="flex items-center text-red-600 text-sm font-medium">
+                <span className="flex items-center text-red-600 dark:text-red-400 text-sm font-medium">
                   ✗ Fout bij opslaan
                 </span>
               )}
@@ -210,7 +234,7 @@ export function SettingsPage() {
 
             <button
               onClick={handleReset}
-              className="px-4 py-2 text-red-600 hover:text-red-700 font-medium"
+              className="px-4 py-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
             >
               Reset naar Standaard
             </button>
@@ -218,7 +242,7 @@ export function SettingsPage() {
         </div>
 
         {/* Cloud Sync */}
-        <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-white rounded-b-lg">
+        <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950 dark:to-gray-800 rounded-b-lg">
           <CloudSyncSettings />
         </div>
       </div>

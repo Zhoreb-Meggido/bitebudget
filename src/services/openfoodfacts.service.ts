@@ -35,6 +35,28 @@ class OpenFoodFactsService {
   }
 
   /**
+   * Parse numeric value from OpenFoodFacts (handles both numbers and strings with comma as decimal separator)
+   * Returns 0 for undefined/null/invalid values
+   */
+  private parseNumericValue(value: any): number {
+    if (value === undefined || value === null) return 0;
+
+    // If it's already a number, return it
+    if (typeof value === 'number') {
+      return isNaN(value) ? 0 : value;
+    }
+
+    // If it's a string, replace comma with dot and parse
+    if (typeof value === 'string') {
+      const cleaned = value.replace(',', '.');
+      const parsed = parseFloat(cleaned);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+
+    return 0;
+  }
+
+  /**
    * Lookup product by barcode (EAN-13)
    *
    * Note: We don't send custom headers to avoid CORS preflight issues in Firefox.
@@ -114,18 +136,21 @@ class OpenFoodFactsService {
         return null;
       }
 
-      // Extract nutrition data (with fallbacks to 0)
-      const calories = nutriments['energy-kcal_100g'] || 0;
-      const protein = nutriments.proteins_100g || 0;
-      const carbohydrates = nutriments.carbohydrates_100g || 0;
-      const sugars = nutriments.sugars_100g || 0;
-      const fat = nutriments.fat_100g || 0;
-      const saturatedFat = nutriments['saturated-fat_100g'] || 0;
-      const fiber = nutriments.fiber_100g || 0;
+      // Extract nutrition data - parse all values to handle comma decimal separators
+      // Required fields default to 0
+      const calories = this.parseNumericValue(nutriments['energy-kcal_100g']);
+      const protein = this.parseNumericValue(nutriments.proteins_100g);
+      const fat = this.parseNumericValue(nutriments.fat_100g);
+
+      // Optional fields - only include if they exist and are non-zero
+      const carbohydratesValue = this.parseNumericValue(nutriments.carbohydrates_100g);
+      const sugarsValue = this.parseNumericValue(nutriments.sugars_100g);
+      const saturatedFatValue = this.parseNumericValue(nutriments['saturated-fat_100g']);
+      const fiberValue = this.parseNumericValue(nutriments.fiber_100g);
 
       // Sodium: OFF uses grams, we use mg (1g = 1000mg)
-      const sodiumGrams = nutriments.sodium_100g || 0;
-      const sodium = sodiumGrams * 1000;
+      // Only include if present
+      const sodiumGrams = this.parseNumericValue(nutriments.sodium_100g);
 
       // Choose best available image
       const image_url = offProduct.image_front_small_url ||
@@ -139,12 +164,12 @@ class OpenFoodFactsService {
         name: offProduct.product_name,
         calories,
         protein,
-        carbohydrates,
-        sugars,
+        carbohydrates: carbohydratesValue,
+        sugars: sugarsValue,
         fat,
-        saturatedFat,
-        fiber,
-        sodium,
+        saturatedFat: saturatedFatValue,
+        fiber: fiberValue,
+        sodium: sodiumGrams > 0 ? Math.round(sodiumGrams * 1000) : 0,
         favorite: false,
         created_at: now,
         updated_at: now,

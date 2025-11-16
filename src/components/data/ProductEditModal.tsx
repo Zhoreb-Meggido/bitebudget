@@ -19,6 +19,24 @@ function parseDecimal(value: string): number {
 }
 
 /**
+ * Parse optional number - returns undefined for empty values, 0 for "0"
+ */
+function parseOptionalDecimal(value: string): number | undefined {
+  if (!value || value.trim() === '') return undefined;
+  const parsed = parseFloat(value.replace(',', '.'));
+  return isNaN(parsed) ? undefined : parsed;
+}
+
+/**
+ * Parse optional integer - returns undefined for empty values, 0 for "0"
+ */
+function parseOptionalInt(value: string): number | undefined {
+  if (!value || value.trim() === '') return undefined;
+  const parsed = parseInt(value.replace(',', '.'));
+  return isNaN(parsed) ? undefined : parsed;
+}
+
+/**
  * Convert a number to string with dot as decimal separator (not comma)
  * This ensures the HTML input receives a valid format regardless of locale
  */
@@ -93,12 +111,12 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
         brand: formData.brand.trim() || undefined,
         calories: parseDecimal(formData.calories),
         protein: parseDecimal(formData.protein),
-        carbohydrates: formData.carbohydrates ? parseDecimal(formData.carbohydrates) : undefined,
-        sugars: formData.sugars ? parseDecimal(formData.sugars) : undefined,
+        carbohydrates: parseOptionalDecimal(formData.carbohydrates) ?? 0,
+        sugars: parseOptionalDecimal(formData.sugars) ?? 0,
         fat: parseDecimal(formData.fat),
-        saturatedFat: formData.saturatedFat ? parseDecimal(formData.saturatedFat) : undefined,
-        fiber: formData.fiber ? parseDecimal(formData.fiber) : undefined,
-        sodium: formData.sodium ? parseInt(formData.sodium.replace(',', '.')) : undefined,
+        saturatedFat: parseOptionalDecimal(formData.saturatedFat) ?? 0,
+        fiber: parseOptionalDecimal(formData.fiber) ?? 0,
+        sodium: parseOptionalInt(formData.sodium) ?? 0,
         favorite: formData.favorite,
       });
       onClose();
@@ -112,16 +130,16 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900">
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {product ? 'Product Bewerken' : 'Nieuw Product'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
           >
             ×
           </button>
@@ -132,26 +150,26 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
           {/* Name & Brand */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Naam *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Naam
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Merk
               </label>
               <input
                 type="text"
                 value={formData.brand}
                 onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -159,8 +177,8 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
           {/* Calories & Protein */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Calorieën (per 100g/ml) *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Calorieën (per 100g/ml)
               </label>
               <input
                 type="number"
@@ -168,13 +186,13 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 step="0.1"
                 value={formData.calories}
                 onChange={(e) => setFormData(prev => ({ ...prev, calories: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Eiwit (g) *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Eiwit (g)
               </label>
               <input
                 type="number"
@@ -182,7 +200,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 step="0.1"
                 value={formData.protein}
                 onChange={(e) => setFormData(prev => ({ ...prev, protein: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
@@ -191,7 +209,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
           {/* Carbs & Sugars */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Koolhydraten (g)
               </label>
               <input
@@ -200,11 +218,11 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 step="0.1"
                 value={formData.carbohydrates}
                 onChange={(e) => setFormData(prev => ({ ...prev, carbohydrates: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Suikers (g)
               </label>
               <input
@@ -213,7 +231,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 step="0.1"
                 value={formData.sugars}
                 onChange={(e) => setFormData(prev => ({ ...prev, sugars: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -221,8 +239,8 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
           {/* Fat & Saturated Fat */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Vet (g) *
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Vet (g)
               </label>
               <input
                 type="number"
@@ -230,12 +248,12 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 step="0.1"
                 value={formData.fat}
                 onChange={(e) => setFormData(prev => ({ ...prev, fat: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Verzadigd Vet (g)
               </label>
               <input
@@ -244,7 +262,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 step="0.1"
                 value={formData.saturatedFat}
                 onChange={(e) => setFormData(prev => ({ ...prev, saturatedFat: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -252,7 +270,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
           {/* Fiber & Sodium */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Vezels (g)
               </label>
               <input
@@ -261,11 +279,11 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 step="0.1"
                 value={formData.fiber}
                 onChange={(e) => setFormData(prev => ({ ...prev, fiber: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Natrium (mg)
               </label>
               <input
@@ -274,7 +292,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 step="1"
                 value={formData.sodium}
                 onChange={(e) => setFormData(prev => ({ ...prev, sodium: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -288,23 +306,23 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 onChange={(e) => setFormData(prev => ({ ...prev, favorite: e.target.checked }))}
                 className="rounded"
               />
-              <span className="text-sm font-medium text-gray-700">Favoriet</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Favoriet</span>
             </label>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="submit"
               disabled={isSaving}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600"
             >
               {isSaving ? 'Opslaan...' : 'Opslaan'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               Annuleren
             </button>

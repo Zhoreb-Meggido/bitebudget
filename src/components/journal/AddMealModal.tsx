@@ -17,6 +17,25 @@ function parseDecimal(value: string): number {
   return parseFloat(value.replace(',', '.')) || 0;
 }
 
+/**
+ * Parse optional number - returns 0 for empty values (since Entry fields are required)
+ * But handles comma separator
+ */
+function parseDecimalSafe(value: string): number {
+  if (!value || value.trim() === '') return 0;
+  const parsed = parseFloat(value.replace(',', '.'));
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Parse optional integer - returns 0 for empty values
+ */
+function parseIntSafe(value: string): number {
+  if (!value || value.trim() === '') return 0;
+  const parsed = parseInt(value.replace(',', '.'));
+  return isNaN(parsed) ? 0 : parsed;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -234,14 +253,14 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       date: selectedDate,
       time: manualMeal.time || getCurrentTime(),
       name: manualMeal.name,
-      calories: parseInt(manualMeal.calories.replace(',', '.')) || 0,
-      protein: parseDecimal(manualMeal.protein),
-      carbohydrates: parseDecimal(manualMeal.carbohydrates),
-      sugars: parseDecimal(manualMeal.sugars),
-      fat: parseDecimal(manualMeal.fat),
-      saturatedFat: parseDecimal(manualMeal.saturatedFat),
-      fiber: parseDecimal(manualMeal.fiber),
-      sodium: parseInt(manualMeal.sodium.replace(',', '.')) || 0,
+      calories: parseIntSafe(manualMeal.calories),
+      protein: parseDecimalSafe(manualMeal.protein),
+      carbohydrates: parseDecimalSafe(manualMeal.carbohydrates),
+      sugars: parseDecimalSafe(manualMeal.sugars),
+      fat: parseDecimalSafe(manualMeal.fat),
+      saturatedFat: parseDecimalSafe(manualMeal.saturatedFat),
+      fiber: parseDecimalSafe(manualMeal.fiber),
+      sodium: parseIntSafe(manualMeal.sodium),
     };
 
     if (isEditMode && editEntry && onUpdateMeal) {
@@ -259,14 +278,14 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         date: selectedDate,
         time: data.time || getCurrentTime(),
         name: data.name || 'Geïmporteerde maaltijd',
-        calories: parseInt(String(data.calories).replace(',', '.')) || 0,
-        protein: parseDecimal(String(data.protein)),
-        carbohydrates: parseDecimal(String(data.carbohydrates)),
-        sugars: parseDecimal(String(data.sugars)),
-        fat: parseDecimal(String(data.fat)),
-        saturatedFat: parseDecimal(String(data.saturatedFat)),
-        fiber: parseDecimal(String(data.fiber)),
-        sodium: parseInt(String(data.sodium).replace(',', '.')) || 0,
+        calories: parseIntSafe(String(data.calories)),
+        protein: parseDecimalSafe(String(data.protein)),
+        carbohydrates: parseDecimalSafe(String(data.carbohydrates)),
+        sugars: parseDecimalSafe(String(data.sugars)),
+        fat: parseDecimalSafe(String(data.fat)),
+        saturatedFat: parseDecimalSafe(String(data.saturatedFat)),
+        fiber: parseDecimalSafe(String(data.fiber)),
+        sodium: parseIntSafe(String(data.sodium)),
       });
       resetForm();
     } catch (e) {
@@ -354,13 +373,13 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Header - Fixed */}
-        <div className="bg-white border-b px-4 py-3 flex justify-between items-center rounded-t-xl flex-shrink-0">
-          <h3 className="text-lg sm:text-xl font-bold text-gray-800">{isEditMode ? 'Maaltijd bewerken' : 'Maaltijd toevoegen'}</h3>
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex justify-between items-center rounded-t-xl flex-shrink-0">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{isEditMode ? 'Maaltijd bewerken' : 'Maaltijd toevoegen'}</h3>
           <button
             onClick={resetForm}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 hover:text-gray-700 text-2xl"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-2xl"
             aria-label="Sluiten"
           >✕</button>
         </div>
@@ -372,7 +391,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-2 py-1.5 rounded-lg font-medium transition text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 min-h-[44px] ${tab === t ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+                className={`px-2 py-1.5 rounded-lg font-medium transition text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 min-h-[44px] ${tab === t ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
               >
                 <span className="text-base sm:text-lg">{t === 'products' ? '📦' : t === 'templates' ? '⭐' : t === 'manual' ? '✏️' : '📋'}</span>
                 <span className="leading-tight">{t === 'products' ? 'Prod' : t === 'templates' ? 'Templ' : t === 'manual' ? 'Hand' : 'JSON'}</span>
@@ -391,14 +410,14 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 value={productSearch}
                 onChange={(e) => setProductSearch(e.target.value)}
                 placeholder="🔍 Zoek product..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base text-gray-900 dark:text-gray-100"
               />
             </div>
 
             {/* Unified Products List - Selected items at top with inline editing */}
             <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-3">
               {sortedProducts.length === 0 ? (
-                <p className="text-center text-gray-500 py-8 text-sm">Geen producten gevonden</p>
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8 text-sm">Geen producten gevonden</p>
               ) : (
                 sortedProducts.map((product, idx) => {
                   if (!product.id) return null; // Skip products without ID
@@ -414,17 +433,17 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                       {/* Divider between selected and unselected */}
                       {showDivider && (
                         <div className="flex items-center gap-2 my-3 px-2">
-                          <div className="flex-1 border-t-2 border-blue-300"></div>
-                          <span className="text-xs text-gray-500 font-medium">Alle producten</span>
-                          <div className="flex-1 border-t-2 border-blue-300"></div>
+                          <div className="flex-1 border-t-2 border-blue-300 dark:border-blue-700"></div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Alle producten</span>
+                          <div className="flex-1 border-t-2 border-blue-300 dark:border-blue-700"></div>
                         </div>
                       )}
 
                       <label
                         className={`flex items-start gap-2 p-2.5 rounded-lg cursor-pointer transition mb-1 ${
                           isSelected
-                            ? 'bg-blue-50 border-2 border-blue-300'
-                            : 'hover:bg-gray-50 border-2 border-transparent'
+                            ? 'bg-blue-50 dark:bg-blue-900 border-2 border-blue-300 dark:border-blue-700'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-transparent'
                         }`}
                       >
                         {/* Checkbox */}
@@ -447,13 +466,13 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                         <div className="flex-1 min-w-0">
                           {/* Product name */}
                           <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="font-medium text-sm">
+                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
                               {product.favorite && '⭐ '}
                               {product.name}
-                              {product.brand && <span className="text-gray-500 text-xs"> ({product.brand})</span>}
+                              {product.brand && <span className="text-gray-500 dark:text-gray-400 text-xs"> ({product.brand})</span>}
                             </span>
                             {!isSelected && (
-                              <span className="text-xs text-gray-500 flex-shrink-0">{product.calories} kcal</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">{product.calories} kcal</span>
                             )}
                           </div>
 
@@ -472,10 +491,10 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                                     onFocus={(e) => e.target.select()}
                                     onClick={(e) => e.stopPropagation()}
                                     placeholder="100"
-                                    className="w-20 px-3 py-2 border rounded-lg text-center text-sm min-h-[44px]"
+                                    className="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-center text-sm min-h-[44px] text-gray-900 dark:text-gray-100"
                                     min="1"
                                   />
-                                  <span className="text-sm text-gray-600 font-medium">g</span>
+                                  <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">g</span>
                                 </div>
 
                                 {/* Portion dropdown if available */}
@@ -496,7 +515,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                                       }
                                     }}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="px-3 py-2 border rounded-lg text-xs min-h-[44px] bg-white"
+                                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-xs min-h-[44px] bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                   >
                                     <option value="custom">Handmatig</option>
                                     {portions.map(p => (
@@ -518,7 +537,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                                       setAddPortionForProduct(product.name);
                                       setShowAddPortionModal(true);
                                     }}
-                                    className="px-3 py-2 text-xs text-blue-600 hover:text-blue-800 underline whitespace-nowrap min-h-[44px] flex items-center"
+                                    className="px-3 py-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline whitespace-nowrap min-h-[44px] flex items-center"
                                   >
                                     + Portie
                                   </button>
@@ -556,28 +575,28 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
           <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-4">
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium mb-1">Tijd (optioneel)</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Tijd (optioneel)</label>
                 <input
                   type="time"
                   value={manualMeal.time}
                   onChange={(e) => setManualMeal({...manualMeal, time: e.target.value})}
-                  className="w-full px-4 py-2 border rounded-lg min-h-[44px]"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg min-h-[44px] text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Naam</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Naam</label>
                 <input
                   type="text"
                   value={manualMeal.name}
                   onChange={(e) => setManualMeal({...manualMeal, name: e.target.value})}
                   placeholder="Bijv. Lunch"
-                  className="w-full px-4 py-2 border rounded-lg text-base min-h-[44px]"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {(['calories', 'protein', 'carbohydrates', 'sugars', 'fat', 'saturatedFat', 'fiber', 'sodium'] as const).map(field => (
                   <div key={field}>
-                    <label className="block text-xs font-medium mb-1">
+                    <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
                       {field === 'calories' ? 'Calorieën' : field === 'protein' ? 'Eiwit (g)' : field === 'carbohydrates' ? 'Koolh (g)' : field === 'sugars' ? 'Suikers (g)' : field === 'fat' ? 'Vet (g)' : field === 'saturatedFat' ? 'Verz. vet (g)' : field === 'fiber' ? 'Vezels (g)' : 'Natrium (mg)'}
                     </label>
                     <input
@@ -588,7 +607,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                       onChange={(e) => setManualMeal({...manualMeal, [field]: e.target.value})}
                       onFocus={(e) => e.target.select()}
                       placeholder="0"
-                      className="w-full px-3 py-2 border rounded-lg min-h-[44px] text-base"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg min-h-[44px] text-base text-gray-900 dark:text-gray-100"
                     />
                   </div>
                 ))}
@@ -603,7 +622,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
             <textarea
               value={mealJson}
               onChange={(e) => setMealJson(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg font-mono text-sm h-64"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg font-mono text-sm h-64 text-gray-900 dark:text-gray-100"
               placeholder='{"time": "12:00", "name": "Lunch", "calories": 500, ...}'
             />
           </div>
@@ -619,7 +638,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 value={templateSearch}
                 onChange={(e) => setTemplateSearch(e.target.value)}
                 placeholder="🔍 Zoek template..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base text-gray-900 dark:text-gray-100"
               />
             </div>
 
@@ -628,23 +647,23 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
               {/* Recent gebruikt */}
               {recentTemplates.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Recent gebruikt</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Recent gebruikt</h4>
                   <div className="space-y-2">
                     {recentTemplates.map(template => {
                       const totals = calculateTemplateTotals(template);
                       return (
-                        <div key={template.id} className="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:bg-blue-100 transition">
+                        <div key={template.id} className="bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 rounded-lg p-3 hover:bg-blue-100 dark:hover:bg-blue-800 transition">
                           <div className="flex items-start gap-2">
                             <button
                               onClick={() => handleLoadTemplate(template)}
                               className="flex-1 text-left min-h-[44px] flex items-center"
                             >
                               <div>
-                                <div className="font-semibold text-gray-800">{template.name}</div>
-                                <div className="text-xs text-gray-600 mt-1">
+                                <div className="font-semibold text-gray-900 dark:text-gray-100">{template.name}</div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                   {template.category} • {template.products.length} producten
                                 </div>
-                                <div className="text-xs text-blue-600 mt-1">
+                                <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                                   {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
                                 </div>
                               </div>
@@ -676,23 +695,23 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
               {/* Favorieten */}
               {favoriteTemplates.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">⭐ Favorieten</h4>
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">⭐ Favorieten</h4>
                   <div className="space-y-2">
                     {favoriteTemplates.map(template => {
                       const totals = calculateTemplateTotals(template);
                       return (
-                        <div key={template.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:bg-yellow-100 transition">
+                        <div key={template.id} className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 hover:bg-yellow-100 dark:hover:bg-yellow-800 transition">
                           <div className="flex items-start gap-2">
                             <button
                               onClick={() => handleLoadTemplate(template)}
                               className="flex-1 text-left min-h-[44px] flex items-center"
                             >
                               <div>
-                                <div className="font-semibold text-gray-800">{template.name}</div>
-                                <div className="text-xs text-gray-600 mt-1">
+                                <div className="font-semibold text-gray-900 dark:text-gray-100">{template.name}</div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                   {template.category} • {template.products.length} producten
                                 </div>
-                                <div className="text-xs text-yellow-700 mt-1">
+                                <div className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
                                   {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
                                 </div>
                               </div>
@@ -723,9 +742,9 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
 
               {/* Alle templates */}
               <div>
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Alle templates</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Alle templates</h4>
                 {filteredTemplates.length === 0 ? (
-                  <div className="text-center text-gray-500 py-8">
+                  <div className="text-center text-gray-500 dark:text-gray-400 py-8">
                     <p className="mb-2">Nog geen templates opgeslagen</p>
                     <p className="text-sm">Ga naar de Producten tab en klik op "Opslaan als template"</p>
                   </div>
@@ -734,18 +753,18 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                     {filteredTemplates.map(template => {
                       const totals = calculateTemplateTotals(template);
                       return (
-                        <div key={template.id} className="bg-gray-50 border border-gray-200 rounded-lg p-3 hover:bg-gray-100 transition">
+                        <div key={template.id} className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-600 transition">
                           <div className="flex items-start gap-2">
                             <button
                               onClick={() => handleLoadTemplate(template)}
                               className="flex-1 text-left min-h-[44px] flex items-center"
                             >
                               <div>
-                                <div className="font-semibold text-gray-800">{template.name}</div>
-                                <div className="text-xs text-gray-600 mt-1">
+                                <div className="font-semibold text-gray-900 dark:text-gray-100">{template.name}</div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                   {template.category} • {template.products.length} producten
                                 </div>
-                                <div className="text-xs text-gray-700 mt-1">
+                                <div className="text-xs text-gray-700 dark:text-gray-300 mt-1">
                                   {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
                                 </div>
                               </div>
@@ -778,22 +797,22 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
         )}
 
         {/* Footer - Sticky Action Buttons */}
-        <div className="border-t bg-white px-4 py-3 rounded-b-xl flex-shrink-0">
+        <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 rounded-b-xl flex-shrink-0">
           {tab === 'products' && (
             <div className="flex flex-col gap-2">
               {/* Mobile: vertical stack, Desktop (lg+): horizontal row with all 3 items */}
               <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
                 {/* Tijd input - compact on desktop */}
                 <div className="flex items-center gap-2 lg:w-auto">
-                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Tijd:</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Tijd:</label>
                   <input
                     type="time"
                     value={mealTime}
                     onChange={(e) => setMealTime(e.target.value)}
                     placeholder={getCurrentTime()}
-                    className="flex-1 lg:w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm min-h-[44px]"
+                    className="flex-1 lg:w-32 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-sm min-h-[44px] text-gray-900 dark:text-gray-100"
                   />
-                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {mealTime === '' && '(nu)'}
                   </span>
                 </div>
@@ -804,7 +823,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                   disabled={selectedProducts.length === 0}
                   className={`flex-1 px-4 py-2.5 rounded-lg font-semibold transition min-h-[44px] ${
                     selectedProducts.length === 0
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                       : 'bg-green-600 text-white hover:bg-green-700'
                   }`}
                 >
@@ -815,7 +834,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 {selectedProducts.length > 0 && (
                   <button
                     onClick={() => setShowSaveTemplateModal(true)}
-                    className="lg:flex-1 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium hover:bg-blue-200 transition min-h-[44px]"
+                    className="lg:flex-1 px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition min-h-[44px]"
                   >
                     💾 <span className="hidden lg:inline">Opslaan als </span>Template
                   </button>
@@ -845,28 +864,28 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       {/* Save Template Modal */}
       {showSaveTemplateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Template opslaan</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Template opslaan</h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Naam template</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Naam template</label>
                 <input
                   type="text"
                   value={newTemplateName}
                   onChange={(e) => setNewTemplateName(e.target.value)}
                   placeholder="Bijv. Ontbijt standaard"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Categorie</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categorie</label>
                 <select
                   value={newTemplateCategory}
                   onChange={(e) => setNewTemplateCategory(e.target.value as MealCategory)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
                 >
                   <option value="ontbijt">Ontbijt</option>
                   <option value="lunch">Lunch</option>
@@ -877,9 +896,9 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                 </select>
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-sm text-gray-700 mb-1">Geselecteerde producten:</p>
-                <ul className="text-xs text-gray-600 space-y-1">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Geselecteerde producten:</p>
+                <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                   {selectedProducts.map(prodId => {
                     const product = products.find(p => p.id === prodId);
                     if (!product) return null;
@@ -898,7 +917,7 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
                   setNewTemplateName('');
                   setNewTemplateCategory('anders');
                 }}
-                className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 min-h-[44px]"
+                className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 min-h-[44px]"
               >
                 Annuleren
               </button>
@@ -916,8 +935,8 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       {/* Add Portion Modal */}
       {showAddPortionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Nieuwe portie voor {addPortionForProduct}</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Nieuwe portie voor {addPortionForProduct}</h3>
 
             <AddPortionForm
               productName={addPortionForProduct}
@@ -985,36 +1004,36 @@ function AddPortionForm({ productName, onSave, onCancel }: {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Naam portie</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Naam portie</label>
         <input
           type="text"
           value={portionName}
           onChange={(e) => setPortionName(e.target.value)}
           placeholder="Bijv. 1 snee, 1 kop"
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
+          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
           autoFocus
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Hoeveelheid</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hoeveelheid</label>
           <input
             type="number"
             inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="1"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
             min="1"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Eenheid</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Eenheid</label>
           <select
             value={unit}
             onChange={(e) => setUnit(e.target.value as typeof unit)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
           >
             <option value="g">gram (g)</option>
             <option value="ml">milliliter (ml)</option>
@@ -1027,21 +1046,21 @@ function AddPortionForm({ productName, onSave, onCancel }: {
 
       {unit === 'stuks' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Grammen per stuk</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grammen per stuk</label>
           <input
             type="number"
             inputMode="decimal"
             value={gramsPerUnit}
             onChange={(e) => setGramsPerUnit(e.target.value)}
             placeholder="Bijv. 35"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg text-base min-h-[44px]"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
             min="1"
           />
         </div>
       )}
 
-      <div className="bg-blue-50 rounded-lg p-3">
-        <p className="text-sm text-gray-700">
+      <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-3">
+        <p className="text-sm text-gray-700 dark:text-gray-300">
           Totaal: <span className="font-semibold">{calculateGrams()}g</span>
         </p>
       </div>
@@ -1049,7 +1068,7 @@ function AddPortionForm({ productName, onSave, onCancel }: {
       <div className="flex gap-3">
         <button
           onClick={onCancel}
-          className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 min-h-[44px]"
+          className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 min-h-[44px]"
         >
           Annuleren
         </button>

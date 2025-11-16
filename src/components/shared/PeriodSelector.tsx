@@ -201,23 +201,18 @@ export function PeriodSelector({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">
-        {showExportButtons ? 'Rapportage' : 'Periode Selectie'}
-      </h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          {showExportButtons ? 'Rapportage' : 'Periode Selectie'}
+        </h2>
 
-      <div className="space-y-4">
-        {/* Time Range Selector with Export Buttons */}
-        <div className="flex flex-col lg:flex-row lg:items-end gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tijdsvak
-            </label>
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              className="w-full lg:w-64 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <select
+            value={timeRange}
+            onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+            className="w-full sm:w-64 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
               {/* Dashboard mode: show visualization-friendly options */}
               {!showExportButtons && (
                 <>
@@ -247,51 +242,53 @@ export function PeriodSelector({
                   <option value="custom-months">Aangepast - Maand(en)</option>
                 </>
               )}
-            </select>
-          </div>
+          </select>
 
           {/* Export Buttons - inline on desktop, below on mobile */}
           {showExportButtons && (
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleExport('csv')}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium whitespace-nowrap"
+                className="px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-800 font-medium whitespace-nowrap"
               >
                 📊 CSV
               </button>
               <button
                 onClick={() => handleExport('pdf')}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium whitespace-nowrap"
+                className="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-800 font-medium whitespace-nowrap"
               >
                 📄 PDF
               </button>
             </div>
           )}
         </div>
+      </div>
+
+      <div className="space-y-4">
 
         {/* Custom Date Range */}
         {timeRange === 'custom' && (
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Van
               </label>
               <input
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Tot
               </label>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -300,27 +297,27 @@ export function PeriodSelector({
         {/* Custom Month Selection */}
         {timeRange === 'custom-months' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Selecteer maand(en) voor maandrapportage
             </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto border border-gray-200 rounded-md p-4 bg-gray-50">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-md p-4 bg-gray-50 dark:bg-gray-900">
               {getAvailableMonths().map(month => (
                 <label
                   key={month.value}
-                  className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-2 rounded"
+                  className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded"
                 >
                   <input
                     type="checkbox"
                     checked={selectedMonths.includes(month.value)}
                     onChange={() => toggleMonth(month.value)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
                   />
-                  <span className="text-sm text-gray-700">{month.label}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{month.label}</span>
                 </label>
               ))}
             </div>
             {selectedMonths.length > 0 && (
-              <p className="text-xs text-gray-600 mt-2">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                 {selectedMonths.length} maand(en) geselecteerd
               </p>
             )}
@@ -329,7 +326,7 @@ export function PeriodSelector({
 
         {/* Help text */}
         {showExportButtons && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 dark:text-gray-400">
             Genereer een overzicht van je voedingsjournaal met alle 8 metrics. CSV voor Excel, PDF met weekoverzichten.
           </p>
         )}

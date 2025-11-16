@@ -171,8 +171,10 @@ class GarminImportService {
 
   /**
    * Parse Intensity Minutes CSV
-   * Format: Intensity Minutes Weekly Total
-   *         ,Actual,Value
+   * Supports both weekly and daily formats:
+   * - Weekly: Intensity Minutes Weekly Total (7-day intervals, distributed across 7 days)
+   * - Daily: Actual daily values (1-day intervals, use as-is)
+   * Format: ,Actual,Value
    *         2024-11-04,335,360
    */
   private parseIntensityCSV(lines: string[]): ParsedGarminData[] {
@@ -189,6 +191,30 @@ class GarminImportService {
 
     if (headerIndex === -1) return result;
 
+    // Detect if data is weekly or daily by checking date intervals
+    let isWeeklyData = false;
+    if (lines.length > headerIndex + 2) {
+      const firstParts = lines[headerIndex + 1].split(',');
+      const secondParts = lines[headerIndex + 2].split(',');
+
+      if (firstParts.length >= 2 && secondParts.length >= 2) {
+        const firstDate = this.parseDate(firstParts[0]);
+        const secondDate = this.parseDate(secondParts[0]);
+
+        if (firstDate && secondDate) {
+          // Calculate day difference
+          const date1 = new Date(firstDate);
+          const date2 = new Date(secondDate);
+          const daysDiff = Math.abs(Math.floor((date2.getTime() - date1.getTime()) / (1000 * 60 * 60 * 24)));
+
+          // If interval is 7 days (or 6-8 to account for slight variations), it's weekly data
+          isWeeklyData = daysDiff >= 6 && daysDiff <= 8;
+
+          console.log(`📊 Intensity Minutes: Date interval = ${daysDiff} days → ${isWeeklyData ? 'WEEKLY' : 'DAILY'} format`);
+        }
+      }
+    }
+
     // Parse data rows
     for (let i = headerIndex + 1; i < lines.length; i++) {
       const parts = lines[i].split(',');
@@ -197,10 +223,13 @@ class GarminImportService {
       const date = this.parseDate(parts[0]);
       if (!date) continue;
 
-      const minutes = parseFloat(parts[1]) || 0;
+      const minutes = parseFloat(parts[1]);
 
-      // Weekly total - distribute evenly across 7 days
-      const dailyMinutes = Math.round(minutes / 7);
+      // Handle undefined/null (no data) vs 0 (valid: no intensive activity)
+      if (isNaN(minutes)) continue;
+
+      // If weekly data, distribute across 7 days. Otherwise use as-is (including 0)
+      const dailyMinutes = isWeeklyData ? Math.round(minutes / 7) : minutes;
 
       result.push({
         date,

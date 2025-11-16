@@ -160,7 +160,7 @@ export function NutritionTab() {
 
   // Get color for metric value
   const getColor = (metric: MetricType, value: number | undefined, dayData?: DayData): string => {
-    if (value === undefined || !dayData) return 'bg-gray-200';
+    if (value === undefined || !dayData) return 'bg-gray-200 dark:bg-gray-700';
 
     switch (metric) {
       case 'calories':
@@ -181,21 +181,21 @@ export function NutritionTab() {
 
       case 'carbohydrates':
         // Treat 0 as "no data" since tracking 0g carbs is virtually impossible
-        if (value === 0) return 'bg-gray-200';
+        if (value === 0) return 'bg-gray-200 dark:bg-gray-700';
         if (value < settings.carbohydratesMax * 0.8) return 'bg-green-500';
         if (value <= settings.carbohydratesMax) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'sugars':
         // Treat 0 as "no data" since tracking 0g sugars is virtually impossible
-        if (value === 0) return 'bg-gray-200';
+        if (value === 0) return 'bg-gray-200 dark:bg-gray-700';
         if (value < settings.sugarsMax * 0.8) return 'bg-green-500';
         if (value <= settings.sugarsMax) return 'bg-yellow-500';
         return 'bg-red-500';
 
       case 'fat':
         // Treat 0 as "no data" since tracking 0g fat is virtually impossible
-        if (value === 0) return 'bg-gray-200';
+        if (value === 0) return 'bg-gray-200 dark:bg-gray-700';
         if (value < settings.fatMax * 0.8) return 'bg-green-500';
         if (value <= settings.fatMax) return 'bg-yellow-500';
         return 'bg-red-500';
@@ -258,7 +258,7 @@ export function NutritionTab() {
       }
 
       default:
-        return 'bg-gray-200';
+        return 'bg-gray-200 dark:bg-gray-700';
     }
   };
 
@@ -347,93 +347,93 @@ export function NutritionTab() {
   return (
     <div>
       {/* Week Comparison */}
-      <div className="border-b border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Week Vergelijking</h2>
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Week Vergelijking</h2>
         </div>
 
         {weekData.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
             Geen data beschikbaar voor week vergelijking
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Week
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Dagen
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Ø Kcal
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Ø Eiwit
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Ø Koolh.
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Ø Suikers
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Ø V.vet
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Ø Vezels
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Ø Natrium
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Dagen &lt;1900
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {weekData.map((week: WeekData) => {
                   const startDate = new Date(week.weekStart);
                   const endDate = new Date(week.weekEnd);
 
                   return (
-                    <tr key={week.weekStart} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr key={week.weekStart} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                         {startDate.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
                         {' - '}
                         {endDate.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {week.days}/7
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${week.avgCalories < 1900 ? 'text-green-600' : 'text-gray-900'}`}>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${week.avgCalories < 1900 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-gray-100'}`}>
                         {week.avgCalories}
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                        week.avgProtein >= 72 ? 'text-green-600' : week.avgProtein >= 36 ? 'text-yellow-600' : 'text-red-600'
+                        week.avgProtein >= 72 ? 'text-green-600 dark:text-green-400' : week.avgProtein >= 36 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
                       }`}>
                         {week.avgProtein}g
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                         {week.avgCarbohydrates}g
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                         {week.avgSugars}g
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${week.avgSaturatedFat < 20 ? 'text-green-600' : 'text-gray-900'}`}>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${week.avgSaturatedFat < 20 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-gray-100'}`}>
                         {week.avgSaturatedFat}g
                       </td>
                       <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                        week.avgFiber >= 35 ? 'text-green-600' : week.avgFiber >= 17.5 ? 'text-yellow-600' : 'text-red-600'
+                        week.avgFiber >= 35 ? 'text-green-600 dark:text-green-400' : week.avgFiber >= 17.5 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'
                       }`}>
                         {week.avgFiber}g
                       </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${week.avgSodium < 2300 ? 'text-green-600' : 'text-gray-900'}`}>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${week.avgSodium < 2300 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-gray-100'}`}>
                         {week.avgSodium}mg
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                         {week.daysUnderCalories}/{week.days}
                       </td>
                     </tr>
@@ -446,14 +446,14 @@ export function NutritionTab() {
       </div>
 
       {/* Calendar Heatmap */}
-      <div className="border-b border-gray-200">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">Kalender Overzicht</h2>
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Kalender Overzicht</h2>
 
           <select
             value={selectedMetric}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedMetric(e.target.value as MetricType)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="overall">Alles (gemiddelde)</option>
             <option value="calories">Calorieën</option>
@@ -468,7 +468,7 @@ export function NutritionTab() {
         </div>
 
         {heatmapData.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">Geen data beschikbaar</div>
+          <div className="p-6 text-center text-gray-500 dark:text-gray-400">Geen data beschikbaar</div>
         ) : (
           <div className="overflow-x-auto p-6">
             <div className="inline-block min-w-full">
@@ -476,7 +476,7 @@ export function NutritionTab() {
               <div className="flex gap-1 mb-2">
                   <div className="w-12"></div>
                   {['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'].map(day => (
-                    <div key={day} className="w-10 text-center text-xs text-gray-600 font-medium">
+                    <div key={day} className="w-10 text-center text-xs text-gray-600 dark:text-gray-400 font-medium">
                       {day}
                     </div>
                   ))}
@@ -490,7 +490,7 @@ export function NutritionTab() {
 
                   return (
                   <div key={weekIndex} className="flex gap-1 mb-1">
-                    <div className="w-12 text-xs text-gray-600 flex items-center">
+                    <div className="w-12 text-xs text-gray-600 dark:text-gray-400 flex items-center">
                       W{weekNumber}
                     </div>
                     {week.map((day: { date: string; data?: DayData }, dayIndex: number) => {
@@ -571,7 +571,7 @@ export function NutritionTab() {
                 })}
 
                 {/* Legend */}
-                <div className="mt-6 flex gap-6 text-xs text-gray-600">
+                <div className="mt-6 flex gap-6 text-xs text-gray-600 dark:text-gray-400">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 bg-green-500 rounded"></div>
                     <span>Doel behaald</span>
@@ -585,7 +585,7 @@ export function NutritionTab() {
                     <span>Onder/boven doel</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                    <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
                     <span>Geen data</span>
                   </div>
                 </div>
@@ -596,9 +596,9 @@ export function NutritionTab() {
 
       {/* Weekday Trends */}
       <div>
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Trends per Weekdag</h2>
-          <p className="text-sm text-gray-600 mt-1">Gemiddelden gebaseerd op de laatste 60 dagen</p>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Trends per Weekdag</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Gemiddelden gebaseerd op de laatste 60 dagen</p>
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -622,13 +622,13 @@ export function NutritionTab() {
               const badges = [];
               if (percentAboveCalories > 75) {
                 badges.push(
-                  <span key="cal" className="inline-block px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">
+                  <span key="cal" className="inline-block px-2 py-1 text-xs rounded-full bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400">
                     ⚠️ Vaak boven calorie-target
                   </span>
                 );
               } else if (avg.calories < 1900 && parseFloat(avg.protein) >= 72) {
                 badges.push(
-                  <span key="exc" className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                  <span key="exc" className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400">
                     ⭐ Excellente dag!
                   </span>
                 );
@@ -636,7 +636,7 @@ export function NutritionTab() {
 
               if (percentAboveSodium > 75) {
                 badges.push(
-                  <span key="sod" className="inline-block px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700">
+                  <span key="sod" className="inline-block px-2 py-1 text-xs rounded-full bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400">
                     🧂 Vaak veel zout
                   </span>
                 );
@@ -644,64 +644,64 @@ export function NutritionTab() {
 
               const getProteinColor = (val: string) => {
                 const v = parseFloat(val);
-                if (v < 36) return 'text-red-600';
-                if (v < 72) return 'text-yellow-600';
-                return 'text-green-600';
+                if (v < 36) return 'text-red-600 dark:text-red-400';
+                if (v < 72) return 'text-yellow-600 dark:text-yellow-400';
+                return 'text-green-600 dark:text-green-400';
               };
 
               const getFiberColor = (val: string) => {
                 const v = parseFloat(val);
-                if (v < 17.5) return 'text-red-600';
-                if (v < 35) return 'text-yellow-600';
-                return 'text-green-600';
+                if (v < 17.5) return 'text-red-600 dark:text-red-400';
+                if (v < 35) return 'text-yellow-600 dark:text-yellow-400';
+                return 'text-green-600 dark:text-green-400';
               };
 
               return (
-                <div key={dayNum} className="bg-gradient-to-br from-white to-gray-50 rounded-lg shadow-md p-4 hover:shadow-lg transition">
+                <div key={dayNum} className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-md p-4 hover:shadow-lg transition">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-lg font-bold text-gray-800">{weekday.name}</h4>
+                    <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200">{weekday.name}</h4>
                     <span className="text-2xl">{weekday.emoji}</span>
                   </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Calorieën:</span>
-                      <span className={`font-semibold ${avg.calories < 1900 ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className="text-gray-600 dark:text-gray-400">Calorieën:</span>
+                      <span className={`font-semibold ${avg.calories < 1900 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         {avg.calories} kcal
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Eiwit:</span>
+                      <span className="text-gray-600 dark:text-gray-400">Eiwit:</span>
                       <span className={`font-semibold ${getProteinColor(avg.protein)}`}>
                         {avg.protein}g
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Koolhydr.:</span>
-                      <span className="font-semibold text-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Koolhydr.:</span>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">
                         {avg.carbohydrates}g
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Suikers:</span>
-                      <span className="font-semibold text-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Suikers:</span>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">
                         {avg.sugars}g
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Verz. vet:</span>
-                      <span className={`font-semibold ${avg.saturatedFat < 20 ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className="text-gray-600 dark:text-gray-400">Verz. vet:</span>
+                      <span className={`font-semibold ${avg.saturatedFat < 20 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         {avg.saturatedFat}g
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Vezels:</span>
+                      <span className="text-gray-600 dark:text-gray-400">Vezels:</span>
                       <span className={`font-semibold ${getFiberColor(avg.fiber)}`}>
                         {avg.fiber}g
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Natrium:</span>
-                      <span className={`font-semibold ${avg.sodium < 2300 ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className="text-gray-600 dark:text-gray-400">Natrium:</span>
+                      <span className={`font-semibold ${avg.sodium < 2300 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         {avg.sodium}mg
                       </span>
                     </div>
@@ -711,7 +711,7 @@ export function NutritionTab() {
                       {badges}
                     </div>
                   )}
-                  <div className="mt-3 text-xs text-gray-500">
+                  <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                     Gebaseerd op {weekday.days.length} dag{weekday.days.length !== 1 ? 'en' : ''}
                   </div>
                 </div>

@@ -274,8 +274,8 @@ export function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Overzicht van je voedingsinname</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">Overzicht van je voedingsinname</p>
       </div>
 
       {/* Dashboard Period Selector */}
@@ -289,8 +289,8 @@ export function DashboardPage() {
       </div>
 
       {dailyData.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-500 text-lg">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+          <p className="text-gray-500 dark:text-gray-400 text-lg">
             Geen data beschikbaar voor de geselecteerde periode.
             <br />
             Voeg maaltijden toe in het Journaal om je voortgang te volgen.
@@ -299,8 +299,8 @@ export function DashboardPage() {
       ) : (
         <>
           {/* Metric Toggle Buttons */}
-          <div className="bg-white rounded-lg shadow mb-6 p-4 sm:p-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-4 sm:p-6">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Metrics (klik om te tonen/verbergen)
             </label>
             <div className="flex flex-wrap gap-2">
@@ -311,7 +311,7 @@ export function DashboardPage() {
                   className={`px-3 sm:px-4 py-2 rounded-md font-medium transition-colors text-sm ${
                     selectedMetrics.has(metric.key)
                       ? 'text-white'
-                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600'
                   }`}
                   style={selectedMetrics.has(metric.key) ? { backgroundColor: metric.color } : {}}
                 >
@@ -322,7 +322,7 @@ export function DashboardPage() {
           </div>
 
           {/* Chart */}
-          <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 mb-6">
             <div className="h-96">
               <Line data={chartData} options={chartOptions} />
             </div>
@@ -331,37 +331,37 @@ export function DashboardPage() {
           {/* Detailed Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             {METRICS.map(metric => (
-              <div key={metric.key} className="bg-white rounded-lg shadow p-4">
-                <p className="text-sm text-gray-600 mb-1">Gem. {metric.label}</p>
+              <div key={metric.key} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Gem. {metric.label}</p>
                 <p className="text-2xl font-bold" style={{ color: metric.color }}>
                   {averages[metric.key]}
                 </p>
-                <p className="text-xs text-gray-500">{metric.unit}/dag</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{metric.unit}/dag</p>
               </div>
             ))}
           </div>
 
           {/* Projected Weight Change Card */}
-          <div className="bg-white rounded-lg shadow p-6 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-gray-700 text-base font-semibold">Gewichtsprojectie per week</h3>
+              <h3 className="text-gray-700 dark:text-gray-300 text-base font-semibold">Gewichtsprojectie per week</h3>
               <span className="text-2xl">{stats.projectedWeightChange < 0 ? '📉' : '📈'}</span>
             </div>
-            <p className={`text-3xl font-bold ${stats.projectedWeightChange < 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`text-3xl font-bold ${stats.projectedWeightChange < 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
               {stats.projectedWeightChange > 0 ? '+' : ''}{stats.projectedWeightChange}kg
             </p>
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
               {stats.projectedWeightChange < 0 ? 'Verwacht gewichtsverlies' : 'Verwachte gewichtstoename'} bij huidig gemiddeld calorietekort
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Gebaseerd op 7700 kcal = 1 kg lichaamsgewicht
             </p>
           </div>
 
           {/* Export Section */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Exporteren</h3>
-            <p className="text-sm text-gray-600 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Exporteren</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Selecteer een periode en exporteer je data als PDF, CSV of TXT bestand.
             </p>
             <PeriodSelector

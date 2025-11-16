@@ -813,7 +813,7 @@ function generateStandardPdfReport(entries: Entry[], options: ReportOptions): vo
       bodyStyles: { fontSize: 7 },
       columnStyles: {
         0: { cellWidth: 12 },
-        1: { cellWidth: 65 },
+        1: { cellWidth: 76 },
         2: { cellWidth: 13, halign: 'right' },
         3: { cellWidth: 11, halign: 'right' },
         4: { cellWidth: 11, halign: 'right' },
@@ -824,6 +824,7 @@ function generateStandardPdfReport(entries: Entry[], options: ReportOptions): vo
         9: { cellWidth: 13, halign: 'right' },
       },
       margin: { left: 15, right: 15 },
+      tableWidth: 'wrap',
       didDrawPage: function (data) {
         yPos = data.cursor?.y || yPos;
       },
@@ -1182,15 +1183,16 @@ function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): voi
         headStyles: { fillColor: [59, 130, 246], fontSize: 8 },
         bodyStyles: { fontSize: 8 },
         columnStyles: {
-          0: { cellWidth: 15 },
-          1: { cellWidth: 85 },
-          2: { cellWidth: 20, halign: 'right' },
-          3: { cellWidth: 15, halign: 'right' },
-          4: { cellWidth: 15, halign: 'right' },
-          5: { cellWidth: 15, halign: 'right' },
-          6: { cellWidth: 15, halign: 'right' },
+          0: { cellWidth: 14 },
+          1: { cellWidth: 94 },
+          2: { cellWidth: 17, halign: 'right' },
+          3: { cellWidth: 14, halign: 'right' },
+          4: { cellWidth: 14, halign: 'right' },
+          5: { cellWidth: 14, halign: 'right' },
+          6: { cellWidth: 13, halign: 'right' },
         },
         margin: { left: 15, right: 15 },
+        tableWidth: 'wrap',
         didDrawPage: function (data) {
           yPos = data.cursor?.y || yPos;
         },

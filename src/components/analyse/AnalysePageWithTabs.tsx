@@ -31,13 +31,13 @@ export function AnalysePageWithTabs() {
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Analyse</h1>
-        <p className="text-gray-600 mt-2">Inzichten in je voeding en activiteit</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Analyse</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">Inzichten in je voeding en activiteit</p>
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex -mb-px">
             {tabs.map((tab) => (
               <button
@@ -46,8 +46,8 @@ export function AnalysePageWithTabs() {
                 className={`
                   flex items-center gap-1 sm:gap-2 px-2 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition-colors flex-1 justify-center
                   ${activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-600 text-blue-600 dark:border-blue-500 dark:text-blue-500'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }
                 `}
               >

@@ -11,7 +11,6 @@ import { downloadTextFile } from '@/utils/download.utils';
 import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity } from '@/types';
 import { GarminImportSection } from './GarminImportSection';
 import { HealthConnectImportSection } from './HealthConnectImportSection';
-import { SQLiteSchemaExplorer } from './SQLiteSchemaExplorer';
 import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
 
 interface BackupData {
@@ -311,32 +310,29 @@ export function ImportExportTab() {
       {/* Health Connect Database Import */}
       <HealthConnectImportSection />
 
-      {/* Health Connect SQLite Explorer */}
-      <SQLiteSchemaExplorer />
-
       {/* Status Messages */}
       {(exportStatus || importStatus) && (
         <div className={`mb-6 p-4 rounded-lg ${
           exportStatus.startsWith('✓') || importStatus.startsWith('✓')
-            ? 'bg-green-50 text-green-800'
-            : 'bg-red-50 text-red-800'
+            ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400'
+            : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-400'
         }`}>
           {exportStatus || importStatus}
         </div>
       )}
 
       {/* Export Section */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Exporteren</h2>
-          <p className="text-sm text-gray-600 mt-1">Download je data als JSON bestand</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Exporteren</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Download je data als JSON bestand</p>
         </div>
 
         <div className="p-4 sm:p-6 space-y-2 sm:space-y-3">
-          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
             <div className="min-w-0 flex-1 mr-3">
-              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Volledige Backup</h3>
-              <p className="text-xs sm:text-sm text-gray-600 truncate">
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Volledige Backup</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {entries.length} maaltijden, {products.length} producten, {weights.length} gewichten, {portions.length} porties, {templates.length} templates, {activities.length} activiteiten
               </p>
             </div>
@@ -348,10 +344,10 @@ export function ImportExportTab() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
             <div className="min-w-0 flex-1 mr-3">
-              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Maaltijden</h3>
-              <p className="text-xs sm:text-sm text-gray-600">{entries.length} maaltijden</p>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Maaltijden</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{entries.length} maaltijden</p>
             </div>
             <button
               onClick={handleExportEntries}
@@ -361,10 +357,10 @@ export function ImportExportTab() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
             <div className="min-w-0 flex-1 mr-3">
-              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Producten Database</h3>
-              <p className="text-xs sm:text-sm text-gray-600">{products.length} producten</p>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Producten Database</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{products.length} producten</p>
             </div>
             <button
               onClick={handleExportProducts}
@@ -374,10 +370,10 @@ export function ImportExportTab() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
             <div className="min-w-0 flex-1 mr-3">
-              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Gewichten</h3>
-              <p className="text-xs sm:text-sm text-gray-600">{weights.length} metingen</p>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Gewichten</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{weights.length} metingen</p>
             </div>
             <button
               onClick={handleExportWeights}
@@ -387,10 +383,10 @@ export function ImportExportTab() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
             <div className="min-w-0 flex-1 mr-3">
-              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Porties</h3>
-              <p className="text-xs sm:text-sm text-gray-600">{portions.length} porties</p>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Porties</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{portions.length} porties</p>
             </div>
             <button
               onClick={handleExportPortions}
@@ -400,10 +396,10 @@ export function ImportExportTab() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
             <div className="min-w-0 flex-1 mr-3">
-              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Templates</h3>
-              <p className="text-xs sm:text-sm text-gray-600">{templates.length} templates</p>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Templates</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{templates.length} templates</p>
             </div>
             <button
               onClick={handleExportTemplates}
@@ -413,10 +409,10 @@ export function ImportExportTab() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
             <div className="min-w-0 flex-1 mr-3">
-              <h3 className="font-medium text-gray-900 text-sm sm:text-base">Activiteiten</h3>
-              <p className="text-xs sm:text-sm text-gray-600">{activities.length} dagen</p>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Activiteiten</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{activities.length} dagen</p>
             </div>
             <button
               onClick={handleExportActivities}
@@ -429,14 +425,14 @@ export function ImportExportTab() {
       </div>
 
       {/* Import Section */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Importeren</h2>
-          <p className="text-sm text-gray-600 mt-1">Upload een eerder geëxporteerd JSON bestand</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Importeren</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Upload een eerder geëxporteerd JSON bestand</p>
         </div>
 
         <div className="p-4 sm:p-6">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center hover:border-blue-400 transition-colors">
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 sm:p-8 text-center hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
             <input
               type="file"
               accept=".json"
@@ -450,13 +446,13 @@ export function ImportExportTab() {
               className={`cursor-pointer ${importing ? 'opacity-50' : ''}`}
             >
               <div className="text-4xl mb-4">📁</div>
-              <p className="text-lg font-medium text-gray-900 mb-2">
+              <p className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                 {importing ? 'Bezig met importeren...' : 'Klik om bestand te selecteren'}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 JSON bestanden van vorige exports worden automatisch herkend
               </p>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                 Producten worden slim samengevoegd (duplicaten worden bijgewerkt)
               </p>
             </label>
@@ -465,17 +461,17 @@ export function ImportExportTab() {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-white rounded-lg shadow border-2 border-red-200">
-        <div className="p-4 sm:p-6 border-b border-red-200 bg-red-50">
-          <h2 className="text-xl font-semibold text-red-900">Danger Zone</h2>
-          <p className="text-sm text-red-700 mt-1">Onomkeerbare acties - wees voorzichtig!</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border-2 border-red-200 dark:border-red-900">
+        <div className="p-4 sm:p-6 border-b border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20">
+          <h2 className="text-xl font-semibold text-red-900 dark:text-red-400">Danger Zone</h2>
+          <p className="text-sm text-red-700 dark:text-red-400 mt-1">Onomkeerbare acties - wees voorzichtig!</p>
         </div>
 
         <div className="p-4 sm:p-6">
-          <div className="flex items-center justify-between p-3 sm:p-4 border border-red-300 rounded-lg bg-red-50">
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-red-300 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-900/20">
             <div className="min-w-0 flex-1 mr-3">
-              <h3 className="font-medium text-red-900 text-sm sm:text-base">Alle Data Verwijderen</h3>
-              <p className="text-xs sm:text-sm text-red-700">
+              <h3 className="font-medium text-red-900 dark:text-red-400 text-sm sm:text-base">Alle Data Verwijderen</h3>
+              <p className="text-xs sm:text-sm text-red-700 dark:text-red-400">
                 Verwijdert ALLE maaltijden, producten en gewichten permanent
               </p>
             </div>
@@ -490,9 +486,9 @@ export function ImportExportTab() {
       </div>
 
       {/* Info Section */}
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
-        <h3 className="font-medium text-blue-900 mb-2">💡 Tips</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
+      <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 sm:p-6">
+        <h3 className="font-medium text-blue-900 dark:text-blue-400 mb-2">💡 Tips</h3>
+        <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
           <li>• Maak regelmatig een volledige backup van je data</li>
           <li>• JSON bestanden kunnen worden geopend en bewerkt in een teksteditor</li>
           <li>• Bij import worden producten met dezelfde naam automatisch bijgewerkt</li>

@@ -158,25 +158,25 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
   // Show loading if products haven't loaded yet
   if (productsLoading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl p-8">
-          <div className="text-center text-gray-500">Producten laden...</div>
+      <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
+          <div className="text-center text-gray-500 dark:text-gray-400">Producten laden...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-gray-900">
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {template ? 'Template Bewerken' : 'Nieuwe Template'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
           >
             ×
           </button>
@@ -187,19 +187,19 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
           {/* Name & Category */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Naam *
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Categorie
               </label>
               <input
@@ -207,7 +207,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                 value={formData.category}
                 onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                 placeholder="bijv. Ontbijt, Lunch, Diner"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -221,14 +221,14 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                 onChange={(e) => setFormData(prev => ({ ...prev, isFavorite: e.target.checked }))}
                 className="rounded"
               />
-              <span className="text-sm font-medium text-gray-700">Favoriet</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Favoriet</span>
             </label>
           </div>
 
           {/* Items Section */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Items</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Items</h3>
               <button
                 type="button"
                 onClick={handleAddItem}
@@ -239,7 +239,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
             </div>
 
             {templateProducts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
                 Geen producten. Klik op "+ Item toevoegen" om te beginnen.
               </div>
             ) : (
@@ -250,12 +250,12 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                   const filteredProducts = getFilteredProducts(index);
 
                   return (
-                    <div key={index} className="bg-gray-50 border border-gray-300 rounded-lg p-3">
+                    <div key={index} className="bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg p-3">
                       <div className="flex items-start gap-2">
                         <div className="flex-1 space-y-2">
                           {/* Product Select with Search */}
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                               Product *
                             </label>
                             {/* Search input */}
@@ -264,13 +264,13 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                               placeholder="Zoek op naam of merk..."
                               value={productSearchQueries[index] || ''}
                               onChange={(e) => setProductSearchQueries(prev => ({ ...prev, [index]: e.target.value }))}
-                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 mb-1"
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 mb-1"
                             />
                             {/* Product dropdown */}
                             <select
                               value={product.name}
                               onChange={(e) => handleProductSelect(index, e.target.value)}
-                              className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                               required
                             >
                               <option value="">-- Selecteer product --</option>
@@ -284,7 +284,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                             </select>
                             {/* Show result count if filtering */}
                             {productSearchQueries[index] && (
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {filteredProducts.length} product{filteredProducts.length !== 1 ? 'en' : ''} gevonden
                               </div>
                             )}
@@ -294,7 +294,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                           <div className="grid grid-cols-2 gap-2">
                             {hasPortions && (
                               <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                   Portie
                                 </label>
                                 <select
@@ -306,7 +306,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                                       handlePortionSelect(index, e.target.value);
                                     }
                                   }}
-                                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                  className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                                 >
                                   <option value="custom">Handmatig</option>
                                   {productPortions.map(p => (
@@ -319,7 +319,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                             )}
 
                             <div className={hasPortions ? '' : 'col-span-2'}>
-                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
                                 Gram *
                               </label>
                               <input
@@ -328,7 +328,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                                 step="0.1"
                                 value={product.grams || ''}
                                 onChange={(e) => handleItemChange(index, 'grams', parseFloat(e.target.value) || 0)}
-                                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                                 required
                               />
                             </div>
@@ -339,7 +339,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
                         <button
                           type="button"
                           onClick={() => handleRemoveItem(index)}
-                          className="mt-6 text-red-600 hover:bg-red-50 rounded text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
+                          className="mt-6 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
                           title="Verwijder product"
                         >
                           🗑️
@@ -353,18 +353,18 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="submit"
               disabled={isSaving}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-400 dark:disabled:bg-gray-600"
             >
               {isSaving ? 'Opslaan...' : 'Opslaan'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               Annuleren
             </button>
