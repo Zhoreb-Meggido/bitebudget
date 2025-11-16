@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { healthConnectImportService, type ParsedHealthConnectData } from '@/services/health-connect-import.service';
+import { healthConnectBackupService } from '@/services/health-connect-backup.service';
+import { platformService } from '@/services/platform.service';
 import { activitiesService } from '@/services/activities.service';
 import { weightsService } from '@/services/weights.service';
 import { heartRateSamplesService } from '@/services/heart-rate-samples.service';
@@ -12,6 +14,10 @@ export function HealthConnectImportSection() {
   const [importing, setImporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState(false);
   const [error, setError] = useState<string>('');
+  const [loadingBackup, setLoadingBackup] = useState(false);
+
+  // Check if running on Windows/Desktop with File System Access API
+  const canAccessMappedDrive = platformService.canAccessMappedDrive();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -200,7 +206,117 @@ export function HealthConnectImportSection() {
     setParsedData([]);
     setError('');
     setImportSuccess(false);
+    setLoadingBackup(false);
     healthConnectImportService.cleanup();
+  };
+
+  /**
+   * Load backup from mapped Google Drive (Windows only)
+   * Opens file picker to select backup file
+   */
+  const handleLoadFromDrive = async () => {
+    setLoadingBackup(true);
+    setError('');
+    setParsedData([]);
+    setImportSuccess(false);
+
+    try {
+      // Select backup file
+      const backupFile = await healthConnectBackupService.selectBackupFile();
+      console.log(`📁 Selected: ${backupFile.name} (${(backupFile.size / 1024).toFixed(2)} KB)`);
+
+      // Extract database if compressed
+      const dbFile = await healthConnectBackupService.extractDatabase(backupFile);
+      console.log(`💾 Database: ${dbFile.name} (${(dbFile.size / 1024).toFixed(2)} KB)`);
+
+      // Set file and auto-preview
+      setFile(dbFile);
+
+      // Auto-preview
+      setParsing(true);
+      try {
+        const results = await healthConnectImportService.parseDatabase(dbFile);
+
+        if (results.length === 0) {
+          setError('Geen activiteit data gevonden in de database');
+          return;
+        }
+
+        setParsedData(results);
+
+        // Preview body composition data
+        try {
+          const bodyCompData = await healthConnectImportService.extractFitDaysBodyComposition();
+          console.log(`📊 Preview: Found ${bodyCompData.length} weight measurements with body composition`);
+        } catch (err) {
+          console.warn('Could not preview body composition:', err);
+        }
+      } catch (err: any) {
+        setError(err?.message || 'Fout bij het parsen van de database');
+        console.error('Health Connect parse error:', err);
+      } finally {
+        setParsing(false);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Fout bij het laden van backup');
+      console.error('Backup loading error:', err);
+    } finally {
+      setLoadingBackup(false);
+    }
+  };
+
+  /**
+   * Load backup by selecting folder (searches for backup automatically)
+   */
+  const handleLoadFromFolder = async () => {
+    setLoadingBackup(true);
+    setError('');
+    setParsedData([]);
+    setImportSuccess(false);
+
+    try {
+      // Select folder and find backup
+      const backupFile = await healthConnectBackupService.selectBackupFromDirectory();
+      console.log(`📁 Found: ${backupFile.name} (${(backupFile.size / 1024).toFixed(2)} KB)`);
+
+      // Extract database if compressed
+      const dbFile = await healthConnectBackupService.extractDatabase(backupFile);
+      console.log(`💾 Database: ${dbFile.name} (${(dbFile.size / 1024).toFixed(2)} KB)`);
+
+      // Set file and auto-preview
+      setFile(dbFile);
+
+      // Auto-preview
+      setParsing(true);
+      try {
+        const results = await healthConnectImportService.parseDatabase(dbFile);
+
+        if (results.length === 0) {
+          setError('Geen activiteit data gevonden in de database');
+          return;
+        }
+
+        setParsedData(results);
+
+        // Preview body composition data
+        try {
+          const bodyCompData = await healthConnectImportService.extractFitDaysBodyComposition();
+          console.log(`📊 Preview: Found ${bodyCompData.length} weight measurements with body composition`);
+        } catch (err) {
+          console.warn('Could not preview body composition:', err);
+        }
+      } catch (err: any) {
+        setError(err?.message || 'Fout bij het parsen van de database');
+        console.error('Health Connect parse error:', err);
+      } finally {
+        setParsing(false);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Fout bij het laden van backup');
+      console.error('Backup loading error:', err);
+    } finally {
+      setLoadingBackup(false);
+    }
   };
 
   const formatDuration = (seconds: number): string => {
@@ -230,6 +346,77 @@ export function HealthConnectImportSection() {
         {importSuccess && (
           <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-400">
             ✓ Data succesvol geïmporteerd!
+          </div>
+        )}
+
+        {/* Windows: Load from Mapped Drive */}
+        {canAccessMappedDrive && !parsedData.length && !file && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4 sm:p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="text-2xl">💻</div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                  Windows: Laad vanaf Gemapped Google Drive
+                </h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Als je Google Drive gemapped hebt (bijv. G:\), kun je hier direct je Health Connect backup laden.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleLoadFromDrive}
+                disabled={loadingBackup || parsing}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loadingBackup ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Bezig met laden...
+                  </>
+                ) : (
+                  <>
+                    📁 Selecteer Backup Bestand
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleLoadFromFolder}
+                disabled={loadingBackup || parsing}
+                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loadingBackup ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    Bezig met zoeken...
+                  </>
+                ) : (
+                  <>
+                    🔍 Zoek in Map
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="mt-3 text-xs text-blue-600 dark:text-blue-400">
+              💡 Tip: Selecteer de backup folder op je gemapped drive (bijv. G:\Android Backups\com.google.android.apps.healthdata\)
+            </div>
+          </div>
+        )}
+
+        {/* Divider (only show if Windows section is visible) */}
+        {canAccessMappedDrive && !parsedData.length && !file && (
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                of upload handmatig
+              </span>
+            </div>
           </div>
         )}
 
