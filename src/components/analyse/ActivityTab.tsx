@@ -37,6 +37,7 @@ export function ActivityTab() {
   const { stages: sleepStages, getStagesMap } = useSleepStages();
   const [selectedMetric, setSelectedMetric] = useState<ActivityMetric>('heartRate');
   const [showTable, setShowTable] = useState(false);
+  const [showSleepTable, setShowSleepTable] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const stats = useMemo(() => {
@@ -619,6 +620,118 @@ export function ActivityTab() {
           </div>
         )}
       </div>
+
+      {/* Sleep Stages Overview - Collapsible */}
+      {sleepStages.length > 0 && (
+        <div className="border-t border-gray-200 dark:border-gray-700">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setShowSleepTable(!showSleepTable)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">😴 Slaapfases Overzicht</h3>
+              <span className="text-gray-500 dark:text-gray-400">
+                {showSleepTable ? '▼ Verberg' : '▶ Toon'} ({sleepStages.length} nachten)
+              </span>
+            </button>
+          </div>
+
+          {showSleepTable && (
+            <div className="overflow-x-auto max-h-96 overflow-y-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Datum</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Totaal</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">💤 Licht</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">🌊 Diep</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">💭 REM</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">👁️ Wakker</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Verdeling</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {sleepStages
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .slice(0, 30)
+                    .map((sleep) => {
+                      const totalHours = sleep.totalSleepMs / 3600000;
+                      const lightHours = sleep.lightSleepMs / 3600000;
+                      const deepHours = sleep.deepSleepMs / 3600000;
+                      const remHours = sleep.remSleepMs / 3600000;
+                      const awakeHours = sleep.awakeSleepMs / 3600000;
+
+                      // Calculate percentages for visual bar
+                      const lightPct = (sleep.lightSleepMs / sleep.totalSleepMs) * 100;
+                      const deepPct = (sleep.deepSleepMs / sleep.totalSleepMs) * 100;
+                      const remPct = (sleep.remSleepMs / sleep.totalSleepMs) * 100;
+                      const awakePct = (sleep.awakeSleepMs / sleep.totalSleepMs) * 100;
+
+                      return (
+                        <tr key={sleep.date} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                            {new Date(sleep.date).toLocaleDateString('nl-NL', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            {totalHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400">
+                            {lightHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-indigo-600 dark:text-indigo-400">
+                            {deepHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-purple-600 dark:text-purple-400">
+                            {remHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400">
+                            {awakeHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex h-6 w-32 rounded overflow-hidden">
+                              {lightPct > 0 && (
+                                <div
+                                  className="bg-blue-400"
+                                  style={{ width: `${lightPct}%` }}
+                                  title={`Licht: ${lightHours.toFixed(1)}u`}
+                                />
+                              )}
+                              {deepPct > 0 && (
+                                <div
+                                  className="bg-indigo-500"
+                                  style={{ width: `${deepPct}%` }}
+                                  title={`Diep: ${deepHours.toFixed(1)}u`}
+                                />
+                              )}
+                              {remPct > 0 && (
+                                <div
+                                  className="bg-purple-500"
+                                  style={{ width: `${remPct}%` }}
+                                  title={`REM: ${remHours.toFixed(1)}u`}
+                                />
+                              )}
+                              {awakePct > 0 && (
+                                <div
+                                  className="bg-red-400"
+                                  style={{ width: `${awakePct}%` }}
+                                  title={`Wakker: ${awakeHours.toFixed(1)}u`}
+                                />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
