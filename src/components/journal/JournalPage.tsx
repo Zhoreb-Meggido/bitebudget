@@ -589,7 +589,9 @@ export function JournalPage() {
             setEditingEntry(undefined);
             setQuickAddTemplate(null);
           }}
-          onAddMeal={addEntry}
+          onAddMeal={async (entry) => {
+            await addEntry(entry);
+          }}
           onUpdateMeal={updateEntry}
           editEntry={editingEntry}
           products={products}

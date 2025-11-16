@@ -74,7 +74,56 @@
 
 ## Larger Features (4+ uur)
 
-### 5. Body Battery Visualisatie Verbeteringen
+### 5. Health Connect Auto-Sync (Automated Daily Import)
+**Feature:** Automatische dagelijkse sync van Health Connect backups vanaf Google Drive.
+
+**Huidige implementatie:**
+- ✅ health-connect-backup.service.ts (File System Access API)
+- ✅ selectBackupFile() - Directe bestandsselectie
+- ✅ selectBackupFromDirectory() - Map selecteren en zoeken
+- ✅ extractDatabase() - ZIP uitpakken
+- ✅ health-connect-import.service.ts - Parsing en import
+- ✅ HealthConnectImportSection.tsx - UI met Windows mapped drive support
+
+**Nog te implementeren:**
+- [ ] Google Drive folder opslaan (persistent via IndexedDB)
+- [ ] Lokale download folder selecteren en opslaan
+- [ ] Auto-sync service met smart scheduling:
+  - Trigger: Laatste sync was gisteren + huidige tijd na 18:00
+  - Check bij app start/activation
+  - Opslaan lastSyncDate in localStorage
+- [ ] Automatisch proces:
+  1. Check voor nieuwe backup in Google Drive folder
+  2. Download naar lokale folder
+  3. Parse en importeer Health Connect data
+  4. Verwijder backup van Google Drive (cleanup)
+  5. Update lastSyncDate
+- [ ] Progress indicator tijdens auto-sync
+- [ ] Toast notifications (succes/errors)
+- [ ] Settings UI voor auto-sync configuratie:
+  - Enable/disable auto-sync
+  - Google Drive folder selecteren
+  - Download folder selecteren
+  - Laatste sync status tonen
+
+**Edge cases:**
+- App niet geopend vandaag → sync morgen na 18:00
+- Meerdere keren openen na 18:00 → alleen eerste keer syncen
+- Geen nieuwe backup → skip, log warning
+- Permissions verlopen → hernieuw via UI
+
+**Waarom 18:00?** Health Connect backup is dan gegarandeerd binnen (meestal begin van de middag beschikbaar).
+
+**Implementatie files:**
+- Nieuwe service: `health-connect-auto-sync.service.ts`
+- Uitbreiden: `HealthConnectImportSection.tsx` (settings UI)
+- IndexedDB schema voor persistent folder handles
+
+**Effort:** ~6-8 uur
+
+---
+
+### 6. Body Battery Visualisatie Verbeteringen
 **Feature:** Betere weergave van Garmin Body Battery data in trends.
 
 **Mogelijke verbeteringen:**
@@ -87,7 +136,7 @@
 
 ---
 
-### 6. Distance Tracking & Visualisatie
+### 7. Distance Tracking & Visualisatie
 **Feature:** Betere weergave van afgelegde afstanden.
 
 **Taken:**
