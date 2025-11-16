@@ -166,6 +166,8 @@ class DatabaseService {
   private static instance: DatabaseService;
   public db: VoedseljournaalDB;
   private readonly MIGRATION_KEY = 'indexeddb_migrated_v2';
+  private isInitialized = false;
+  private initPromise: Promise<void> | null = null;
 
   private constructor() {
     this.db = new VoedseljournaalDB();
@@ -185,6 +187,25 @@ class DatabaseService {
    * Initialiseer database en voer migratie uit indien nodig
    */
   public async init(): Promise<void> {
+    // Prevent duplicate initialization (React StrictMode calls useEffect twice in dev)
+    if (this.isInitialized) {
+      console.log('⏭️ Database already initialized, skipping duplicate...');
+      return;
+    }
+
+    // If initialization is in progress, return the existing promise
+    if (this.initPromise) {
+      console.log('⏭️ Database initialization in progress, waiting...');
+      return this.initPromise;
+    }
+
+    // Start initialization
+    this.initPromise = this._initInternal();
+    await this.initPromise;
+    this.initPromise = null;
+  }
+
+  private async _initInternal(): Promise<void> {
     console.log('🔧 Initializing database...');
 
     // Database is automatisch geopend door Dexie
@@ -195,6 +216,9 @@ class DatabaseService {
 
     // Migreer oude localStorage data indien aanwezig
     await this.migrateFromLocalStorage();
+
+    // Mark as initialized
+    this.isInitialized = true;
   }
 
   /**
