@@ -3,6 +3,7 @@ import { healthConnectImportService, type ParsedHealthConnectData } from '@/serv
 import { activitiesService } from '@/services/activities.service';
 import { weightsService } from '@/services/weights.service';
 import { heartRateSamplesService } from '@/services/heart-rate-samples.service';
+import { sleepStagesService } from '@/services/sleep-stages.service';
 
 export function HealthConnectImportSection() {
   const [file, setFile] = useState<File | null>(null);
@@ -127,7 +128,20 @@ export function HealthConnectImportSection() {
         console.error('Failed to import heart rate samples:', err);
       }
 
-      // 3. Import Body Composition (FitDays weight data)
+      // 3. Import Sleep Stages (intraday sleep data)
+      try {
+        await healthConnectImportService.extractAndStoreAllSleepStages();
+
+        // Cleanup old sleep stages (75-day retention)
+        const deletedNights = await sleepStagesService.cleanupOldStages();
+        if (deletedNights > 0) {
+          console.log(`🗑️ Cleaned up ${deletedNights} nights of old sleep stages (75-day retention)`);
+        }
+      } catch (err) {
+        console.error('Failed to import sleep stages:', err);
+      }
+
+      // 4. Import Body Composition (FitDays weight data)
       let weightsImported = 0;
       let weightsUpdated = 0;
       let weightsSkipped = 0;
