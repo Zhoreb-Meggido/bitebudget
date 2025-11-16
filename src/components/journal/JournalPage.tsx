@@ -3,9 +3,10 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useEntries, useProducts, useSettings, useTemplates } from '@/hooks';
+import { useEntries, useProducts, useSettings, useTemplates, useWeights } from '@/hooks';
 import { getTodayDate, calculateTotals, calculateProductNutrition } from '@/utils';
-import type { Entry, MealTemplate } from '@/types';
+import type { Entry, MealTemplate, Weight } from '@/types';
+import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
 import { AddMealModal } from './AddMealModal';
 import { MacroBreakdownModal } from './MacroBreakdownModal';
 
@@ -13,6 +14,7 @@ export function JournalPage() {
   const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
   const { products } = useProducts();
   const { settings } = useSettings();
+  const { weights } = useWeights();
   const { recentTemplates, trackUsage } = useTemplates();
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
@@ -39,6 +41,16 @@ export function JournalPage() {
 
   const todayEntries = getEntriesByDate(selectedDate);
   const totals = calculateTotals(todayEntries);
+
+  // Get most recent weight for protein calculation
+  const currentWeight = useMemo(() => {
+    const validWeights = weights.filter((w: Weight) => !w.deleted && w.weight > 0);
+    if (validWeights.length === 0) return settings.targetWeight;
+
+    // Sort by date descending and get the most recent
+    const sorted = [...validWeights].sort((a, b) => b.date.localeCompare(a.date));
+    return sorted[0].weight;
+  }, [weights, settings.targetWeight]);
 
   // Calculate previous day data
   const previousDayData = useMemo(() => {
@@ -109,7 +121,7 @@ export function JournalPage() {
     };
   }, [selectedDate, entries]);
 
-  // Daily goals
+  // Daily goals and limits (for display)
   const goals = {
     calories: settings.calories,
     protein: settings.protein,
@@ -122,6 +134,13 @@ export function JournalPage() {
     saturatedFat: settings.saturatedFatMax,
     fiber: settings.fiberMin,
     sodium: settings.sodiumMax,
+  };
+
+  // Thresholds for green color (scientific recommendations)
+  // These are used to determine when cards turn green, independent of personal goals
+  const greenThresholds = {
+    protein: NUTRITION_CONSTANTS.PROTEIN_PER_KG_MIN * currentWeight, // 0.83g per kg bodyweight
+    fiber: NUTRITION_CONSTANTS.FIBER_SUFFICIENT, // 28g sufficient intake
   };
 
   // Calculate nutritional totals for template preview
@@ -231,7 +250,7 @@ export function JournalPage() {
               </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
-                  className={`absolute inset-0 transition-all ${totals.protein < goals.protein ? 'bg-orange-500' : 'bg-green-500'}`}
+                  className={`absolute inset-0 transition-all ${totals.protein < greenThresholds.protein ? 'bg-orange-500' : 'bg-green-500'}`}
                   style={{ width: `${Math.min((totals.protein / goals.protein) * 100, 100)}%` }}
                 ></div>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -366,7 +385,7 @@ export function JournalPage() {
               </div>
               <div className="relative w-full bg-gray-200 dark:bg-gray-700 rounded-lg h-8 overflow-hidden">
                 <div
-                  className={`absolute inset-0 transition-all ${totals.fiber < limits.fiber ? 'bg-orange-500' : 'bg-green-500'}`}
+                  className={`absolute inset-0 transition-all ${totals.fiber < greenThresholds.fiber ? 'bg-orange-500' : 'bg-green-500'}`}
                   style={{ width: `${Math.min((totals.fiber / limits.fiber) * 100, 100)}%` }}
                 ></div>
                 <div className="absolute inset-0 flex items-center justify-center">
