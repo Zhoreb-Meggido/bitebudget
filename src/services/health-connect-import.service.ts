@@ -508,10 +508,10 @@ class HealthConnectImportService {
 
     // Now get all sleep stages for this session
     const stagesResult = this.db.exec(`
-      SELECT start_time, end_time, stage
+      SELECT stage_start_time, stage_end_time, stage_type
       FROM sleep_stages_table
       WHERE parent_key = ${sessionRowId}
-      ORDER BY start_time ASC
+      ORDER BY stage_start_time ASC
     `);
 
     if (!stagesResult[0]?.values || stagesResult[0].values.length === 0) {
@@ -521,9 +521,9 @@ class HealthConnectImportService {
 
     // Convert to SleepStage format
     const stages: SleepStage[] = stagesResult[0].values.map(row => ({
-      startTime: row[0] as number,  // epoch_millis
-      endTime: row[1] as number,     // epoch_millis
-      stage: row[2] as SleepStageType  // stage type (1-8)
+      startTime: row[0] as number,  // stage_start_time (epoch_millis)
+      endTime: row[1] as number,     // stage_end_time (epoch_millis)
+      stage: row[2] as SleepStageType  // stage_type (1-8)
     }));
 
     // Store in database
