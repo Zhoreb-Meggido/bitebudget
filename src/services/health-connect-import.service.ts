@@ -1,6 +1,7 @@
 import initSqlJs, { Database } from 'sql.js';
-import { DailyActivity, HeartRateSample, Weight } from '@/types/database.types';
+import { DailyActivity, HeartRateSample, Weight, SleepStage, SleepStageType } from '@/types/database.types';
 import { heartRateSamplesService } from './heart-rate-samples.service';
+import { sleepStagesService } from './sleep-stages.service';
 
 export interface HealthConnectImportResult {
   success: boolean;
@@ -442,6 +443,93 @@ class HealthConnectImportService {
     await heartRateSamplesService.addOrUpdateSamples(date, samples);
 
     console.log(`💓 Stored ${samples.length} HR samples for ${date}`);
+  }
+
+  /**
+   * Extract and store sleep stages (intraday sleep data) for all dates
+   * Should be called during import, not during preview
+   */
+  async extractAndStoreAllSleepStages(): Promise<void> {
+    if (!this.db) {
+      console.warn('❌ Database not loaded, cannot extract sleep stages');
+      return;
+    }
+
+    // Get all unique dates that have sleep session data
+    const datesResult = this.db.exec(`
+      SELECT DISTINCT local_date
+      FROM sleep_session_record_table
+      WHERE app_info_id = 4  -- Garmin Connect
+      ORDER BY local_date
+    `);
+
+    if (!datesResult[0]?.values || datesResult[0].values.length === 0) {
+      console.log('ℹ️ No sleep session data found');
+      return;
+    }
+
+    const epochDays = datesResult[0].values.map(row => row[0] as number);
+    console.log(`😴 Extracting sleep stages for ${epochDays.length} nights...`);
+
+    for (const epochDay of epochDays) {
+      const date = this.epochDaysToDate(epochDay);
+      try {
+        await this.extractAndStoreSleepStagesForDay(epochDay, date);
+      } catch (err) {
+        console.warn(`Could not extract sleep stages for ${date}:`, err);
+      }
+    }
+
+    console.log(`✅ Finished extracting sleep stages`);
+  }
+
+  /**
+   * Extract and store sleep stages for a specific day
+   */
+  private async extractAndStoreSleepStagesForDay(epochDay: number, date: string): Promise<void> {
+    if (!this.db) return;
+
+    // First, get the sleep session info (start and end time)
+    const sessionResult = this.db.exec(`
+      SELECT row_id, start_time, end_time
+      FROM sleep_session_record_table
+      WHERE local_date = ${epochDay}
+        AND app_info_id = 4  -- Garmin Connect
+      LIMIT 1
+    `);
+
+    if (!sessionResult[0]?.values || sessionResult[0].values.length === 0) {
+      return; // No sleep session for this day
+    }
+
+    const sessionRowId = sessionResult[0].values[0][0] as number;
+    const sleepStart = sessionResult[0].values[0][1] as number;
+    const sleepEnd = sessionResult[0].values[0][2] as number;
+
+    // Now get all sleep stages for this session
+    const stagesResult = this.db.exec(`
+      SELECT stage_start_time, stage_end_time, stage_type
+      FROM sleep_stages_table
+      WHERE parent_key = ${sessionRowId}
+      ORDER BY stage_start_time ASC
+    `);
+
+    if (!stagesResult[0]?.values || stagesResult[0].values.length === 0) {
+      console.log(`⚠️ No sleep stages found for ${date}, but session exists`);
+      return;
+    }
+
+    // Convert to SleepStage format
+    const stages: SleepStage[] = stagesResult[0].values.map(row => ({
+      startTime: row[0] as number,  // stage_start_time (epoch_millis)
+      endTime: row[1] as number,     // stage_end_time (epoch_millis)
+      stage: row[2] as SleepStageType  // stage_type (1-8)
+    }));
+
+    // Store in database
+    await sleepStagesService.addOrUpdateStages(date, stages, sleepStart, sleepEnd);
+
+    console.log(`😴 Stored ${stages.length} sleep stages for ${date}`);
   }
 
   /**

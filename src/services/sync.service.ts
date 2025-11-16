@@ -12,9 +12,10 @@ import { portionsService } from './portions.service';
 import { templatesService } from './templates.service';
 import { activitiesService } from './activities.service';
 import { heartRateSamplesService } from './heart-rate-samples.service';
+import { sleepStagesService } from './sleep-stages.service';
 import { db } from './database.service';
 import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
-import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages } from '@/types';
 
 export interface SyncData {
   version: string;
@@ -28,6 +29,7 @@ export interface SyncData {
   mealTemplates?: MealTemplate[];      // v1.3+
   dailyActivities?: DailyActivity[];   // v1.5+
   heartRateSamples?: DayHeartRateSamples[];  // v1.6+ - 75 day retention
+  sleepStages?: DaySleepStages[];      // v1.10+ - 75 day retention
 }
 
 class SyncService {
@@ -273,6 +275,18 @@ class SyncService {
       if (oldDeletedHRSamples.length > 0) {
         console.log(`🗑️ Cleaned up ${oldDeletedHRSamples.length} old deleted HR sample days`);
       }
+
+      // Cleanup sleep stages
+      const sleepStages = await sleepStagesService.getAllStagesIncludingDeleted();
+      const oldDeletedSleepStages = sleepStages.filter(
+        s => s.deleted && s.deleted_at && s.deleted_at < cutoffDate
+      );
+      for (const stage of oldDeletedSleepStages) {
+        await db.sleepStages.delete(stage.date);
+      }
+      if (oldDeletedSleepStages.length > 0) {
+        console.log(`🗑️ Cleaned up ${oldDeletedSleepStages.length} old deleted sleep stage nights`);
+      }
     } catch (error) {
       console.error('❌ Error during cleanup of old deleted items:', error);
     }
@@ -292,6 +306,7 @@ class SyncService {
     const mealTemplates = await templatesService.getAllTemplatesIncludingDeleted();
     const dailyActivities = await activitiesService.getAllActivitiesIncludingDeleted();
     const heartRateSamples = await heartRateSamplesService.getAllSamplesIncludingDeleted();
+    const sleepStages = await sleepStagesService.getAllStagesIncludingDeleted();
 
     // Ensure old rust/sport day fields are removed from settings before export
     const settingsClean = { ...settings } as any;
@@ -309,6 +324,7 @@ class SyncService {
     const templatesDeleted = mealTemplates.filter(t => t.deleted === true).length;
     const activitiesDeleted = dailyActivities.filter(a => a.deleted === true).length;
     const hrSamplesDeleted = heartRateSamples.filter(h => h.deleted === true).length;
+    const sleepStagesDeleted = sleepStages.filter(s => s.deleted === true).length;
 
     console.log('📤 Preparing export with:', {
       entries: `${entries.length} (${entriesDeleted} deleted)`,
@@ -319,6 +335,7 @@ class SyncService {
       mealTemplates: `${mealTemplates.length} (${templatesDeleted} deleted)`,
       dailyActivities: `${dailyActivities.length} (${activitiesDeleted} deleted)`,
       heartRateSamples: `${heartRateSamples.length} (${hrSamplesDeleted} deleted)`,
+      sleepStages: `${sleepStages.length} (${sleepStagesDeleted} deleted)`,
     });
 
     return {
@@ -333,6 +350,7 @@ class SyncService {
       mealTemplates,
       dailyActivities,
       heartRateSamples,
+      sleepStages,
     };
   }
 
@@ -732,6 +750,40 @@ class SyncService {
       console.log(`✅ HR Samples: ${addedCount} added, ${updatedCount} updated`);
     } else {
       console.log('ℹ️ No HR samples in cloud backup (might be older version)');
+    }
+
+    // Merge sleep stages - add cloud stages that don't exist locally or are newer
+    if (cloudData.sleepStages && cloudData.sleepStages.length > 0) {
+      console.log(`😴 Merging ${cloudData.sleepStages.length} sleep stage nights from cloud...`);
+      const localStages = await sleepStagesService.getAllStagesIncludingDeleted();
+      const localStagesMap = new Map(localStages.map(s => [s.date, s]));
+
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      for (const cloudStage of cloudData.sleepStages) {
+        try {
+          const localStage = localStagesMap.get(cloudStage.date);
+
+          if (!localStage) {
+            // New sleep stage night from cloud - use put() which handles primary key (date)
+            await db.sleepStages.put(cloudStage);
+            addedCount++;
+          } else if (cloudStage.updated_at && localStage.updated_at &&
+                     new Date(cloudStage.updated_at) > new Date(localStage.updated_at)) {
+            // Cloud stage is newer - replace with cloud data
+            await db.sleepStages.put(cloudStage);
+            updatedCount++;
+          }
+        } catch (err) {
+          console.error(`❌ Error processing sleep stages ${cloudStage.date}:`, err);
+          throw err;
+        }
+      }
+
+      console.log(`✅ Sleep Stages: ${addedCount} added, ${updatedCount} updated`);
+    } else {
+      console.log('ℹ️ No sleep stages in cloud backup (might be older version)');
     }
   }
 

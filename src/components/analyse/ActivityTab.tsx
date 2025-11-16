@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useActivities, useHeartRateSamples } from '@/hooks';
+import { useActivities, useHeartRateSamples, useSleepStages } from '@/hooks';
 import { HeartRateChart } from './HeartRateChart';
+import { SleepStagesChart } from './SleepStagesChart';
 import type { DailyActivity } from '@/types';
 
 type ActivityMetric = 'heartRate' | 'steps' | 'calories' | 'intensityMinutes' | 'sleep' | 'bodyBattery' | 'stress';
@@ -33,8 +34,10 @@ function getISOWeekNumber(date: Date): number {
 export function ActivityTab() {
   const { activities, isLoading: loading } = useActivities();
   const { samples: hrSamples, getSamplesMap } = useHeartRateSamples();
+  const { stages: sleepStages, getStagesMap } = useSleepStages();
   const [selectedMetric, setSelectedMetric] = useState<ActivityMetric>('heartRate');
   const [showTable, setShowTable] = useState(false);
+  const [showSleepTable, setShowSleepTable] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const stats = useMemo(() => {
@@ -72,8 +75,9 @@ export function ActivityTab() {
       avgMaxHR: total.maxHRCount > 0 ? Math.round(total.maxHR / total.maxHRCount) : 0,
       totalDays: activities.length,
       totalHRDays: hrSamples.length,
+      totalSleepNights: sleepStages.length,
     };
-  }, [activities, hrSamples]);
+  }, [activities, hrSamples, sleepStages]);
 
   // Weekday patterns (last 60 days)
   const weekdayPatterns = useMemo(() => {
@@ -107,11 +111,12 @@ export function ActivityTab() {
   const heatmapData = useMemo(() => {
     const today = new Date();
     const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-    const weeks: Array<Array<{ date: string; activity?: typeof activities[0]; hrSample?: typeof hrSamples[0] }>> = [];
+    const weeks: Array<Array<{ date: string; activity?: typeof activities[0]; hrSample?: typeof hrSamples[0]; sleepStage?: typeof sleepStages[0] }>> = [];
 
     // Create data maps for quick lookup
     const dataMap = new Map(activities.map((a: DailyActivity) => [a.date, a]));
     const hrMap = getSamplesMap();
+    const sleepMap = getStagesMap();
 
     // Generate 8 weeks
     for (let weekIndex = 0; weekIndex < 8; weekIndex++) {
@@ -137,6 +142,7 @@ export function ActivityTab() {
           date: dateStr,
           activity: dataMap.get(dateStr),
           hrSample: hrMap.get(dateStr),
+          sleepStage: sleepMap.get(dateStr),
         });
       }
 
@@ -144,7 +150,7 @@ export function ActivityTab() {
     }
 
     return weeks.reverse(); // Oldest week first
-  }, [activities, hrSamples, getSamplesMap]);
+  }, [activities, hrSamples, sleepStages, getSamplesMap, getStagesMap]);
 
   // Get color for metric value
   const getColor = (metric: ActivityMetric, activity?: typeof activities[0], _hrSample?: typeof hrSamples[0]): string => {
@@ -278,8 +284,9 @@ export function ActivityTab() {
         </div>
 
         <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 rounded-lg p-4 border border-indigo-200 dark:border-indigo-800">
-          <div className="text-sm text-indigo-600 dark:text-indigo-400 font-medium mb-1">Ø Slaap</div>
+          <div className="text-sm text-indigo-600 dark:text-indigo-400 font-medium mb-1">😴 Ø Slaap</div>
           <div className="text-2xl font-bold text-indigo-900 dark:text-indigo-300">{stats?.avgSleepHours || 0}u</div>
+          <div className="text-xs text-indigo-600 dark:text-indigo-400 mt-1">{stats?.totalSleepNights || 0} nachten</div>
         </div>
         </div>
       </div>
@@ -312,7 +319,7 @@ export function ActivityTab() {
         ) : (
           <div className="p-2 md:p-4 flex flex-col lg:flex-row gap-4">
             {/* Heatmap (left side on desktop, top on mobile) */}
-            <div className={`flex-shrink-0 overflow-x-auto ${selectedDate && selectedMetric === 'heartRate' ? 'lg:w-auto' : 'w-full'}`}>
+            <div className={`flex-shrink-0 overflow-x-auto ${selectedDate && (selectedMetric === 'heartRate' || selectedMetric === 'sleep') ? 'lg:w-auto' : 'w-full'}`}>
             <div className="inline-block min-w-full">
               {/* Day labels */}
               <div className="flex gap-1 mb-2">
@@ -325,7 +332,7 @@ export function ActivityTab() {
               </div>
 
               {/* Heatmap grid */}
-              {heatmapData.map((week: Array<{ date: string; activity?: DailyActivity; hrSample?: any }>, weekIndex: number) => {
+              {heatmapData.map((week: Array<{ date: string; activity?: DailyActivity; hrSample?: any; sleepStage?: any }>, weekIndex: number) => {
                 const mondayDate = new Date(week[0].date + 'T12:00:00');
                 const weekNumber = getISOWeekNumber(mondayDate);
 
@@ -334,12 +341,13 @@ export function ActivityTab() {
                     <div className="w-12 text-xs text-gray-600 dark:text-gray-400 flex items-center">
                       W{weekNumber}
                     </div>
-                    {week.map((day: { date: string; activity?: DailyActivity; hrSample?: any }, dayIndex: number) => {
+                    {week.map((day: { date: string; activity?: DailyActivity; hrSample?: any; sleepStage?: any }, dayIndex: number) => {
                       const dayDate = new Date(day.date);
                       const dayNum = dayDate.getDate();
                       const colorClass = getColor(selectedMetric, day.activity, day.hrSample);
                       const hasHRData = day.hrSample && day.hrSample.sampleCount > 0;
-                      const isClickable = selectedMetric === 'heartRate' && hasHRData;
+                      const hasSleepData = day.sleepStage && day.sleepStage.stageCount > 0;
+                      const isClickable = (selectedMetric === 'heartRate' && hasHRData) || (selectedMetric === 'sleep' && hasSleepData);
 
                       // Build tooltip
                       let tooltipText = day.date;
@@ -395,6 +403,12 @@ export function ActivityTab() {
                               💓
                             </span>
                           )}
+                          {/* Sleep indicator for days with sleep stages data */}
+                          {hasSleepData && selectedMetric === 'sleep' && (
+                            <span className="absolute top-0 right-0 text-[8px]" style={{ lineHeight: '1' }}>
+                              😴
+                            </span>
+                          )}
                         </div>
                       );
                     })}
@@ -433,6 +447,16 @@ export function ActivityTab() {
               <div className="flex-1 min-w-0">
                 <HeartRateChart
                   data={getSamplesMap().get(selectedDate)!}
+                  onClose={() => setSelectedDate(null)}
+                />
+              </div>
+            )}
+
+            {/* Sleep Stages Chart (right side on desktop, below on mobile) */}
+            {selectedDate && selectedMetric === 'sleep' && (
+              <div className="flex-1 min-w-0">
+                <SleepStagesChart
+                  data={getStagesMap().get(selectedDate)!}
                   onClose={() => setSelectedDate(null)}
                 />
               </div>
@@ -596,6 +620,118 @@ export function ActivityTab() {
           </div>
         )}
       </div>
+
+      {/* Sleep Stages Overview - Collapsible */}
+      {sleepStages.length > 0 && (
+        <div className="border-t border-gray-200 dark:border-gray-700">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setShowSleepTable(!showSleepTable)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">😴 Slaapfases Overzicht</h3>
+              <span className="text-gray-500 dark:text-gray-400">
+                {showSleepTable ? '▼ Verberg' : '▶ Toon'} ({sleepStages.length} nachten)
+              </span>
+            </button>
+          </div>
+
+          {showSleepTable && (
+            <div className="overflow-x-auto max-h-96 overflow-y-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Datum</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Totaal</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">💤 Licht</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">🌊 Diep</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">💭 REM</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">👁️ Wakker</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Verdeling</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {sleepStages
+                    .sort((a, b) => b.date.localeCompare(a.date))
+                    .slice(0, 30)
+                    .map((sleep) => {
+                      const totalHours = sleep.totalSleepMs / 3600000;
+                      const lightHours = sleep.lightSleepMs / 3600000;
+                      const deepHours = sleep.deepSleepMs / 3600000;
+                      const remHours = sleep.remSleepMs / 3600000;
+                      const awakeHours = sleep.awakeSleepMs / 3600000;
+
+                      // Calculate percentages for visual bar
+                      const lightPct = (sleep.lightSleepMs / sleep.totalSleepMs) * 100;
+                      const deepPct = (sleep.deepSleepMs / sleep.totalSleepMs) * 100;
+                      const remPct = (sleep.remSleepMs / sleep.totalSleepMs) * 100;
+                      const awakePct = (sleep.awakeSleepMs / sleep.totalSleepMs) * 100;
+
+                      return (
+                        <tr key={sleep.date} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                            {new Date(sleep.date).toLocaleDateString('nl-NL', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            {totalHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400">
+                            {lightHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-indigo-600 dark:text-indigo-400">
+                            {deepHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-purple-600 dark:text-purple-400">
+                            {remHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-red-600 dark:text-red-400">
+                            {awakeHours.toFixed(1)}u
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex h-6 w-32 rounded overflow-hidden">
+                              {lightPct > 0 && (
+                                <div
+                                  className="bg-blue-400"
+                                  style={{ width: `${lightPct}%` }}
+                                  title={`Licht: ${lightHours.toFixed(1)}u`}
+                                />
+                              )}
+                              {deepPct > 0 && (
+                                <div
+                                  className="bg-indigo-500"
+                                  style={{ width: `${deepPct}%` }}
+                                  title={`Diep: ${deepHours.toFixed(1)}u`}
+                                />
+                              )}
+                              {remPct > 0 && (
+                                <div
+                                  className="bg-purple-500"
+                                  style={{ width: `${remPct}%` }}
+                                  title={`REM: ${remHours.toFixed(1)}u`}
+                                />
+                              )}
+                              {awakePct > 0 && (
+                                <div
+                                  className="bg-red-400"
+                                  style={{ width: `${awakePct}%` }}
+                                  title={`Wakker: ${awakeHours.toFixed(1)}u`}
+                                />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,11 +1,11 @@
-# BiteBudget (Voedseljournaal) v1.8.2
+# BiteBudget (Voedseljournaal) v1.10.0
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.8.2:** Redesigned Analyse Overzicht Tab - 3 powerful charts voor nutrition, activity & correlatie analyse!
-**📊 Recent:** v1.8.1 - Compact Date Navigation met clean angle bracket (‹ ›) buttons!
+**🎉 Nieuw in v1.10.0:** Sleep Stages Tracking - Detailed sleep stage analysis (Light, Deep, REM, Awake) from Health Connect!
+**📊 Recent:** v1.8.2 - Redesigned Analyse Overzicht Tab with 3 powerful charts!
 
 ---
 
@@ -49,7 +49,52 @@ npm run build
 
 ---
 
-## ✨ v1.7.0 - Heart Rate Visualization (Huidige Versie)
+## ✨ v1.10.0 - Sleep Stages Tracking & Visualization
+
+### **Detailed Sleep Analysis** 😴
+
+#### **Comprehensive Sleep Stage Tracking**
+- ✅ **Sleep Stage Import** - Extract detailed sleep stages from Health Connect (Garmin/Fitbit data)
+- ✅ **Stage Breakdown** - Light Sleep, Deep Sleep, REM Sleep, and Awake time
+- ✅ **Timeline Visualization** - Color-coded timeline showing all sleep phases throughout the night
+- ✅ **Summary Statistics** - Total sleep, light, deep, REM, and awake hours per night
+- ✅ **Interactive Chart** - Click on sleep days to view detailed stage breakdown
+
+#### **Activity Tab Integration** 📊
+- ✅ **Sleep Heatmap** - 8-week calendar with sleep duration color coding
+- ✅ **😴 Indicators** - Icon on days with detailed sleep stage data
+- ✅ **Clickable Days** - Click any day with sleep data to view detailed timeline
+- ✅ **Sleep Stats Card** - Average sleep hours with "nachten" counter
+- ✅ **Overview Table** - Collapsible table showing last 30 nights with:
+  - Total sleep duration
+  - Light/Deep/REM/Awake breakdown (hours)
+  - Visual bar chart showing stage distribution
+  - Color-coded columns (Blue = Light, Indigo = Deep, Purple = REM, Red = Awake)
+
+#### **Technical Implementation** 🔧
+- ✅ **Database v11** - New sleepStages table with date as primary key
+- ✅ **useSleepStages Hook** - Custom hook for loading and managing sleep data
+- ✅ **SleepStagesChart Component** - Visual timeline with stage breakdown
+- ✅ **SleepStageType Enum** - Type-safe sleep stages (AWAKE, LIGHT, DEEP, REM, etc.)
+- ✅ **TypeScript Types** - SleepStage and DaySleepStages interfaces
+- ✅ **75-Day Retention** - Automatic cleanup of old sleep data
+
+#### **Cloud Sync Support** ☁️
+- ✅ **Full Sync Integration** - Sleep stages included in cloud backups
+- ✅ **Smart Merge** - Timestamp-based conflict resolution
+- ✅ **Soft Delete** - 14-day tombstone retention for cross-device sync
+- ✅ **Automatic Cleanup** - Old soft-deleted records removed after 14 days
+
+**Use Cases:**
+- Track sleep quality through stage distribution (more deep/REM = better quality)
+- Identify sleep pattern changes over time
+- Analyze correlation between sleep quality and daily performance
+- Monitor impact of lifestyle changes on sleep stages
+- Visualize wake-up frequency during the night
+
+---
+
+## ✨ v1.7.0 - Heart Rate Visualization
 
 ### **Intraday Heart Rate Charts** 💓
 

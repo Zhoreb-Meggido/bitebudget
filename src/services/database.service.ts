@@ -9,7 +9,7 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples } from '@/types';
+import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages } from '@/types';
 
 export class VoedseljournaalDB extends Dexie {
   // Tables
@@ -21,6 +21,7 @@ export class VoedseljournaalDB extends Dexie {
   mealTemplates!: Table<MealTemplate, number>;
   dailyActivities!: Table<DailyActivity, number>;
   heartRateSamples!: Table<DayHeartRateSamples, string>;
+  sleepStages!: Table<DaySleepStages, string>;
 
   constructor() {
     super('VoedseljournaalDB');
@@ -158,6 +159,27 @@ export class VoedseljournaalDB extends Dexie {
       console.log('🏋️ New fields: bodyFat, boneMass, bmr, source, updated_at');
       console.log('💡 Existing weights are preserved, new fields are optional');
       console.log('📱 Import Health Connect data to populate body composition');
+    });
+
+    // Version 11 - Add sleep stages (intraday sleep stage data)
+    // PRIMARY KEY: 'date' (YYYY-MM-DD string)
+    // Each record contains an array of sleep stages for one night with breakdown by stage type
+    this.version(11).stores({
+      entries: 'id, date, created_at, updated_at',
+      products: 'id, name, ean, source, created_at, updated_at',
+      weights: 'id, date, created_at, updated_at',
+      settings: 'key',
+      productPortions: 'id, productName, created_at, updated_at',
+      mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at',
+      dailyActivities: 'id, date, created_at, updated_at',
+      heartRateSamples: 'date, sampleCount, created_at, updated_at',
+      sleepStages: 'date, stageCount, created_at, updated_at'
+    }).upgrade(async tx => {
+      console.log('✅ V11: Added sleepStages table');
+      console.log('📊 Primary key: date (YYYY-MM-DD)');
+      console.log('😴 Each record stores array of sleep stages for one night');
+      console.log('💤 Includes breakdown: light, deep, REM, awake time');
+      console.log('ℹ️ Import Health Connect data to populate');
     });
   }
 }

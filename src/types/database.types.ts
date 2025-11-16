@@ -238,6 +238,43 @@ export interface DayHeartRateSamples {
 }
 
 // ============================================
+// SLEEP STAGES (Intraday sleep stage data)
+// ============================================
+
+export enum SleepStageType {
+  AWAKE = 1,           // Awake during sleep
+  SLEEPING = 2,        // General/unknown sleep
+  OUT_OF_BED = 3,      // Out of bed
+  LIGHT = 4,           // Light sleep
+  DEEP = 5,            // Deep sleep
+  REM = 6,             // REM sleep
+  AWAKE_IN_BED = 7,    // Awake in bed
+  UNKNOWN = 8          // Unknown
+}
+
+export interface SleepStage {
+  startTime: number;   // Unix timestamp in milliseconds
+  endTime: number;     // Unix timestamp in milliseconds
+  stage: SleepStageType;  // Sleep stage type
+}
+
+export interface DaySleepStages {
+  date: string;                    // Primary key: YYYY-MM-DD
+  stages: SleepStage[];            // Array of sleep stages
+  stageCount: number;              // Number of stages
+  totalSleepMs: number;            // Total sleep duration in milliseconds
+  lightSleepMs: number;            // Light sleep duration
+  deepSleepMs: number;             // Deep sleep duration
+  remSleepMs: number;              // REM sleep duration
+  awakeSleepMs: number;            // Awake time during sleep
+  sleepStart: number;              // Sleep session start timestamp
+  sleepEnd: number;                // Sleep session end timestamp
+  created_at: string;              // ISO timestamp
+  updated_at: string;              // ISO timestamp
+  deleted?: boolean;               // Soft delete flag
+}
+
+// ============================================
 // SETTINGS
 // ============================================
 
@@ -301,6 +338,7 @@ export interface BackupData {
   mealTemplates?: MealTemplate[];      // v1.3+
   dailyActivities?: DailyActivity[];   // v1.5+ (Google Fit integration)
   heartRateSamples?: DayHeartRateSamples[];  // v1.6+ (Health Connect HR data, 75-day retention)
+  sleepStages?: DaySleepStages[];      // v1.10+ (Health Connect sleep stages data, 75-day retention)
 }
 
 // ============================================

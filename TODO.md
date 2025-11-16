@@ -206,6 +206,49 @@
 
 **Effort:** ~7 uur (all phases complete)
 
+### Sleep Stages Tracking & Visualization (v1.10.0) ✅
+**Feature:** Comprehensive sleep tracking with detailed sleep stage analysis from Health Connect.
+
+**Implemented:**
+- **Database & Types**
+  - SleepStageType enum (AWAKE, LIGHT, DEEP, REM, etc.)
+  - DaySleepStages interface with stage breakdown
+  - Database schema v11 with sleepStages table
+  - Soft delete support with 75-day retention policy
+
+- **Data Import**
+  - Extract sleep stages from Health Connect sleep_stages_table
+  - Read sleep session data from sleep_session_record_table
+  - Automatic calculation of light/deep/REM/awake duration
+  - Cleanup of old sleep stages (75-day retention)
+
+- **Visualization Components**
+  - useSleepStages hook for data management
+  - SleepStagesChart component with:
+    - Color-coded timeline of sleep phases
+    - Summary stats (total, light, deep, REM, awake hours)
+    - Interactive timeline with stage breakdown
+  - Sleep stages overview table with:
+    - Last 30 nights with detailed breakdown
+    - Visual bar chart showing stage distribution
+    - Sortable by date (most recent first)
+
+- **Activity Tab Integration**
+  - Sleep metric heatmap with 😴 indicator for nights with data
+  - Clickable days to view detailed sleep stages
+  - Collapsible sleep stages overview table
+  - Sleep nights counter in stats cards
+
+- **Cloud Sync**
+  - Full sync support for sleep stages
+  - Smart merge with timestamp comparison
+  - Soft delete cleanup (>14 days)
+  - Export/import in cloud backups
+
+**Impact:** Deep insights into sleep quality with detailed stage analysis (light/deep/REM/awake breakdown)!
+
+**Effort:** ~4 uur
+
 ### OAuth & Heart Rate Sync Improvements (v1.7.1) ✅
 - [x] Heart rate samples cloud sync with 75-day retention
 - [x] Soft-delete pattern for HR samples (consistent with other data)
