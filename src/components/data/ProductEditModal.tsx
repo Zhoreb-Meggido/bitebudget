@@ -118,6 +118,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
         fiber: parseOptionalDecimal(formData.fiber) ?? 0,
         sodium: parseOptionalInt(formData.sodium) ?? 0,
         favorite: formData.favorite,
+        source: product?.source || 'manual', // Preserve source when editing, default to 'manual' when adding
       });
       onClose();
     } catch (error: any) {
