@@ -237,41 +237,6 @@ export function CloudSyncSettings() {
     setTimeout(() => setSuccess(null), 3000);
   };
 
-  const handleDownloadBackup = async () => {
-    setError(null);
-    setSuccess(null);
-    setIsSyncing(true);
-
-    try {
-      await googleDriveService.downloadBackupFile();
-      setSuccess('✅ Backup gedownload! Je kunt dit bestand nu handmatig naar Proton Drive uploaden.');
-    } catch (err: any) {
-      setError(`Download mislukt: ${err.message}`);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleDeleteBackup = async () => {
-    if (!confirm('⚠️ WAARSCHUWING: Dit verwijdert je backup PERMANENT van Google Drive!\n\nZorg dat je eerst een backup hebt gedownload voordat je doorgaat.\n\nWeet je zeker dat je wilt verwijderen?')) {
-      return;
-    }
-
-    setError(null);
-    setSuccess(null);
-    setIsSyncing(true);
-
-    try {
-      await googleDriveService.deleteBackup();
-      setSuccess('✅ Backup verwijderd van Google Drive');
-      setCloudInfo(null); // Clear cloud info since backup is deleted
-    } catch (err: any) {
-      setError(`Verwijderen mislukt: ${err.message}`);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div>
@@ -384,42 +349,6 @@ export function CloudSyncSettings() {
             >
               📥 Pull vanaf Drive
             </button>
-          </div>
-
-          {/* Backup Management */}
-          <div className="bg-blue-50 dark:bg-blue-900 border-2 border-blue-300 dark:border-blue-700 rounded-lg p-4">
-            <div className="mb-3">
-              <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                💾 Backup Beheer
-              </h4>
-              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                Download je encrypted backup om handmatig naar Proton Drive te uploaden, en verwijder van Google Drive
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDownloadBackup}
-                disabled={isSyncing}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 ${
-                  isSyncing
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                💾 Download Backup
-              </button>
-              <button
-                onClick={handleDeleteBackup}
-                disabled={isSyncing}
-                className={`flex-1 px-4 py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 ${
-                  isSyncing
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-red-600 text-white hover:bg-red-700'
-                }`}
-              >
-                🗑️ Verwijder van Drive
-              </button>
-            </div>
           </div>
 
           {/* Force Push Button */}
