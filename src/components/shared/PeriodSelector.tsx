@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Entry } from '@/types';
 import { downloadCSVReport } from '@/utils/export.utils';
-import { generatePdfReport, type ReportOptions } from '@/utils/report.utils';
+import { generatePdfReport, type ReportOptions, exportWeeklyAggregatesToCSV, exportMonthlyAggregatesToCSV } from '@/utils/report.utils';
+import { useAggregates } from '@/hooks/useAggregates';
 
 export type TimeRange = '7' | '14' | '28' | '90' | 'this-week' | 'last-week' | 'this-month' | 'last-month' | 'all' | 'custom' | 'custom-months';
 
@@ -147,6 +148,13 @@ export function PeriodSelector({
     return { startDate, endDate };
   }, [timeRange, customStartDate, customEndDate, entries]);
 
+  // Get aggregates for CSV export (with activity data)
+  const { weeklyAggregates, monthlyAggregates } = useAggregates({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+    includeActivity: true,
+  });
+
   // Filter entries based on date range
   const filteredEntries = useMemo(() => {
     if (timeRange === 'all') {
@@ -174,12 +182,25 @@ export function PeriodSelector({
         return;
       }
 
-      downloadCSVReport({
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        entries: filteredEntries,
-        format: 'csv',
-      });
+      // Determine whether to use weekly or monthly aggregates based on date range
+      const daysDiff = Math.ceil(
+        (new Date(dateRange.endDate).getTime() - new Date(dateRange.startDate).getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      // Use weekly aggregates for periods <= 90 days, monthly for longer periods
+      if (daysDiff <= 90) {
+        if (weeklyAggregates.length === 0) {
+          alert('Geen week data beschikbaar voor de geselecteerde periode.');
+          return;
+        }
+        exportWeeklyAggregatesToCSV(weeklyAggregates);
+      } else {
+        if (monthlyAggregates.length === 0) {
+          alert('Geen maand data beschikbaar voor de geselecteerde periode.');
+          return;
+        }
+        exportMonthlyAggregatesToCSV(monthlyAggregates);
+      }
     } else {
       // PDF export using unified report.utils.ts
       let reportOptions: ReportOptions;
