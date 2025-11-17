@@ -220,9 +220,11 @@ class HealthConnectImportService {
     // 2. Total Calories (Garmin)
     // IMPORTANT: Health Connect stores energy in joules, but Garmin exports seem to use calories
     // Dividing by 1000 converts from calories to kcal
+    // IMPORTANT: When activities are present, Garmin splits the day into multiple records
+    // (before activity, during activity, after activity). We must SUM all records.
     try {
       const caloriesResult = this.db.exec(`
-        SELECT energy
+        SELECT SUM(energy) as total_energy
         FROM total_calories_burned_record_table
         WHERE local_date = ${epochDay}
           AND app_info_id = 4  -- Garmin Connect
@@ -249,26 +251,41 @@ class HealthConnectImportService {
       `);
 
       if (bmrResult[0]?.values[0]?.[0]) {
-        const bmr = bmrResult[0].values[0][0] as number;
-        // BMR values seem to be in kcal/day (e.g., 85.86)
-        // This seems too low - might be per hour or incorrectly scaled
-        // For now, use directly but flag as potentially incorrect
-        metrics.restingCalories = Math.round(bmr);
+        const bmrPerHour = bmrResult[0].values[0][0] as number;
+        // IMPORTANT: FitDays stores BMR as kcal/hour (e.g., 85.86)
+        // We need to multiply by 24 to get daily resting calories
+        // Example: 85.86 kcal/hour × 24 hours = 2061 kcal/day
+        metrics.restingCalories = Math.round(bmrPerHour * 24);
         sources.add('FitDays');
-
-        if (bmr < 1000) {
-          warnings.push('BMR waarde lijkt te laag (mogelijk verkeerde eenheid)');
-        }
       }
     } catch (err) {
       // BMR is optional
     }
 
-    // 4. Active Calories (calculated if we have total and resting)
-    if (metrics.totalCalories && metrics.restingCalories) {
-      metrics.activeCalories = Math.max(0, metrics.totalCalories - metrics.restingCalories);
-    } else {
-      warnings.push('Active calories niet beschikbaar (berekening vereist total en resting)');
+    // 4. Active Calories - read directly from active_calories_burned_record_table
+    // IMPORTANT: Similar to total calories, when activities are present, Garmin creates
+    // multiple active calorie records throughout the day. We must SUM all records.
+    try {
+      const activeCaloriesResult = this.db.exec(`
+        SELECT SUM(energy) as total_active_energy
+        FROM active_calories_burned_record_table
+        WHERE local_date = ${epochDay}
+          AND app_info_id = 4  -- Garmin Connect
+      `);
+
+      if (activeCaloriesResult[0]?.values[0]?.[0]) {
+        const rawActiveEnergy = activeCaloriesResult[0].values[0][0] as number;
+        // Same conversion: divide by 1000 to get kcal
+        metrics.activeCalories = Math.round(rawActiveEnergy / 1000);
+        sources.add('Garmin Connect');
+      }
+    } catch (err) {
+      // If active calories table doesn't exist or has no data, fall back to calculation
+      if (metrics.totalCalories && metrics.restingCalories) {
+        metrics.activeCalories = Math.max(0, metrics.totalCalories - metrics.restingCalories);
+      } else {
+        warnings.push('Active calories niet beschikbaar');
+      }
     }
 
     // 5. Distance (Garmin)
@@ -597,7 +614,7 @@ class HealthConnectImportService {
       `);
       const boneMassGrams = boneMassResult[0]?.values[0]?.[0] as number | undefined;
 
-      // Get BMR (Basal Metabolic Rate in kcal)
+      // Get BMR (Basal Metabolic Rate - stored as kcal/hour, need to multiply by 24)
       const bmrResult = this.db.exec(`
         SELECT basal_metabolic_rate
         FROM basal_metabolic_rate_record_table
@@ -605,7 +622,8 @@ class HealthConnectImportService {
         ORDER BY time DESC
         LIMIT 1
       `);
-      const bmr = bmrResult[0]?.values[0]?.[0] as number | undefined;
+      const bmrPerHour = bmrResult[0]?.values[0]?.[0] as number | undefined;
+      const bmr = bmrPerHour ? bmrPerHour * 24 : undefined;
 
       // Create Weight object
       const weight: Weight = {

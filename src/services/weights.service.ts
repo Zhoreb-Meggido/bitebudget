@@ -202,7 +202,7 @@ class WeightsService {
           updated++;
           console.log(`🔄 Updated weight for ${fitDaysWeight.date} (FitDays data is newer - all fields updated)`);
         } else {
-          // Existing weight is newer, but still import body composition data if missing
+          // Existing weight is newer, but still import body composition data if missing or significantly different
           const updates: Partial<Weight> = {};
           let hasUpdates = false;
 
@@ -215,9 +215,18 @@ class WeightsService {
             updates.boneMass = fitDaysWeight.boneMass;
             hasUpdates = true;
           }
-          if (fitDaysWeight.bmr !== undefined && existing.bmr === undefined) {
-            updates.bmr = fitDaysWeight.bmr;
-            hasUpdates = true;
+          // Update BMR if it doesn't exist OR if the new value is significantly different
+          // (to fix incorrectly imported BMR values from before the ×24 conversion fix)
+          if (fitDaysWeight.bmr !== undefined) {
+            const shouldUpdateBmr = existing.bmr === undefined ||
+                                   Math.abs(fitDaysWeight.bmr - existing.bmr) > 100;
+            if (shouldUpdateBmr) {
+              updates.bmr = fitDaysWeight.bmr;
+              hasUpdates = true;
+              if (existing.bmr !== undefined) {
+                console.log(`  🔧 Updating BMR: ${existing.bmr} → ${fitDaysWeight.bmr} (significant difference detected)`);
+              }
+            }
           }
 
           if (hasUpdates) {
