@@ -1217,6 +1217,126 @@ function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): voi
 }
 
 /**
+ * Export daily aggregates to CSV (for periods <= 90 days)
+ * Combines nutrition entries with activity data per day
+ */
+export function exportDailyAggregatesToCSV(entries: any[], activities: any[], startDate: string, endDate: string): void {
+  // Generate all dates in range
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const dates: string[] = [];
+
+  for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+    dates.push(date.toISOString().split('T')[0]);
+  }
+
+  // Group entries by date
+  const entriesByDate = new Map<string, any[]>();
+  entries.forEach(entry => {
+    const existing = entriesByDate.get(entry.date) || [];
+    existing.push(entry);
+    entriesByDate.set(entry.date, existing);
+  });
+
+  // Group activities by date
+  const activitiesByDate = new Map<string, any>();
+  activities.forEach(activity => {
+    activitiesByDate.set(activity.date, activity);
+  });
+
+  // CSV Header
+  const headers = [
+    'Datum',
+    'Weekdag',
+    'Cal (kcal)',
+    'Eiwit (g)',
+    'Koolhydraten (g)',
+    'Suikers (g)',
+    'Vetten (g)',
+    'Verz. vet (g)',
+    'Vezels (g)',
+    'Natrium (mg)',
+    'Stappen',
+    'Actieve Cal (kcal)',
+    'Totaal Cal (kcal)',
+    'Intensiteit (min)',
+    'Slaap (uur)',
+    'Rust HR (bpm)',
+    'Max HR (bpm)',
+  ];
+
+  // Generate rows for each date
+  const rows = dates.map(dateStr => {
+    const date = new Date(dateStr);
+    const weekday = date.toLocaleDateString('nl-NL', { weekday: 'long' });
+
+    // Calculate nutrition totals for the day
+    const dayEntries = entriesByDate.get(dateStr) || [];
+    const nutrition = dayEntries.reduce((acc, entry) => ({
+      calories: acc.calories + (entry.calories || 0),
+      protein: acc.protein + (entry.protein || 0),
+      carbohydrates: acc.carbohydrates + (entry.carbohydrates || 0),
+      sugars: acc.sugars + (entry.sugars || 0),
+      fat: acc.fat + (entry.fat || 0),
+      saturatedFat: acc.saturatedFat + (entry.saturatedFat || 0),
+      fiber: acc.fiber + (entry.fiber || 0),
+      sodium: acc.sodium + (entry.sodium || 0),
+    }), {
+      calories: 0,
+      protein: 0,
+      carbohydrates: 0,
+      sugars: 0,
+      fat: 0,
+      saturatedFat: 0,
+      fiber: 0,
+      sodium: 0,
+    });
+
+    // Get activity data for the day
+    const activity = activitiesByDate.get(dateStr) || {};
+
+    return [
+      dateStr,
+      weekday,
+      nutrition.calories || '',
+      nutrition.protein ? nutrition.protein.toFixed(1) : '',
+      nutrition.carbohydrates ? nutrition.carbohydrates.toFixed(1) : '',
+      nutrition.sugars ? nutrition.sugars.toFixed(1) : '',
+      nutrition.fat ? nutrition.fat.toFixed(1) : '',
+      nutrition.saturatedFat ? nutrition.saturatedFat.toFixed(1) : '',
+      nutrition.fiber ? nutrition.fiber.toFixed(1) : '',
+      nutrition.sodium || '',
+      activity.steps || '',
+      activity.activeCalories || '',
+      activity.totalCalories || '',
+      activity.intensityMinutes || '',
+      activity.sleepSeconds ? (activity.sleepSeconds / 3600).toFixed(1) : '',
+      activity.heartRateResting || '',
+      activity.heartRateMax || '',
+    ];
+  });
+
+  // Build CSV content with UTF-8 BOM for Excel compatibility
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.join(',')),
+  ].join('\r\n');
+
+  // Download
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `dagelijks_overzicht_${new Date().toISOString().split('T')[0]}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
  * Export weekly aggregates to CSV
  */
 export function exportWeeklyAggregatesToCSV(weeklyAggregates: any[]): void {
