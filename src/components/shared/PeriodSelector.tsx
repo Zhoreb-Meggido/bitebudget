@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { Entry } from '@/types';
 import { downloadCSVReport } from '@/utils/export.utils';
-import { generatePdfReport, type ReportOptions, exportWeeklyAggregatesToCSV, exportMonthlyAggregatesToCSV } from '@/utils/report.utils';
+import { generatePdfReport, type ReportOptions, exportDailyAggregatesToCSV, exportWeeklyAggregatesToCSV, exportMonthlyAggregatesToCSV } from '@/utils/report.utils';
 import { useAggregates } from '@/hooks/useAggregates';
+import { useActivities } from '@/hooks/useActivities';
 
 export type TimeRange = '7' | '14' | '28' | '90' | 'this-week' | 'last-week' | 'this-month' | 'last-month' | 'all' | 'custom' | 'custom-months';
 
@@ -132,9 +133,27 @@ export function PeriodSelector({
         break;
       }
       case 'custom-months': {
-        // For custom months, set dummy dates - will be handled separately in handleExport
-        startDate = today.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        // Calculate actual date range from selected months
+        if (selectedMonths.length === 0) {
+          // No months selected - use today as dummy
+          startDate = today.toISOString().split('T')[0];
+          endDate = today.toISOString().split('T')[0];
+        } else {
+          // Sort months to get earliest and latest
+          const sortedMonths = [...selectedMonths].sort();
+          const firstMonth = sortedMonths[0]; // e.g., "2024-11"
+          const lastMonth = sortedMonths[sortedMonths.length - 1];
+
+          // Parse first month to get start date (first day of month)
+          const [startYear, startMonth] = firstMonth.split('-').map(Number);
+          const firstDay = new Date(startYear, startMonth - 1, 1);
+          startDate = firstDay.toISOString().split('T')[0];
+
+          // Parse last month to get end date (last day of month)
+          const [endYear, endMonth] = lastMonth.split('-').map(Number);
+          const lastDay = new Date(endYear, endMonth, 0); // Day 0 = last day of previous month
+          endDate = lastDay.toISOString().split('T')[0];
+        }
         break;
       }
       default: {
@@ -146,9 +165,12 @@ export function PeriodSelector({
     }
 
     return { startDate, endDate };
-  }, [timeRange, customStartDate, customEndDate, entries]);
+  }, [timeRange, customStartDate, customEndDate, selectedMonths, entries]);
 
-  // Get aggregates for CSV export (with activity data)
+  // Get activities for daily CSV export
+  const { activities } = useActivities();
+
+  // Get aggregates for CSV export (weekly for 90-365 days, monthly for > 365 days)
   const { weeklyAggregates, monthlyAggregates } = useAggregates({
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
@@ -182,19 +204,23 @@ export function PeriodSelector({
         return;
       }
 
-      // Determine whether to use weekly or monthly aggregates based on date range
+      // Determine export format based on date range
       const daysDiff = Math.ceil(
         (new Date(dateRange.endDate).getTime() - new Date(dateRange.startDate).getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      // Use weekly aggregates for periods <= 90 days, monthly for longer periods
       if (daysDiff <= 90) {
+        // Daily aggregates with activity data (≤ 90 days)
+        exportDailyAggregatesToCSV(filteredEntries, activities, dateRange.startDate, dateRange.endDate);
+      } else if (daysDiff <= 365) {
+        // Weekly aggregates (90-365 days)
         if (weeklyAggregates.length === 0) {
           alert('Geen week data beschikbaar voor de geselecteerde periode.');
           return;
         }
         exportWeeklyAggregatesToCSV(weeklyAggregates);
       } else {
+        // Monthly aggregates (> 365 days)
         if (monthlyAggregates.length === 0) {
           alert('Geen maand data beschikbaar voor de geselecteerde periode.');
           return;
