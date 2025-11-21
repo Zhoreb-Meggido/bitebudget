@@ -7,7 +7,7 @@ import { useEntries, useProducts, useSettings, useTemplates, useWeights } from '
 import { getTodayDate, calculateTotals, calculateProductNutrition } from '@/utils';
 import type { Entry, MealTemplate, Weight } from '@/types';
 import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
-import { AddMealModal } from './AddMealModal';
+import { AddMealModalV2 } from './AddMealModal.v2';
 import { MacroBreakdownModal } from './MacroBreakdownModal';
 
 export function JournalPage() {
@@ -582,7 +582,7 @@ export function JournalPage() {
         </div>
 
         {/* Modals */}
-        <AddMealModal
+        <AddMealModalV2
           isOpen={showAddMeal}
           onClose={() => {
             setShowAddMeal(false);
