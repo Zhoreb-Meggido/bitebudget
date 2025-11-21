@@ -6,6 +6,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { Product, Entry, MealTemplate, MealCategory, ProductPortion } from '@/types';
 import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from '@/utils';
 import { useTemplates, usePortions, useDebounce } from '@/hooks';
+import { PortionModal } from '@/components/shared/PortionModal';
 
 /**
  * Parse a number string that might use comma or dot as decimal separator
@@ -933,152 +934,20 @@ export function AddMealModal({ isOpen, onClose, onAddMeal, products, selectedDat
       )}
 
       {/* Add Portion Modal */}
-      {showAddPortionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Nieuwe portie voor {addPortionForProduct}</h3>
-
-            <AddPortionForm
-              productName={addPortionForProduct}
-              onSave={async (portion) => {
-                await addPortion(portion);
-                setShowAddPortionModal(false);
-                setAddPortionForProduct('');
-              }}
-              onCancel={() => {
-                setShowAddPortionModal(false);
-                setAddPortionForProduct('');
-              }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Helper component for adding portions
-function AddPortionForm({ productName, onSave, onCancel }: {
-  productName: string;
-  onSave: (portion: Omit<ProductPortion, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
-  onCancel: () => void;
-}) {
-  const [portionName, setPortionName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [unit, setUnit] = useState<'g' | 'ml' | 'stuks' | 'el' | 'tl'>('g');
-  const [gramsPerUnit, setGramsPerUnit] = useState('');
-
-  const calculateGrams = (): number => {
-    const amt = parseInt(amount) || 0;
-    if (unit === 'g') return amt;
-    if (unit === 'ml') return amt; // 1:1 for liquids
-    if (unit === 'el') return amt * 15;
-    if (unit === 'tl') return amt * 5;
-    if (unit === 'stuks') return amt * (parseInt(gramsPerUnit) || 0);
-    return amt;
-  };
-
-  const handleSave = async () => {
-    if (!portionName.trim() || !amount) {
-      alert('Vul alle velden in');
-      return;
-    }
-
-    if (unit === 'stuks' && !gramsPerUnit) {
-      alert('Vul het aantal grammen per stuk in');
-      return;
-    }
-
-    const grams = calculateGrams();
-    await onSave({
-      productName,
-      portionName,
-      amount: parseInt(amount),
-      unit,
-      gramsPerUnit: unit === 'stuks' ? parseInt(gramsPerUnit) : undefined,
-      grams,
-      isDefault: false,
-    });
-  };
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Naam portie</label>
-        <input
-          type="text"
-          value={portionName}
-          onChange={(e) => setPortionName(e.target.value)}
-          placeholder="Bijv. 1 snee, 1 kop"
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
-          autoFocus
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hoeveelheid</label>
-          <input
-            type="number"
-            inputMode="decimal"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="1"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
-            min="1"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Eenheid</label>
-          <select
-            value={unit}
-            onChange={(e) => setUnit(e.target.value as typeof unit)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
-          >
-            <option value="g">gram (g)</option>
-            <option value="ml">milliliter (ml)</option>
-            <option value="stuks">stuks</option>
-            <option value="el">eetlepel (el)</option>
-            <option value="tl">theelepel (tl)</option>
-          </select>
-        </div>
-      </div>
-
-      {unit === 'stuks' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Grammen per stuk</label>
-          <input
-            type="number"
-            inputMode="decimal"
-            value={gramsPerUnit}
-            onChange={(e) => setGramsPerUnit(e.target.value)}
-            placeholder="Bijv. 35"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
-            min="1"
-          />
-        </div>
-      )}
-
-      <div className="bg-blue-50 dark:bg-blue-900 rounded-lg p-3">
-        <p className="text-sm text-gray-700 dark:text-gray-300">
-          Totaal: <span className="font-semibold">{calculateGrams()}g</span>
-        </p>
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          onClick={onCancel}
-          className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 min-h-[44px]"
-        >
-          Annuleren
-        </button>
-        <button
-          onClick={handleSave}
-          className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 min-h-[44px]"
-        >
-          Opslaan
-        </button>
-      </div>
+      <PortionModal
+        isOpen={showAddPortionModal}
+        onClose={() => {
+          setShowAddPortionModal(false);
+          setAddPortionForProduct('');
+        }}
+        portion={null}
+        productName={addPortionForProduct}
+        onSave={async (portion) => {
+          await addPortion(portion);
+          setShowAddPortionModal(false);
+          setAddPortionForProduct('');
+        }}
+      />
     </div>
   );
 }

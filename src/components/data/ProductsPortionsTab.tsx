@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, memo } from 'react';
 import { useProducts, usePortions, useDebounce } from '@/hooks';
 import type { Product, ProductPortion } from '@/types';
 import { ProductEditModal } from './ProductEditModal';
-import { PortionEditModal } from './PortionEditModal';
+import { PortionModal } from '@/components/shared/PortionModal';
 import { BarcodeScanner } from '../journal/BarcodeScanner';
 import { OpenFoodFactsSearch } from '../journal/OpenFoodFactsSearch';
 import { openFoodFactsService } from '@/services/openfoodfacts.service';
@@ -191,7 +191,12 @@ export function ProductsPortionsTab() {
   const filteredProducts = useMemo(() =>
     products
       .filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
+        // Search in both name and brand
+        const searchTerm = debouncedSearchQuery.toLowerCase();
+        const matchesName = product.name.toLowerCase().includes(searchTerm);
+        const matchesBrand = product.brand?.toLowerCase().includes(searchTerm) || false;
+        const matchesSearch = matchesName || matchesBrand;
+
         if (!matchesSearch) return false;
 
         if (showOnlyWithPortions) {
@@ -299,7 +304,7 @@ export function ProductsPortionsTab() {
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Zoek producten..."
+              placeholder="Zoek op naam of merk..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
@@ -365,7 +370,7 @@ export function ProductsPortionsTab() {
         product={editingProduct}
         onSave={handleSaveProduct}
       />
-      <PortionEditModal
+      <PortionModal
         isOpen={showPortionModal}
         onClose={() => setShowPortionModal(false)}
         portion={editingPortion}
