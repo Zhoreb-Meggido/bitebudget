@@ -24,24 +24,30 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   const hasScannedRef = useRef(false); // Prevent multiple scans
   const [showCameraSelector, setShowCameraSelector] = useState(false);
 
-  // Define stopScanning first
-  const stopScanning = useCallback(async () => {
-    if (scannerRef.current && isScanning) {
+  // Define stopScanning as a ref function to avoid dependency issues
+  const stopScanning = async () => {
+    if (scannerRef.current) {
       try {
+        console.log('Stopping scanner...');
         await scannerRef.current.stop();
         scannerRef.current.clear();
         scannerRef.current = null;
         setIsScanning(false);
+        console.log('Scanner stopped');
       } catch (err) {
         console.error('Error stopping scanner:', err);
       }
     }
-  }, [isScanning]);
+  };
 
   // Define startScanning before useEffect
-  const startScanning = useCallback(async () => {
+  const startScanning = async () => {
+    console.log('startScanning called, selectedCamera:', selectedCamera);
+
     if (!selectedCamera) {
+      console.error('No camera selected');
       setError('Selecteer eerst een camera');
+      setShowCameraSelector(true);
       return;
     }
 
@@ -49,6 +55,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
     // This prevents saving invalid camera IDs
     if (cameras.some(c => c.id === selectedCamera)) {
       localStorage.setItem(CAMERA_PREFERENCE_KEY, selectedCamera);
+      console.log('Saved camera preference:', selectedCamera);
     }
 
     // First set isScanning to true so the div is rendered
@@ -75,6 +82,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
         throw new Error('Scanner div not found in DOM');
       }
 
+      console.log('Starting scanner with camera:', selectedCamera);
       const scanner = new Html5Qrcode('barcode-reader');
       scannerRef.current = scanner;
 
@@ -106,13 +114,14 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
           // console.log('Scanning...', errorMessage);
         }
       );
+      console.log('Scanner started successfully');
     } catch (err: any) {
       console.error('Error starting scanner:', err);
       console.error('Full error details:', JSON.stringify(err, null, 2));
       setError(`Fout: ${err?.message || 'Kon scanner niet starten'}`);
       setIsScanning(false);
     }
-  }, [selectedCamera, cameras, isScanning, onScan, stopScanning]);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -208,7 +217,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
         scannerRef.current = null;
       }
     };
-  }, [isOpen, startScanning, stopScanning]);
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChangeCamera = async () => {
     await stopScanning();
