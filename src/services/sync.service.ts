@@ -69,6 +69,16 @@ class SyncService {
     // Bidirectional sync every 5 minutes (pull + push)
     this.autoSyncInterval = window.setInterval(async () => {
       try {
+        // Check if any modals have unsaved changes
+        const hasUnsavedChanges = window.dispatchEvent(
+          new CustomEvent('check-modal-dirty-state', { cancelable: true })
+        );
+
+        if (!hasUnsavedChanges) {
+          console.log('⏰ Auto-sync skipped: Modal has unsaved changes');
+          return;
+        }
+
         console.log('⏰ Auto-sync: Running periodic sync...');
         await this.syncToCloud(password, false); // Smart merge (not force)
       } catch (error) {

@@ -15,14 +15,91 @@ import { AppFooter } from '@/components/AppFooter'
 import { AutoSyncWarningModal, useAutoSyncWarning } from '@/components/AutoSyncWarningModal'
 import { TokenExpiringModal } from '@/components/TokenExpiringModal'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import { ModalStateProvider, useModalState } from '@/contexts/ModalStateContext'
+import { QuickActions } from '@/components/QuickActions'
+import { AddMealModalV2 } from '@/components/journal/AddMealModal.v2'
+import { ProductEditModal } from '@/components/data/ProductEditModal'
+import { BarcodeScanner } from '@/components/data/BarcodeScanner'
+import { OpenFoodFactsSearch } from '@/components/data/OpenFoodFactsSearch'
+import { useProducts, useEntries } from '@/hooks'
+import { getTodayDate } from '@/utils'
+import { openFoodFactsService } from '@/services/openfoodfacts.service'
+import { productsService } from '@/services/products.service'
 
-// App component met database initialisatie
-function App() {
-  const { isInitialized, error } = useDatabase();
+// Inner app component with modal state access
+function AppContent() {
   const [activeTab, setActiveTab] = useActiveTab();
   const { shouldShowWarning, dismissWarning } = useAutoSyncWarning();
   const [tokenExpiringMinutes, setTokenExpiringMinutes] = useState<number | null>(null);
   const [oauthProcessing, setOauthProcessing] = useState(false);
+  const { hasUnsavedChanges } = useModalState();
+
+  // Global QuickActions modal states
+  const [showQuickActions, setShowQuickActions] = useState(false);
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showScannerModal, setShowScannerModal] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+
+  // Data hooks for global modals
+  const { products, addProduct, updateProduct, reloadProducts } = useProducts();
+  const { addEntry } = useEntries();
+  const [selectedDate] = useState(getTodayDate());
+
+  // QuickActions handlers
+  const handleQuickAddMeal = () => {
+    setActiveTab('journaal'); // Switch to journal tab
+    setShowAddMealModal(true);
+  };
+
+  const handleQuickAddProduct = () => {
+    setShowAddProductModal(true);
+  };
+
+  const handleQuickScan = () => {
+    setShowQuickActions(false); // Close bottom sheet first
+    setShowScannerModal(true);
+  };
+
+  const handleQuickSearch = () => {
+    setShowQuickActions(false); // Close bottom sheet first
+    setShowSearchModal(true);
+  };
+
+  // Product modal save handler
+  const handleSaveProduct = async (data: any) => {
+    await addProduct(data);
+    setShowAddProductModal(false);
+  };
+
+  // Barcode scan handler
+  const handleBarcodeScan = async (barcode: string) => {
+    try {
+      const result = await openFoodFactsService.getProductByBarcode(barcode);
+      if (result) {
+        await productsService.addProduct(result);
+        await reloadProducts();
+        setShowScannerModal(false);
+        alert(`✓ Product toegevoegd: ${result.name}`);
+      } else {
+        alert('❌ Product niet gevonden');
+      }
+    } catch (error: any) {
+      alert(error.message || 'Fout bij opslaan product');
+    }
+  };
+
+  // Search product handler
+  const handleProductSelected = async (product: any) => {
+    try {
+      await productsService.addProduct(product);
+      await reloadProducts();
+      setShowSearchModal(false);
+      alert(`✓ Product toegevoegd: ${product.name}`);
+    } catch (error: any) {
+      alert(error.message || 'Fout bij opslaan product');
+    }
+  };
 
   // Handle OAuth callback (Google Drive Authorization Code Flow)
   useEffect(() => {
@@ -157,6 +234,123 @@ function App() {
     };
   }, []);
 
+  // Listen for modal dirty state checks (from sync service)
+  useEffect(() => {
+    const handleDirtyStateCheck = (event: Event) => {
+      // If there are unsaved changes, prevent the event (which cancels auto-sync)
+      if (hasUnsavedChanges()) {
+        event.preventDefault();
+        console.log('🔒 Auto-sync blocked: Modal has unsaved changes');
+      }
+    };
+
+    window.addEventListener('check-modal-dirty-state', handleDirtyStateCheck);
+
+    return () => {
+      window.removeEventListener('check-modal-dirty-state', handleDirtyStateCheck);
+    };
+  }, [hasUnsavedChanges]);
+
+  if (oauthProcessing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            Google Drive wordt verbonden...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
+      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="flex-1 overflow-y-auto py-4">
+        {activeTab === 'journaal' && <JournalPage />}
+        {activeTab === 'tracking' && <TrackingPage />}
+        {activeTab === 'dashboard' && <DashboardPage />}
+        {activeTab === 'analyse' && <AnalysePage />}
+        {activeTab === 'data' && <DataPage />}
+        {activeTab === 'instellingen' && <SettingsPage />}
+      </div>
+      <AppFooter onQuickActionsClick={() => setShowQuickActions(true)} />
+
+      {/* Auto-Sync Warning Modal */}
+      {shouldShowWarning && (
+        <AutoSyncWarningModal onClose={dismissWarning} />
+      )}
+
+      {/* Token Expiring Warning Modal */}
+      {tokenExpiringMinutes !== null && (
+        <TokenExpiringModal
+          minutesRemaining={tokenExpiringMinutes}
+          onClose={() => setTokenExpiringMinutes(null)}
+        />
+      )}
+
+      {/* Global QuickActions Bottom Sheet */}
+      <QuickActions
+        isOpen={showQuickActions}
+        onToggle={() => setShowQuickActions(!showQuickActions)}
+        onAddMeal={handleQuickAddMeal}
+        onAddProduct={handleQuickAddProduct}
+        onScan={handleQuickScan}
+        onSearch={handleQuickSearch}
+      />
+
+      {/* Global Modals for QuickActions */}
+      {showAddMealModal && (
+        <AddMealModalV2
+          isOpen={showAddMealModal}
+          onClose={() => setShowAddMealModal(false)}
+          onAddMeal={async (entry) => {
+            await addEntry(entry);
+            setShowAddMealModal(false);
+          }}
+          onUpdateMeal={async () => {
+            // Not used in quick add context
+          }}
+          editEntry={undefined}
+          products={products}
+          selectedDate={selectedDate}
+          quickAddTemplate={null}
+        />
+      )}
+
+      {showAddProductModal && (
+        <ProductEditModal
+          isOpen={showAddProductModal}
+          onClose={() => setShowAddProductModal(false)}
+          product={null}
+          onSave={handleSaveProduct}
+        />
+      )}
+
+      {showScannerModal && (
+        <BarcodeScanner
+          isOpen={showScannerModal}
+          onClose={() => setShowScannerModal(false)}
+          onScan={handleBarcodeScan}
+        />
+      )}
+
+      {showSearchModal && (
+        <OpenFoodFactsSearch
+          isOpen={showSearchModal}
+          onClose={() => setShowSearchModal(false)}
+          onSelectProduct={handleProductSelected}
+        />
+      )}
+    </div>
+  );
+}
+
+// Outer App component with providers and database initialization
+function App() {
+  const { isInitialized, error } = useDatabase();
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50 dark:bg-red-950">
@@ -170,13 +364,13 @@ function App() {
     );
   }
 
-  if (!isInitialized || oauthProcessing) {
+  if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">
-            {oauthProcessing ? 'Google Drive wordt verbonden...' : 'Database wordt geïnitialiseerd...'}
+            Database wordt geïnitialiseerd...
           </p>
         </div>
       </div>
@@ -185,31 +379,9 @@ function App() {
 
   return (
     <ThemeProvider>
-      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
-        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-        <div className="flex-1 overflow-y-auto py-4">
-          {activeTab === 'journaal' && <JournalPage />}
-          {activeTab === 'tracking' && <TrackingPage />}
-          {activeTab === 'dashboard' && <DashboardPage />}
-          {activeTab === 'analyse' && <AnalysePage />}
-          {activeTab === 'data' && <DataPage />}
-          {activeTab === 'instellingen' && <SettingsPage />}
-        </div>
-        <AppFooter />
-
-        {/* Auto-Sync Warning Modal */}
-        {shouldShowWarning && (
-          <AutoSyncWarningModal onClose={dismissWarning} />
-        )}
-
-        {/* Token Expiring Warning Modal */}
-        {tokenExpiringMinutes !== null && (
-          <TokenExpiringModal
-            minutesRemaining={tokenExpiringMinutes}
-            onClose={() => setTokenExpiringMinutes(null)}
-          />
-        )}
-      </div>
+      <ModalStateProvider>
+        <AppContent />
+      </ModalStateProvider>
     </ThemeProvider>
   );
 }

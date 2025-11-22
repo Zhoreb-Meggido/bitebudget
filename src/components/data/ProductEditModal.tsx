@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Product } from '@/types';
+import { useModalLock } from '@/contexts/ModalStateContext';
 
 interface Props {
   isOpen: boolean;
@@ -61,6 +62,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
     favorite: false,
   });
   const [isSaving, setIsSaving] = useState(false);
+  const { markDirty, markClean } = useModalLock('product-edit-modal');
 
   // Load product data when editing
   useEffect(() => {
@@ -120,12 +122,23 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
         favorite: formData.favorite,
         source: product?.source || 'manual', // Preserve source when editing, default to 'manual' when adding
       });
+      markClean(); // Clear dirty state before closing
       onClose();
     } catch (error: any) {
       alert(error.message || 'Fout bij opslaan');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleClose = () => {
+    markClean();
+    onClose();
+  };
+
+  const handleChange = (field: string, value: any) => {
+    setFormData({ ...formData, [field]: value });
+    markDirty(); // Mark as dirty on any change
   };
 
   if (!isOpen) return null;
@@ -139,7 +152,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
             {product ? 'Product Bewerken' : 'Nieuw Product'}
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
           >
             ×
@@ -157,7 +170,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => handleChange('name', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
@@ -169,7 +182,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               <input
                 type="text"
                 value={formData.brand}
-                onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+                onChange={(e) => handleChange('brand', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -186,7 +199,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 inputMode="decimal"
                 step="0.1"
                 value={formData.calories}
-                onChange={(e) => setFormData(prev => ({ ...prev, calories: e.target.value }))}
+                onChange={(e) => handleChange('calories', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
@@ -200,7 +213,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 inputMode="decimal"
                 step="0.1"
                 value={formData.protein}
-                onChange={(e) => setFormData(prev => ({ ...prev, protein: e.target.value }))}
+                onChange={(e) => handleChange('protein', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
@@ -218,7 +231,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 inputMode="decimal"
                 step="0.1"
                 value={formData.carbohydrates}
-                onChange={(e) => setFormData(prev => ({ ...prev, carbohydrates: e.target.value }))}
+                onChange={(e) => handleChange('carbohydrates', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -231,7 +244,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 inputMode="decimal"
                 step="0.1"
                 value={formData.sugars}
-                onChange={(e) => setFormData(prev => ({ ...prev, sugars: e.target.value }))}
+                onChange={(e) => handleChange('sugars', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -248,7 +261,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 inputMode="decimal"
                 step="0.1"
                 value={formData.fat}
-                onChange={(e) => setFormData(prev => ({ ...prev, fat: e.target.value }))}
+                onChange={(e) => handleChange('fat', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
@@ -262,7 +275,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 inputMode="decimal"
                 step="0.1"
                 value={formData.saturatedFat}
-                onChange={(e) => setFormData(prev => ({ ...prev, saturatedFat: e.target.value }))}
+                onChange={(e) => handleChange('saturatedFat', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -279,7 +292,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 inputMode="decimal"
                 step="0.1"
                 value={formData.fiber}
-                onChange={(e) => setFormData(prev => ({ ...prev, fiber: e.target.value }))}
+                onChange={(e) => handleChange('fiber', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -292,7 +305,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
                 inputMode="decimal"
                 step="1"
                 value={formData.sodium}
-                onChange={(e) => setFormData(prev => ({ ...prev, sodium: e.target.value }))}
+                onChange={(e) => handleChange('sodium', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -304,7 +317,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
               <input
                 type="checkbox"
                 checked={formData.favorite}
-                onChange={(e) => setFormData(prev => ({ ...prev, favorite: e.target.checked }))}
+                onChange={(e) => handleChange('favorite', e.target.checked)}
                 className="rounded"
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Favoriet</span>
@@ -322,7 +335,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               Annuleren

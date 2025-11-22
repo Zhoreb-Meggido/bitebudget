@@ -8,6 +8,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import type { Product, Entry, MealTemplate, ProductPortion } from '@/types';
 import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from '@/utils';
 import { useTemplates, usePortions, useDebounce } from '@/hooks';
+import { useModalLock } from '@/contexts/ModalStateContext';
 
 // Cart item - product with selected quantity
 interface CartItem {
@@ -38,6 +39,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
 
   const { templates, recentTemplates, favoriteTemplates, trackUsage } = useTemplates();
   const { portions: allPortions } = usePortions();
+  const { markDirty, markClean } = useModalLock('add-meal-modal-v2');
 
   const debouncedProductSearch = useDebounce(productSearch, 300);
   const debouncedTemplateSearch = useDebounce(templateSearch, 300);
@@ -139,6 +141,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
     const grams = defaultPortion?.grams || 100;
 
     setCart([...cart, { product, grams }]);
+    markDirty(); // Mark modal as having unsaved changes
   };
 
   // Load template into cart
@@ -154,6 +157,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
     setMealTime(getCurrentTime());
     await trackUsage(template.id!);
     setStep(2);
+    markDirty(); // Mark modal as having unsaved changes
   };
 
   // Update cart item grams
@@ -161,11 +165,13 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
     const newCart = [...cart];
     newCart[index] = { ...newCart[index], grams };
     setCart(newCart);
+    markDirty(); // Mark modal as having unsaved changes
   };
 
   // Remove from cart
   const removeFromCart = (index: number) => {
     setCart(cart.filter((_, i) => i !== index));
+    markDirty(); // Mark modal as having unsaved changes
   };
 
   // Submit meal
@@ -190,6 +196,13 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
       await onAddMeal(mealData);
     }
 
+    markClean(); // Clear dirty state before closing
+    onClose();
+  };
+
+  // Handle close (also clear dirty state)
+  const handleClose = () => {
+    markClean();
     onClose();
   };
 
@@ -222,7 +235,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
               {isEditMode ? 'Maaltijd bewerken' : 'Maaltijd toevoegen'}
             </h3>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 text-2xl sm:flex"
               aria-label="Sluiten"
             >✕</button>

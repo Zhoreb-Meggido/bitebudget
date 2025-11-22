@@ -3,8 +3,8 @@ import { useProducts, usePortions, useDebounce } from '@/hooks';
 import type { Product, ProductPortion } from '@/types';
 import { ProductEditModal } from './ProductEditModal';
 import { PortionModal } from '@/components/shared/PortionModal';
-import { BarcodeScanner } from '../journal/BarcodeScanner';
-import { OpenFoodFactsSearch } from '../journal/OpenFoodFactsSearch';
+import { BarcodeScanner } from './BarcodeScanner';
+import { OpenFoodFactsSearch } from './OpenFoodFactsSearch';
 import { openFoodFactsService } from '@/services/openfoodfacts.service';
 import { productsService } from '@/services/products.service';
 

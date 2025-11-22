@@ -611,6 +611,7 @@ export function JournalPage() {
             unit={breakdownModal.unit}
           />
         )}
+
       </div>
     </div>
   );
