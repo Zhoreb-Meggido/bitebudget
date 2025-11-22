@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NutritionTab } from './NutritionTab';
 import { ActivityTab } from './ActivityTab';
 import { BalanceTab } from './BalanceTab';
@@ -8,8 +8,17 @@ import { useSwipeTabs } from '../../hooks';
 
 type TabType = 'nutrition' | 'activity' | 'balance' | 'trends' | 'aggregates';
 
+const ANALYSE_TAB_KEY = 'voedseljournaal_analyse_tab';
+
 export function AnalysePageWithTabs() {
-  const [activeTab, setActiveTab] = useState<TabType>('nutrition');
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    const saved = localStorage.getItem(ANALYSE_TAB_KEY);
+    return (saved as TabType) || 'nutrition';
+  });
+
+  useEffect(() => {
+    localStorage.setItem(ANALYSE_TAB_KEY, activeTab);
+  }, [activeTab]);
 
   const tabs = [
     { id: 'nutrition' as TabType, label: 'Voeding', icon: '🍎' },

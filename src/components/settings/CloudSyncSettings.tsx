@@ -2,7 +2,7 @@
  * CloudSyncSettings - Google Drive sync met encryptie
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { googleDriveService } from '@/services/googledrive.service';
 import { syncService } from '@/services/sync.service';
 
@@ -17,46 +17,7 @@ export function CloudSyncSettings() {
   const [success, setSuccess] = useState<string | null>(null);
   const [cloudInfo, setCloudInfo] = useState<{ date: Date; size: number } | null>(null);
 
-  const refreshConnectionState = () => {
-    // Check if already connected
-    setIsConnected(googleDriveService.isSignedIn());
-
-    // Load last sync time
-    const lastSyncTime = syncService.getLastSyncTime();
-    setLastSync(lastSyncTime);
-
-    // Load stored password if exists
-    const storedPassword = syncService.getStoredPassword();
-    if (storedPassword) {
-      setEncryptionPassword(storedPassword);
-      setRememberPassword(true);
-    }
-
-    // Check if auto-sync is enabled
-    setAutoSyncEnabled(syncService.isAutoSyncEnabled());
-
-    // Load cloud info if connected (don't auto-sync on page load)
-    if (googleDriveService.isSignedIn()) {
-      loadCloudInfo(false);
-    }
-  };
-
-  useEffect(() => {
-    refreshConnectionState();
-
-    // Listen for reconnection events from modal
-    const handleReconnect = () => {
-      refreshConnectionState();
-    };
-
-    window.addEventListener('google-drive-reconnected', handleReconnect);
-
-    return () => {
-      window.removeEventListener('google-drive-reconnected', handleReconnect);
-    };
-  }, []);
-
-  const loadCloudInfo = async (shouldAutoSync: boolean = true) => {
+  const loadCloudInfo = useCallback(async (shouldAutoSync: boolean = true) => {
     try {
       const info = await googleDriveService.getLastSyncInfo();
       setCloudInfo(info);
@@ -85,9 +46,48 @@ export function CloudSyncSettings() {
     } catch (err) {
       console.error('Failed to load cloud info:', err);
     }
-  };
+  }, [isSyncing]);
 
-  const handleConnect = async () => {
+  const refreshConnectionState = useCallback(() => {
+    // Check if already connected
+    setIsConnected(googleDriveService.isSignedIn());
+
+    // Load last sync time
+    const lastSyncTime = syncService.getLastSyncTime();
+    setLastSync(lastSyncTime);
+
+    // Load stored password if exists
+    const storedPassword = syncService.getStoredPassword();
+    if (storedPassword) {
+      setEncryptionPassword(storedPassword);
+      setRememberPassword(true);
+    }
+
+    // Check if auto-sync is enabled
+    setAutoSyncEnabled(syncService.isAutoSyncEnabled());
+
+    // Load cloud info if connected (don't auto-sync on page load)
+    if (googleDriveService.isSignedIn()) {
+      loadCloudInfo(false);
+    }
+  }, [loadCloudInfo]);
+
+  useEffect(() => {
+    refreshConnectionState();
+
+    // Listen for reconnection events from modal
+    const handleReconnect = () => {
+      refreshConnectionState();
+    };
+
+    window.addEventListener('google-drive-reconnected', handleReconnect);
+
+    return () => {
+      window.removeEventListener('google-drive-reconnected', handleReconnect);
+    };
+  }, [refreshConnectionState]);
+
+  const handleConnect = useCallback(async () => {
     setError(null);
     setSuccess(null);
 
@@ -101,9 +101,9 @@ export function CloudSyncSettings() {
     } catch (err: any) {
       setError(`Verbinding mislukt: ${err.message}`);
     }
-  };
+  }, [loadCloudInfo]);
 
-  const handleDisconnect = async () => {
+  const handleDisconnect = useCallback(async () => {
     // Disable auto-sync first
     if (autoSyncEnabled) {
       syncService.disableAutoSync();
@@ -117,9 +117,9 @@ export function CloudSyncSettings() {
     setIsConnected(false);
     setCloudInfo(null);
     setSuccess('Ontkoppeld van Google Drive');
-  };
+  }, [autoSyncEnabled]);
 
-  const handleSync = async () => {
+  const handleSync = useCallback(async () => {
     if (!encryptionPassword) {
       setError('Voer een encryptie wachtwoord in');
       return;
@@ -146,9 +146,9 @@ export function CloudSyncSettings() {
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [encryptionPassword, rememberPassword, loadCloudInfo]);
 
-  const handleForceSync = async () => {
+  const handleForceSync = useCallback(async () => {
     if (!encryptionPassword) {
       setError('Voer een encryptie wachtwoord in');
       return;
@@ -179,9 +179,9 @@ export function CloudSyncSettings() {
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [encryptionPassword, rememberPassword, loadCloudInfo]);
 
-  const handleRestore = async () => {
+  const handleRestore = useCallback(async () => {
     if (!encryptionPassword) {
       setError('Voer een encryptie wachtwoord in');
       return;
@@ -216,9 +216,9 @@ export function CloudSyncSettings() {
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [encryptionPassword, rememberPassword]);
 
-  const handleToggleAutoSync = () => {
+  const handleToggleAutoSync = useCallback(() => {
     if (!encryptionPassword) {
       setError('Voer eerst een encryptie wachtwoord in voor auto-sync');
       return;
@@ -235,7 +235,7 @@ export function CloudSyncSettings() {
     }
 
     setTimeout(() => setSuccess(null), 3000);
-  };
+  }, [encryptionPassword, autoSyncEnabled]);
 
   return (
     <div className="space-y-6">

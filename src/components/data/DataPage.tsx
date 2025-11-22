@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ImportExportTab } from './ImportExportTab';
 import { ProductsPortionsTab } from './ProductsPortionsTab';
 import { TemplatesTab } from './TemplatesTab';
@@ -6,8 +6,17 @@ import { useSwipeTabs } from '../../hooks';
 
 type DataTab = 'products' | 'templates' | 'import-export';
 
+const DATA_TAB_KEY = 'voedseljournaal_data_tab';
+
 export function DataPage() {
-  const [activeTab, setActiveTab] = useState<DataTab>('products');
+  const [activeTab, setActiveTab] = useState<DataTab>(() => {
+    const saved = localStorage.getItem(DATA_TAB_KEY);
+    return (saved as DataTab) || 'products';
+  });
+
+  useEffect(() => {
+    localStorage.setItem(DATA_TAB_KEY, activeTab);
+  }, [activeTab]);
 
   // Enable swipe gestures for tab navigation
   const tabs: DataTab[] = ['products', 'templates', 'import-export'];

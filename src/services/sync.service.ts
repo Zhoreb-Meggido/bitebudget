@@ -54,6 +54,21 @@ class SyncService {
       this.autoSyncEnabled = true;
       this.startAutoSyncInterval(password);
       console.log('Auto-sync restored from previous session');
+
+      // Perform initial sync on app startup (after a short delay to let app initialize)
+      setTimeout(async () => {
+        try {
+          console.log('🔄 Auto-sync: Performing initial sync on app startup...');
+          await this.syncToCloud(password, false); // Smart merge (not force)
+        } catch (error) {
+          console.error('Initial auto-sync failed:', error);
+
+          // Check if failure was due to token expiry
+          if (!googleDriveService.isSignedIn()) {
+            window.dispatchEvent(new CustomEvent('google-drive-token-expired'));
+          }
+        }
+      }, 2000); // 2 second delay to let app initialize
     }
   }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useWeights, useSettings } from '@/hooks';
 import type { Weight } from '@/types';
 import { getTodayDate } from '@/utils/date.utils';
@@ -101,69 +101,76 @@ export function TrackingPage() {
     setNote('');
   };
 
-  // Prepare chart data (last 90 days)
-  const last90Days = weights.slice(0, 90).reverse();
-  const chartData = {
-    labels: last90Days.map(w => {
-      const d = new Date(w.date);
-      return `${d.getDate()}/${d.getMonth() + 1}`;
-    }),
-    datasets: [
-      {
-        label: 'Gewicht (kg)',
-        data: last90Days.map(w => w.weight),
-        borderColor: isDarkMode ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
-        backgroundColor: isDarkMode ? 'rgba(96, 165, 250, 0.1)' : 'rgba(59, 130, 246, 0.1)',
-        fill: true,
-        tension: 0.3,
-      },
-      {
-        label: 'Streefgewicht',
-        data: last90Days.map(() => settings.targetWeight),
-        borderColor: isDarkMode ? 'rgb(74, 222, 128)' : 'rgb(34, 197, 94)',
-        backgroundColor: 'transparent',
-        borderDash: [5, 5],
-        pointRadius: 0,
-      },
-    ],
-  };
+  // Memoize chart data to prevent recalculation on every render (e.g., during typing)
+  const last90Days = useMemo(() => {
+    return weights.slice(0, 90).reverse();
+  }, [weights]);
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
+  const chartData = useMemo(() => {
+    return {
+      labels: last90Days.map(w => {
+        const d = new Date(w.date);
+        return `${d.getDate()}/${d.getMonth() + 1}`;
+      }),
+      datasets: [
+        {
+          label: 'Gewicht (kg)',
+          data: last90Days.map(w => w.weight),
+          borderColor: isDarkMode ? 'rgb(96, 165, 250)' : 'rgb(59, 130, 246)',
+          backgroundColor: isDarkMode ? 'rgba(96, 165, 250, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+          fill: true,
+          tension: 0.3,
+        },
+        {
+          label: 'Streefgewicht',
+          data: last90Days.map(() => settings.targetWeight),
+          borderColor: isDarkMode ? 'rgb(74, 222, 128)' : 'rgb(34, 197, 94)',
+          backgroundColor: 'transparent',
+          borderDash: [5, 5],
+          pointRadius: 0,
+        },
+      ],
+    };
+  }, [last90Days, settings.targetWeight, isDarkMode]);
+
+  const chartOptions = useMemo(() => {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top' as const,
+          labels: {
+            color: isDarkMode ? 'rgb(229, 231, 235)' : 'rgb(31, 41, 55)',
+          },
+        },
+        title: {
+          display: true,
+          text: 'Gewichtsontwikkeling (laatste 90 dagen)',
           color: isDarkMode ? 'rgb(229, 231, 235)' : 'rgb(31, 41, 55)',
         },
       },
-      title: {
-        display: true,
-        text: 'Gewichtsontwikkeling (laatste 90 dagen)',
-        color: isDarkMode ? 'rgb(229, 231, 235)' : 'rgb(31, 41, 55)',
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: isDarkMode ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)',
+      scales: {
+        x: {
+          ticks: {
+            color: isDarkMode ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)',
+          },
+          grid: {
+            color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 1)',
+          },
         },
-        grid: {
-          color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 1)',
-        },
-      },
-      y: {
-        beginAtZero: false,
-        ticks: {
-          color: isDarkMode ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)',
-        },
-        grid: {
-          color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 1)',
+        y: {
+          beginAtZero: false,
+          ticks: {
+            color: isDarkMode ? 'rgb(156, 163, 175)' : 'rgb(107, 114, 128)',
+          },
+          grid: {
+            color: isDarkMode ? 'rgba(75, 85, 99, 0.3)' : 'rgba(229, 231, 235, 1)',
+          },
         },
       },
-    },
-  };
+    };
+  }, [isDarkMode]);
 
   const latestWeight = weights[0];
   const weightDiff = latestWeight ? latestWeight.weight - settings.targetWeight : 0;

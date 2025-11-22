@@ -3,7 +3,7 @@
  * Shows ~680 HR samples for a single day with time on X-axis and BPM on Y-axis
  */
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import type { DayHeartRateSamples, HeartRateSample } from '@/types';
 
 interface HeartRateChartProps {
@@ -75,36 +75,46 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
     return padding.top + innerHeight - ((bpm - yMin) / (yMax - yMin)) * innerHeight;
   };
 
-  // Generate SVG path for line chart
-  const linePath = data.samples
-    .map((sample: HeartRateSample, i: number) => {
-      const x = xScale(sample.timestamp);
-      const y = yScale(sample.bpm);
-      return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
-    })
-    .join(' ');
+  // Memoize expensive SVG path generation (680 samples)
+  const linePath = useMemo(() => {
+    return data.samples
+      .map((sample: HeartRateSample, i: number) => {
+        const x = xScale(sample.timestamp);
+        const y = yScale(sample.bpm);
+        return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
+      })
+      .join(' ');
+  }, [data.samples, containerWidth]);
 
-  // Generate area path (for gradient fill)
-  const areaPath = data.samples.length > 0
-    ? `${linePath} L ${xScale(data.samples[data.samples.length - 1].timestamp)},${padding.top + innerHeight} L ${xScale(data.samples[0].timestamp)},${padding.top + innerHeight} Z`
-    : '';
+  // Memoize area path
+  const areaPath = useMemo(() => {
+    return data.samples.length > 0
+      ? `${linePath} L ${xScale(data.samples[data.samples.length - 1].timestamp)},${padding.top + innerHeight} L ${xScale(data.samples[0].timestamp)},${padding.top + innerHeight} Z`
+      : '';
+  }, [linePath, data.samples, containerWidth]);
 
-  // Y-axis labels (every 20 bpm)
-  const yLabels = [];
-  const yStep = 20;
-  for (let bpm = Math.ceil(yMin / yStep) * yStep; bpm <= yMax; bpm += yStep) {
-    yLabels.push(bpm);
-  }
+  // Memoize Y-axis labels
+  const yLabels = useMemo(() => {
+    const labels = [];
+    const yStep = 20;
+    for (let bpm = Math.ceil(yMin / yStep) * yStep; bpm <= yMax; bpm += yStep) {
+      labels.push(bpm);
+    }
+    return labels;
+  }, [yMin, yMax]);
 
-  // X-axis labels (every 3 hours)
-  const xLabels = [];
-  for (let hour = 0; hour <= 24; hour += 3) {
-    const timestamp = dayStart + hour * 3600 * 1000;
-    xLabels.push({
-      label: `${hour.toString().padStart(2, '0')}:00`,
-      x: xScale(timestamp),
-    });
-  }
+  // Memoize X-axis labels
+  const xLabels = useMemo(() => {
+    const labels = [];
+    for (let hour = 0; hour <= 24; hour += 3) {
+      const timestamp = dayStart + hour * 3600 * 1000;
+      labels.push({
+        label: `${hour.toString().padStart(2, '0')}:00`,
+        x: xScale(timestamp),
+      });
+    }
+    return labels;
+  }, [dayStart, containerWidth]);
 
   // Heart rate zones (based on estimated max HR or measured max)
   // Use 220 - 35 (age estimate) = 185 as default max HR
@@ -117,16 +127,18 @@ export function HeartRateChart({ data, onClose }: HeartRateChartProps) {
     { name: 'Zone 5 (Max)', min: estimatedMaxHR * 0.9, max: estimatedMaxHR, color: '#f87171', opacity: 0.15 }, // Red
   ];
 
-  // Calculate time spent in each zone
-  const zoneStats = hrZones.map(zone => {
-    const samplesInZone = data.samples.filter((s: HeartRateSample) => s.bpm >= zone.min && s.bpm < zone.max).length;
-    const percentage = (samplesInZone / data.samples.length) * 100;
-    return {
-      ...zone,
-      count: samplesInZone,
-      percentage: percentage,
-    };
-  });
+  // Memoize zone statistics calculation (680 samples)
+  const zoneStats = useMemo(() => {
+    return hrZones.map(zone => {
+      const samplesInZone = data.samples.filter((s: HeartRateSample) => s.bpm >= zone.min && s.bpm < zone.max).length;
+      const percentage = (samplesInZone / data.samples.length) * 100;
+      return {
+        ...zone,
+        count: samplesInZone,
+        percentage: percentage,
+      };
+    });
+  }, [data.samples]);
 
   return (
     <div className="w-full">

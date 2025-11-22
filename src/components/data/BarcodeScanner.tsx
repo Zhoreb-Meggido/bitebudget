@@ -92,6 +92,12 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
             setError('📷 Camera niet beschikbaar op dit apparaat. Gebruik de OpenFoodFacts zoekfunctie of voeg handmatig een product toe.');
           }
         });
+    } else {
+      // Reset state when modal closes
+      setShowCameraSelector(false);
+      setCameras([]);
+      setSelectedCamera('');
+      setError(null);
     }
 
     return () => {

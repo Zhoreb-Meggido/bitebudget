@@ -3,6 +3,7 @@
  * Toont timeline van licht/diep/REM/wakker slaap voor één nacht
  */
 
+import { useMemo } from 'react';
 import { SleepStageType, type DaySleepStages } from '@/types';
 
 interface SleepStagesChartProps {
@@ -45,11 +46,14 @@ export function SleepStagesChart({ data, onClose }: SleepStagesChartProps) {
     );
   }
 
-  const totalHours = data.totalSleepMs / 3600000;
-  const lightHours = data.lightSleepMs / 3600000;
-  const deepHours = data.deepSleepMs / 3600000;
-  const remHours = data.remSleepMs / 3600000;
-  const awakeHours = data.awakeSleepMs / 3600000;
+  // Memoize hour calculations
+  const sleepHours = useMemo(() => ({
+    total: data.totalSleepMs / 3600000,
+    light: data.lightSleepMs / 3600000,
+    deep: data.deepSleepMs / 3600000,
+    rem: data.remSleepMs / 3600000,
+    awake: data.awakeSleepMs / 3600000,
+  }), [data.totalSleepMs, data.lightSleepMs, data.deepSleepMs, data.remSleepMs, data.awakeSleepMs]);
 
   const sleepStartTime = new Date(data.sleepStart);
   const sleepEndTime = new Date(data.sleepEnd);
@@ -58,6 +62,24 @@ export function SleepStagesChart({ data, onClose }: SleepStagesChartProps) {
   // Format tijd
   const formatTime = (date: Date) =>
     date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+
+  // Memoize timeline bars calculation
+  const timelineBars = useMemo(() => {
+    return data.stages.map((stage, idx) => {
+      const stageStart = stage.startTime - data.sleepStart;
+      const stageDuration = stage.endTime - stage.startTime;
+      const left = (stageStart / duration) * 100;
+      const width = (stageDuration / duration) * 100;
+
+      return {
+        key: idx,
+        left,
+        width,
+        color: STAGE_COLORS[stage.stage],
+        title: `${STAGE_NAMES[stage.stage]}: ${((stageDuration / 3600000).toFixed(1))}u`,
+      };
+    });
+  }, [data.stages, data.sleepStart, duration]);
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-4xl">
@@ -76,23 +98,23 @@ export function SleepStagesChart({ data, onClose }: SleepStagesChartProps) {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-600 dark:text-gray-400">Totaal</div>
-          <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{totalHours.toFixed(1)}u</div>
+          <div className="text-lg font-bold text-gray-900 dark:text-gray-100">{sleepHours.total.toFixed(1)}u</div>
         </div>
         <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
           <div className="text-xs text-blue-600 dark:text-blue-400">Licht</div>
-          <div className="text-lg font-bold text-blue-900 dark:text-blue-300">{lightHours.toFixed(1)}u</div>
+          <div className="text-lg font-bold text-blue-900 dark:text-blue-300">{sleepHours.light.toFixed(1)}u</div>
         </div>
         <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3">
           <div className="text-xs text-indigo-600 dark:text-indigo-400">Diep</div>
-          <div className="text-lg font-bold text-indigo-900 dark:text-indigo-300">{deepHours.toFixed(1)}u</div>
+          <div className="text-lg font-bold text-indigo-900 dark:text-indigo-300">{sleepHours.deep.toFixed(1)}u</div>
         </div>
         <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
           <div className="text-xs text-purple-600 dark:text-purple-400">REM</div>
-          <div className="text-lg font-bold text-purple-900 dark:text-purple-300">{remHours.toFixed(1)}u</div>
+          <div className="text-lg font-bold text-purple-900 dark:text-purple-300">{sleepHours.rem.toFixed(1)}u</div>
         </div>
         <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
           <div className="text-xs text-red-600 dark:text-red-400">Wakker</div>
-          <div className="text-lg font-bold text-red-900 dark:text-red-300">{awakeHours.toFixed(1)}u</div>
+          <div className="text-lg font-bold text-red-900 dark:text-red-300">{sleepHours.awake.toFixed(1)}u</div>
         </div>
       </div>
 
@@ -100,25 +122,18 @@ export function SleepStagesChart({ data, onClose }: SleepStagesChartProps) {
       <div className="mb-6">
         <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Slaap Timeline</h4>
         <div className="relative h-16 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
-          {data.stages.map((stage, idx) => {
-            const stageStart = stage.startTime - data.sleepStart;
-            const stageDuration = stage.endTime - stage.startTime;
-            const left = (stageStart / duration) * 100;
-            const width = (stageDuration / duration) * 100;
-
-            return (
-              <div
-                key={idx}
-                className="absolute h-full transition-opacity hover:opacity-80"
-                style={{
-                  left: `${left}%`,
-                  width: `${width}%`,
-                  backgroundColor: STAGE_COLORS[stage.stage],
-                }}
-                title={`${STAGE_NAMES[stage.stage]}: ${((stageDuration / 3600000).toFixed(1))}u`}
-              />
-            );
-          })}
+          {timelineBars.map((bar) => (
+            <div
+              key={bar.key}
+              className="absolute h-full transition-opacity hover:opacity-80"
+              style={{
+                left: `${bar.left}%`,
+                width: `${bar.width}%`,
+                backgroundColor: bar.color,
+              }}
+              title={bar.title}
+            />
+          ))}
         </div>
 
         {/* Time labels */}
