@@ -1,5 +1,6 @@
 /**
  * BarcodeScanner - Barcode scanning component using html5-qrcode
+ * Saves camera preference to localStorage for faster subsequent scans
  */
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -11,6 +12,8 @@ interface Props {
   onScan: (barcode: string) => void;
 }
 
+const CAMERA_PREFERENCE_KEY = 'bitebudget_preferred_camera';
+
 export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +22,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   const [selectedCamera, setSelectedCamera] = useState<string>('');
   const readerDivRef = useRef<HTMLDivElement>(null);
   const hasScannedRef = useRef(false); // Prevent multiple scans
+  const [showCameraSelector, setShowCameraSelector] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -29,23 +33,46 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
       Html5Qrcode.getCameras()
         .then((devices) => {
           if (devices && devices.length > 0) {
-            setCameras(
-              devices.map((d) => ({
-                id: d.id,
-                label: d.label || `Camera ${d.id}`,
-              }))
-            );
-            // Prefer back camera on mobile
+            const cameraList = devices.map((d) => ({
+              id: d.id,
+              label: d.label || `Camera ${d.id}`,
+            }));
+            setCameras(cameraList);
+
+            // Camera selection priority:
+            // 1. Previously saved camera (if still available)
+            // 2. Back camera (mobile preference)
+            // 3. First available camera
+            const savedCameraId = localStorage.getItem(CAMERA_PREFERENCE_KEY);
+            const savedCameraExists = savedCameraId && cameraList.some(c => c.id === savedCameraId);
             const backCamera = devices.find((d) => d.label.toLowerCase().includes('back'));
-            const cameraId = backCamera?.id || devices[0].id;
+
+            let cameraId: string;
+            if (savedCameraExists) {
+              cameraId = savedCameraId;
+            } else if (backCamera) {
+              cameraId = backCamera.id;
+            } else {
+              cameraId = devices[0].id;
+            }
+
             setSelectedCamera(cameraId);
 
-            // Auto-start scanning after selecting camera
-            setTimeout(() => {
-              if (cameraId) {
-                startScanning();
-              }
-            }, 200);
+            // Auto-start behavior:
+            // - If only 1 camera: start immediately, no selector
+            // - If saved preference exists: start immediately with saved camera
+            // - Otherwise: show selector (first time or multiple cameras)
+            if (devices.length === 1 || savedCameraExists) {
+              setShowCameraSelector(false);
+              setTimeout(() => {
+                if (cameraId) {
+                  startScanning();
+                }
+              }, 200);
+            } else {
+              // Multiple cameras and no saved preference - show selector
+              setShowCameraSelector(true);
+            }
           } else {
             setError('📷 Geen camera gevonden op dit apparaat.');
           }
@@ -78,8 +105,12 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
       return;
     }
 
+    // Save camera preference for next time
+    localStorage.setItem(CAMERA_PREFERENCE_KEY, selectedCamera);
+
     // First set isScanning to true so the div is rendered
     setIsScanning(true);
+    setShowCameraSelector(false);
     setError(null);
 
     // Wait for the div to be in the DOM
@@ -153,6 +184,11 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
     }
   };
 
+  const handleChangeCamera = async () => {
+    await stopScanning();
+    setShowCameraSelector(true);
+  };
+
   const handleClose = () => {
     stopScanning();
     onClose();
@@ -180,7 +216,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
             </div>
           )}
 
-          {!isScanning && cameras.length > 0 && (
+          {showCameraSelector && !isScanning && cameras.length > 0 && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Selecteer Camera</label>
@@ -213,12 +249,22 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
                 className="w-full rounded-lg overflow-hidden border-4 border-blue-500 dark:border-blue-600"
               ></div>
 
-              <button
-                onClick={stopScanning}
-                className="w-full px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700"
-              >
-                ⏹️ Stop Scannen
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={stopScanning}
+                  className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700"
+                >
+                  ⏹️ Stop
+                </button>
+                {cameras.length > 1 && (
+                  <button
+                    onClick={handleChangeCamera}
+                    className="px-4 py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700"
+                  >
+                    🔄 Camera
+                  </button>
+                )}
+              </div>
 
               <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                 Richt de camera op een barcode (EAN-13)
