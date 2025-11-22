@@ -44,10 +44,12 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   };
 
   // Define startScanning before useEffect
-  const startScanning = async () => {
-    console.log('startScanning called, selectedCamera:', selectedCamera);
+  const startScanning = async (cameraIdOverride?: string) => {
+    // Use override if provided, otherwise use state
+    const cameraToUse = cameraIdOverride || selectedCamera;
+    console.log('startScanning called, camera:', cameraToUse);
 
-    if (!selectedCamera) {
+    if (!cameraToUse) {
       console.error('No camera selected');
       setError('Selecteer eerst een camera');
       setShowCameraSelector(true);
@@ -56,9 +58,9 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
 
     // Save camera preference for next time (only if user made an explicit choice)
     // This prevents saving invalid camera IDs
-    if (cameras.some(c => c.id === selectedCamera)) {
-      localStorage.setItem(CAMERA_PREFERENCE_KEY, selectedCamera);
-      console.log('Saved camera preference:', selectedCamera);
+    if (cameras.some(c => c.id === cameraToUse)) {
+      localStorage.setItem(CAMERA_PREFERENCE_KEY, cameraToUse);
+      console.log('Saved camera preference:', cameraToUse);
     }
 
     // First set isScanning to true so the div is rendered
@@ -85,12 +87,12 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
         throw new Error('Scanner div not found in DOM');
       }
 
-      console.log('Starting scanner with camera:', selectedCamera);
+      console.log('Starting scanner with camera:', cameraToUse);
       const scanner = new Html5Qrcode('barcode-reader');
       scannerRef.current = scanner;
 
       await scanner.start(
-        selectedCamera,
+        cameraToUse,
         {
           fps: 10,
           qrbox: { width: 250, height: 250 },
@@ -168,17 +170,13 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
               // Single camera - auto start without selector
               setShowCameraSelector(false);
               setTimeout(() => {
-                if (cameraId) {
-                  startScanning();
-                }
+                startScanning(cameraId);
               }, 200);
             } else if (savedCameraExists) {
               // Multiple cameras but valid saved preference - auto start
               setShowCameraSelector(false);
               setTimeout(() => {
-                if (cameraId) {
-                  startScanning();
-                }
+                startScanning(cameraId);
               }, 200);
             } else {
               // Multiple cameras and no valid saved preference - show selector
