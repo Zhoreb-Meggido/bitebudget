@@ -3,7 +3,7 @@
  * Saves camera preference to localStorage for faster subsequent scans
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 
 interface Props {
@@ -23,6 +23,96 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   const readerDivRef = useRef<HTMLDivElement>(null);
   const hasScannedRef = useRef(false); // Prevent multiple scans
   const [showCameraSelector, setShowCameraSelector] = useState(false);
+
+  // Define stopScanning first
+  const stopScanning = useCallback(async () => {
+    if (scannerRef.current && isScanning) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+        scannerRef.current = null;
+        setIsScanning(false);
+      } catch (err) {
+        console.error('Error stopping scanner:', err);
+      }
+    }
+  }, [isScanning]);
+
+  // Define startScanning before useEffect
+  const startScanning = useCallback(async () => {
+    if (!selectedCamera) {
+      setError('Selecteer eerst een camera');
+      return;
+    }
+
+    // Save camera preference for next time (only if user made an explicit choice)
+    // This prevents saving invalid camera IDs
+    if (cameras.some(c => c.id === selectedCamera)) {
+      localStorage.setItem(CAMERA_PREFERENCE_KEY, selectedCamera);
+    }
+
+    // First set isScanning to true so the div is rendered
+    setIsScanning(true);
+    setShowCameraSelector(false);
+    setError(null);
+
+    // Wait for the div to be in the DOM
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    try {
+      // Stop any existing scanner first
+      if (scannerRef.current) {
+        try {
+          await scannerRef.current.stop();
+          scannerRef.current.clear();
+        } catch (e) {
+          console.log('No active scanner to stop');
+        }
+      }
+
+      // Check if the div exists
+      if (!document.getElementById('barcode-reader')) {
+        throw new Error('Scanner div not found in DOM');
+      }
+
+      const scanner = new Html5Qrcode('barcode-reader');
+      scannerRef.current = scanner;
+
+      await scanner.start(
+        selectedCamera,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+        },
+        async (decodedText) => {
+          // Prevent multiple scans
+          if (hasScannedRef.current) {
+            return;
+          }
+          hasScannedRef.current = true;
+
+          // Success callback
+          console.log('✅ Barcode scanned:', decodedText);
+
+          // Stop scanning FIRST to prevent multiple scans
+          await stopScanning();
+
+          // Then call the callback
+          onScan(decodedText);
+        },
+        (errorMessage) => {
+          // Error callback (we can ignore most of these as they're just "no barcode found")
+          // console.log('Scanning...', errorMessage);
+        }
+      );
+    } catch (err: any) {
+      console.error('Error starting scanner:', err);
+      console.error('Full error details:', JSON.stringify(err, null, 2));
+      setError(`Fout: ${err?.message || 'Kon scanner niet starten'}`);
+      setIsScanning(false);
+    }
+  }, [selectedCamera, cameras, isScanning, onScan, stopScanning]);
 
   useEffect(() => {
     if (isOpen) {
@@ -118,95 +208,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
         scannerRef.current = null;
       }
     };
-  }, [isOpen]);
-
-  const startScanning = async () => {
-    if (!selectedCamera) {
-      setError('Selecteer eerst een camera');
-      return;
-    }
-
-    // Save camera preference for next time (only if user made an explicit choice)
-    // This prevents saving invalid camera IDs
-    if (cameras.some(c => c.id === selectedCamera)) {
-      localStorage.setItem(CAMERA_PREFERENCE_KEY, selectedCamera);
-    }
-
-    // First set isScanning to true so the div is rendered
-    setIsScanning(true);
-    setShowCameraSelector(false);
-    setError(null);
-
-    // Wait for the div to be in the DOM
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    try {
-      // Stop any existing scanner first
-      if (scannerRef.current) {
-        try {
-          await scannerRef.current.stop();
-          scannerRef.current.clear();
-        } catch (e) {
-          console.log('No active scanner to stop');
-        }
-      }
-
-      // Check if the div exists
-      if (!document.getElementById('barcode-reader')) {
-        throw new Error('Scanner div not found in DOM');
-      }
-
-      const scanner = new Html5Qrcode('barcode-reader');
-      scannerRef.current = scanner;
-
-      await scanner.start(
-        selectedCamera,
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
-        async (decodedText) => {
-          // Prevent multiple scans
-          if (hasScannedRef.current) {
-            return;
-          }
-          hasScannedRef.current = true;
-
-          // Success callback
-          console.log('✅ Barcode scanned:', decodedText);
-
-          // Stop scanning FIRST to prevent multiple scans
-          await stopScanning();
-
-          // Then call the callback
-          onScan(decodedText);
-        },
-        (errorMessage) => {
-          // Error callback (we can ignore most of these as they're just "no barcode found")
-          // console.log('Scanning...', errorMessage);
-        }
-      );
-    } catch (err: any) {
-      console.error('Error starting scanner:', err);
-      console.error('Full error details:', JSON.stringify(err, null, 2));
-      setError(`Fout: ${err?.message || 'Kon scanner niet starten'}`);
-      setIsScanning(false);
-    }
-  };
-
-  const stopScanning = async () => {
-    if (scannerRef.current && isScanning) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
-        scannerRef.current = null;
-        setIsScanning(false);
-      } catch (err) {
-        console.error('Error stopping scanner:', err);
-      }
-    }
-  };
+  }, [isOpen, startScanning, stopScanning]);
 
   const handleChangeCamera = async () => {
     await stopScanning();
