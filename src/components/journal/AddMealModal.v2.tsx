@@ -208,13 +208,18 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
 
   // Calculate template totals for display
   const calculateTemplateTotals = (template: MealTemplate) => {
-    let totals = { calories: 0, protein: 0 };
+    let totals = { calories: 0, protein: 0, carbohydrates: 0, sugars: 0, saturatedFat: 0, fiber: 0, sodium: 0 };
     template.products.forEach(({ name, grams }) => {
       const product = products.find(p => p.name === name);
       if (!product) return;
       const nutrition = calculateProductNutrition(product, grams);
       totals.calories += nutrition.calories;
       totals.protein += nutrition.protein;
+      totals.carbohydrates += nutrition.carbohydrates;
+      totals.sugars += nutrition.sugars;
+      totals.saturatedFat += nutrition.saturatedFat;
+      totals.fiber += nutrition.fiber;
+      totals.sodium += nutrition.sodium;
     });
     return totals;
   };
@@ -309,7 +314,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
                                 <div className="text-xs text-gray-500 dark:text-gray-400">{product.brand}</div>
                               )}
                               <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                {product.calories} kcal • {product.protein}g eiwit
+                                {product.calories} kcal • {product.protein}g eiw • {product.carbohydrates}g koolh • {product.sugars}g suik • {product.saturatedFat}g v.vet • {product.fiber}g vez • {product.sodium}mg natr
                               </div>
                             </div>
                           </div>
@@ -356,7 +361,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
                               {template.category} • {template.products.length} producten
                             </div>
                             <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                              {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                              {totals.calories} kcal • {totals.protein.toFixed(1)}g eiw • {totals.carbohydrates.toFixed(1)}g koolh • {totals.sugars.toFixed(1)}g suik • {totals.saturatedFat.toFixed(1)}g v.vet • {totals.fiber.toFixed(1)}g vez • {totals.sodium.toFixed(0)}mg natr
                             </div>
                           </button>
                         );
@@ -383,7 +388,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
                               {template.category} • {template.products.length} producten
                             </div>
                             <div className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
-                              {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                              {totals.calories} kcal • {totals.protein.toFixed(1)}g eiw • {totals.carbohydrates.toFixed(1)}g koolh • {totals.sugars.toFixed(1)}g suik • {totals.saturatedFat.toFixed(1)}g v.vet • {totals.fiber.toFixed(1)}g vez • {totals.sodium.toFixed(0)}mg natr
                             </div>
                           </button>
                         );
@@ -414,7 +419,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
                               {template.category} • {template.products.length} producten
                             </div>
                             <div className="text-xs text-gray-700 dark:text-gray-300 mt-1">
-                              {totals.calories} kcal • {totals.protein.toFixed(1)}g eiwit
+                              {totals.calories} kcal • {totals.protein.toFixed(1)}g eiw • {totals.carbohydrates.toFixed(1)}g koolh • {totals.sugars.toFixed(1)}g suik • {totals.saturatedFat.toFixed(1)}g v.vet • {totals.fiber.toFixed(1)}g vez • {totals.sodium.toFixed(0)}mg natr
                             </div>
                           </button>
                         );

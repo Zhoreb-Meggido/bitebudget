@@ -60,9 +60,18 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
 
             // Auto-start behavior:
             // - If only 1 camera: start immediately, no selector
-            // - If saved preference exists: start immediately with saved camera
+            // - If saved preference exists AND is valid: start immediately with saved camera
             // - Otherwise: show selector (first time or multiple cameras)
-            if (devices.length === 1 || savedCameraExists) {
+            if (devices.length === 1) {
+              // Single camera - auto start without selector
+              setShowCameraSelector(false);
+              setTimeout(() => {
+                if (cameraId) {
+                  startScanning();
+                }
+              }, 200);
+            } else if (savedCameraExists) {
+              // Multiple cameras but valid saved preference - auto start
               setShowCameraSelector(false);
               setTimeout(() => {
                 if (cameraId) {
@@ -70,7 +79,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
                 }
               }, 200);
             } else {
-              // Multiple cameras and no saved preference - show selector
+              // Multiple cameras and no valid saved preference - show selector
               setShowCameraSelector(true);
             }
           } else {
@@ -94,14 +103,20 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
         });
     } else {
       // Reset state when modal closes
+      stopScanning();
       setShowCameraSelector(false);
       setCameras([]);
       setSelectedCamera('');
       setError(null);
+      setIsScanning(false);
     }
 
     return () => {
-      stopScanning();
+      // Cleanup on unmount
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(() => {});
+        scannerRef.current = null;
+      }
     };
   }, [isOpen]);
 
@@ -111,8 +126,11 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
       return;
     }
 
-    // Save camera preference for next time
-    localStorage.setItem(CAMERA_PREFERENCE_KEY, selectedCamera);
+    // Save camera preference for next time (only if user made an explicit choice)
+    // This prevents saving invalid camera IDs
+    if (cameras.some(c => c.id === selectedCamera)) {
+      localStorage.setItem(CAMERA_PREFERENCE_KEY, selectedCamera);
+    }
 
     // First set isScanning to true so the div is rendered
     setIsScanning(true);
@@ -195,9 +213,17 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
     setShowCameraSelector(true);
   };
 
-  const handleClose = () => {
-    stopScanning();
+  const handleClose = async () => {
+    await stopScanning();
     onClose();
+  };
+
+  const handleResetPreference = () => {
+    localStorage.removeItem(CAMERA_PREFERENCE_KEY);
+    setShowCameraSelector(true);
+    if (cameras.length > 0) {
+      setSelectedCamera(cameras[0].id);
+    }
   };
 
   if (!isOpen) return null;
@@ -225,7 +251,14 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
           {showCameraSelector && !isScanning && cameras.length > 0 && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Selecteer Camera</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Selecteer Camera
+                  {cameras.length > 1 && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                      ({cameras.length} beschikbaar)
+                    </span>
+                  )}
+                </label>
                 <select
                   value={selectedCamera}
                   onChange={(e) => setSelectedCamera(e.target.value)}
@@ -241,7 +274,8 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
 
               <button
                 onClick={startScanning}
-                className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+                disabled={!selectedCamera}
+                className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 📷 Start Scannen
               </button>

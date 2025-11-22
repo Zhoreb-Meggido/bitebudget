@@ -455,8 +455,7 @@ const ProductWithPortions = memo(function ProductWithPortions({
         {/* Nutrition Info */}
         <div className="text-sm text-gray-600 dark:text-gray-400 overflow-x-auto">
           <div className="whitespace-nowrap">
-            📊 Per 100{product.calories > 0 ? 'g' : 'ml'}: {product.calories} kcal, {product.protein}g eiwit, {product.fat}g vet
-            {product.carbohydrates !== undefined && `, ${product.carbohydrates}g koolhydraten`}
+            📊 Per 100{product.calories > 0 ? 'g' : 'ml'}: {product.calories} kcal • {product.protein}g eiw • {product.carbohydrates}g koolh • {product.sugars}g suik • {product.saturatedFat}g v.vet • {product.fiber}g vez • {product.sodium}mg natr
           </div>
         </div>
 
