@@ -22,6 +22,7 @@ import {
 import { useAggregates } from '@/hooks/useAggregates';
 import { useSettings } from '@/hooks/useSettings';
 import type { AggregatePeriod } from '@/types';
+import { CHART_COLORS, commonPlugins, createYAxis } from '@/config/chart.config';
 
 ChartJS.register(
   CategoryScale,
@@ -61,24 +62,24 @@ const defaultSettings = {
 };
 
 const NUTRITION_METRICS: NutritionMetricConfig[] = [
-  { key: 'calories', label: 'Calorieën', color: 'rgb(59, 130, 246)', unit: 'kcal', targetField: 'calories' },
-  { key: 'protein', label: 'Eiwit', color: 'rgb(147, 51, 234)', unit: 'g', targetField: 'protein' },
-  { key: 'carbs', label: 'Koolhydraten', color: 'rgb(245, 158, 11)', unit: 'g' },
-  { key: 'sugars', label: 'Suikers', color: 'rgb(251, 191, 36)', unit: 'g' },
-  { key: 'fat', label: 'Vet', color: 'rgb(156, 163, 175)', unit: 'g' },
-  { key: 'saturatedFat', label: 'Verzadigd Vet', color: 'rgb(239, 68, 68)', unit: 'g', targetField: 'saturatedFat' },
-  { key: 'fiber', label: 'Vezels', color: 'rgb(34, 197, 94)', unit: 'g', targetField: 'fiber' },
-  { key: 'sodium', label: 'Natrium', color: 'rgb(249, 115, 22)', unit: 'mg', targetField: 'sodium' },
+  { key: 'calories', label: 'Calorieën', color: CHART_COLORS.nutrition.calories, unit: 'kcal', targetField: 'calories' },
+  { key: 'protein', label: 'Eiwit', color: CHART_COLORS.nutrition.protein, unit: 'g', targetField: 'protein' },
+  { key: 'carbs', label: 'Koolhydraten', color: CHART_COLORS.nutrition.carbohydrates, unit: 'g' },
+  { key: 'sugars', label: 'Suikers', color: CHART_COLORS.nutrition.sugars, unit: 'g' },
+  { key: 'fat', label: 'Vet', color: CHART_COLORS.nutrition.fat, unit: 'g' },
+  { key: 'saturatedFat', label: 'Verzadigd Vet', color: CHART_COLORS.nutrition.saturatedFat, unit: 'g', targetField: 'saturatedFat' },
+  { key: 'fiber', label: 'Vezels', color: CHART_COLORS.nutrition.fiber, unit: 'g', targetField: 'fiber' },
+  { key: 'sodium', label: 'Natrium', color: CHART_COLORS.nutrition.sodium, unit: 'mg', targetField: 'sodium' },
 ];
 
 const ACTIVITY_METRICS: ActivityMetricConfig[] = [
-  { key: 'steps', label: 'Stappen', color: 'rgb(59, 130, 246)', unit: '' },
-  { key: 'activeCalories', label: 'Actieve Cal', color: 'rgb(239, 68, 68)', unit: 'kcal' },
-  { key: 'totalCalories', label: 'Totaal Cal', color: 'rgb(220, 38, 38)', unit: 'kcal' },
-  { key: 'intensityMinutes', label: 'Intensiteit', color: 'rgb(147, 51, 234)', unit: 'min' },
-  { key: 'sleep', label: 'Slaap', color: 'rgb(34, 197, 94)', unit: 'uur' },
-  { key: 'restingHR', label: 'HR Rust', color: 'rgb(14, 165, 233)', unit: 'bpm' },
-  { key: 'maxHR', label: 'HR Max', color: 'rgb(220, 38, 38)', unit: 'bpm' },
+  { key: 'steps', label: 'Stappen', color: CHART_COLORS.activity.steps, unit: '' },
+  { key: 'activeCalories', label: 'Actieve Cal', color: CHART_COLORS.activity.activeCalories, unit: 'kcal' },
+  { key: 'totalCalories', label: 'Totaal Cal', color: CHART_COLORS.activity.totalCalories, unit: 'kcal' },
+  { key: 'intensityMinutes', label: 'Intensiteit', color: CHART_COLORS.activity.intensityMinutes, unit: 'min' },
+  { key: 'sleep', label: 'Slaap', color: CHART_COLORS.activity.sleep, unit: 'uur' },
+  { key: 'restingHR', label: 'HR Rust', color: CHART_COLORS.activity.heartRate, unit: 'bpm' },
+  { key: 'maxHR', label: 'HR Max', color: CHART_COLORS.activity.heartRateMax, unit: 'bpm' },
 ];
 
 export function AggregatesTab() {
@@ -252,52 +253,36 @@ export function AggregatesTab() {
   const nutritionChartOptions = useMemo(() => {
     const scales: any = {
       x: { grid: { display: false } },
-      y: {
-        type: 'linear',
+      y: createYAxis({
         display: selectedNutritionMetrics.has('protein') || selectedNutritionMetrics.has('carbs') ||
                 selectedNutritionMetrics.has('sugars') || selectedNutritionMetrics.has('fat') ||
                 selectedNutritionMetrics.has('saturatedFat') || selectedNutritionMetrics.has('fiber'),
         position: 'left',
-        beginAtZero: true,
-        title: { display: true, text: 'Grammen (g)' },
-      },
+        title: 'Grammen (g)',
+      }),
     };
 
     if (selectedNutritionMetrics.has('calories')) {
-      scales['y-calories'] = {
-        type: 'linear',
-        display: true,
+      scales['y-calories'] = createYAxis({
         position: 'right',
-        beginAtZero: true,
-        title: { display: true, text: 'Calorieën (kcal)' },
-        grid: { drawOnChartArea: false },
-      };
+        title: 'Calorieën (kcal)',
+        drawOnChartArea: false,
+      });
     }
 
     if (selectedNutritionMetrics.has('sodium')) {
-      scales['y-sodium'] = {
-        type: 'linear',
-        display: true,
+      scales['y-sodium'] = createYAxis({
         position: 'right',
-        beginAtZero: true,
-        title: { display: true, text: 'Natrium (mg)' },
-        grid: { drawOnChartArea: false },
-      };
+        title: 'Natrium (mg)',
+        drawOnChartArea: false,
+      });
     }
 
     return {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index' as const, intersect: false },
-      plugins: {
-        legend: { position: 'bottom' as const, labels: { usePointStyle: true, padding: 15 } },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: 12,
-          titleColor: '#fff',
-          bodyColor: '#fff',
-        },
-      },
+      plugins: commonPlugins,
       scales,
     };
   }, [selectedNutritionMetrics]);
@@ -306,45 +291,38 @@ export function AggregatesTab() {
   const activityChartOptions = useMemo(() => {
     const scales: any = {
       x: { grid: { display: false } },
-      y: {
-        type: 'linear',
+      y: createYAxis({
         display: selectedActivityMetrics.has('intensityMinutes') || selectedActivityMetrics.has('sleep'),
         position: 'left',
-        beginAtZero: true,
-        title: { display: true, text: 'Min / Uur' },
-      },
+        title: 'Min / Uur',
+      }),
     };
 
     if (selectedActivityMetrics.has('steps')) {
-      scales['y-steps'] = {
-        type: 'linear',
-        display: true,
+      scales['y-steps'] = createYAxis({
         position: 'left',
-        beginAtZero: true,
-        title: { display: true, text: 'Stappen' },
-      };
+        title: 'Stappen',
+      });
     }
 
     if (selectedActivityMetrics.has('activeCalories') || selectedActivityMetrics.has('totalCalories')) {
-      scales['y-calories'] = {
-        type: 'linear',
-        display: true,
+      scales['y-calories'] = createYAxis({
         position: 'right',
-        beginAtZero: true,
-        title: { display: true, text: 'Calorieën (kcal)' },
-        grid: { drawOnChartArea: false },
-      };
+        title: 'Calorieën (kcal)',
+        drawOnChartArea: false,
+      });
     }
 
     if (selectedActivityMetrics.has('restingHR') || selectedActivityMetrics.has('maxHR')) {
       scales['y-hr'] = {
-        type: 'linear',
-        display: true,
-        position: 'right',
+        ...createYAxis({
+          position: 'right',
+          title: 'Hartslag (bpm)',
+          drawOnChartArea: false,
+          beginAtZero: false,
+        }),
         min: 40,
         max: 220,
-        title: { display: true, text: 'Hartslag (bpm)' },
-        grid: { drawOnChartArea: false },
       };
     }
 
@@ -352,15 +330,7 @@ export function AggregatesTab() {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: 'index' as const, intersect: false },
-      plugins: {
-        legend: { position: 'bottom' as const, labels: { usePointStyle: true, padding: 15 } },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: 12,
-          titleColor: '#fff',
-          bodyColor: '#fff',
-        },
-      },
+      plugins: commonPlugins,
       scales,
     };
   }, [selectedActivityMetrics]);

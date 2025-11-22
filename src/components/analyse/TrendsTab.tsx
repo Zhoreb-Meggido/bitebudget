@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { CHART_COLORS, commonPlugins, getResponsiveConfig, createYAxis } from '@/config/chart.config';
 
 ChartJS.register(
   CategoryScale,
@@ -33,14 +34,14 @@ interface MetricConfig {
 }
 
 const METRICS: MetricConfig[] = [
-  { key: 'steps', label: 'Stappen', color: 'rgb(59, 130, 246)', unit: '' },
-  { key: 'calories', label: 'Calorieën', color: 'rgb(239, 68, 68)', unit: 'kcal' },
-  { key: 'intensityMinutes', label: 'Intensiteit', color: 'rgb(147, 51, 234)', unit: 'min' },
-  { key: 'restingHeartRate', label: 'HR Rust', color: 'rgb(14, 165, 233)', unit: 'bpm' },
-  { key: 'maxHeartRate', label: 'HR Max', color: 'rgb(220, 38, 38)', unit: 'bpm' },
-  { key: 'stressLevel', label: 'Stress', color: 'rgb(245, 158, 11)', unit: '' },
-  { key: 'sleepDuration', label: 'Slaap', color: 'rgb(34, 197, 94)', unit: 'uur' },
-  { key: 'hrvOvernight', label: 'HRV', color: 'rgb(14, 165, 233)', unit: 'ms' },
+  { key: 'steps', label: 'Stappen', color: CHART_COLORS.activity.steps, unit: '' },
+  { key: 'calories', label: 'Calorieën', color: CHART_COLORS.activity.caloriesAlt, unit: 'kcal' },
+  { key: 'intensityMinutes', label: 'Intensiteit', color: CHART_COLORS.activity.intensityMinutes, unit: 'min' },
+  { key: 'restingHeartRate', label: 'HR Rust', color: CHART_COLORS.activity.heartRate, unit: 'bpm' },
+  { key: 'maxHeartRate', label: 'HR Max', color: CHART_COLORS.activity.heartRateMax, unit: 'bpm' },
+  { key: 'stressLevel', label: 'Stress', color: CHART_COLORS.activity.stress, unit: '' },
+  { key: 'sleepDuration', label: 'Slaap', color: CHART_COLORS.activity.sleep, unit: 'uur' },
+  { key: 'hrvOvernight', label: 'HRV', color: CHART_COLORS.activity.hrv, unit: 'ms' },
   { key: 'hrv7DayAvg', label: 'HRV 7d', color: 'rgb(6, 182, 212)', unit: 'ms' },
 ];
 
@@ -214,182 +215,108 @@ export function TrendsTab() {
   }, [filteredActivities, selectedMetrics]);
 
   const chartOptions = useMemo(() => {
-    // Detect mobile for responsive Y-axes
-    const isMobile = window.innerWidth < 768;
-    const isVerySmall = window.innerWidth < 640;
+    const { isVerySmall, isMobile, fontSize, tickFontSize, maxTicksLimit } = getResponsiveConfig();
 
     // Build scales dynamically based on selected metrics
     const scales: any = {
-      x: {
-        grid: {
-          display: false,
-        },
-      },
+      x: { grid: { display: false } },
     };
 
     // Add Y-axis for each selected metric
     if (selectedMetrics.has('steps')) {
-      scales['y-steps'] = {
-        type: 'linear',
-        display: !isVerySmall, // Hide on very small screens
+      scales['y-steps'] = createYAxis({
+        display: !isVerySmall,
         position: 'left',
-        beginAtZero: true,
-        title: {
-          display: !isMobile, // Hide title on mobile
-          text: 'Stappen',
-          color: 'rgb(59, 130, 246)',
-          font: { size: isMobile ? 10 : 12 },
-        },
-        ticks: {
-          color: 'rgb(59, 130, 246)',
-          font: { size: isMobile ? 9 : 11 },
-          maxTicksLimit: isMobile ? 4 : 6,
-        },
-        grid: {
-          color: 'rgba(59, 130, 246, 0.1)',
-        },
-      };
+        title: !isMobile ? 'Stappen' : undefined,
+        color: CHART_COLORS.activity.steps,
+        fontSize,
+        maxTicksLimit,
+      });
     }
 
     if (selectedMetrics.has('calories')) {
-      scales['y-calories'] = {
-        type: 'linear',
+      scales['y-calories'] = createYAxis({
         display: !isVerySmall,
         position: 'right',
-        beginAtZero: true,
-        title: {
-          display: !isMobile,
-          text: 'Cal',
-          color: 'rgb(239, 68, 68)',
-          font: { size: isMobile ? 10 : 12 },
-        },
-        ticks: {
-          color: 'rgb(239, 68, 68)',
-          font: { size: isMobile ? 9 : 11 },
-          maxTicksLimit: isMobile ? 4 : 6,
-        },
-        grid: {
-          drawOnChartArea: false,
-        },
-      };
+        title: !isMobile ? 'Cal' : undefined,
+        color: CHART_COLORS.activity.caloriesAlt,
+        fontSize,
+        maxTicksLimit,
+        drawOnChartArea: false,
+      });
     }
 
     if (selectedMetrics.has('intensityMinutes')) {
-      scales['y-minutes'] = {
-        type: 'linear',
+      scales['y-minutes'] = createYAxis({
         display: !isVerySmall,
         position: 'right',
-        beginAtZero: true,
-        title: {
-          display: !isMobile,
-          text: 'Int',
-          color: 'rgb(147, 51, 234)',
-          font: { size: isMobile ? 10 : 12 },
-        },
-        ticks: {
-          color: 'rgb(147, 51, 234)',
-          font: { size: isMobile ? 9 : 11 },
-          maxTicksLimit: isMobile ? 4 : 6,
-        },
-        grid: {
-          drawOnChartArea: false,
-        },
-      };
+        title: !isMobile ? 'Int' : undefined,
+        color: CHART_COLORS.activity.intensityMinutes,
+        fontSize,
+        maxTicksLimit,
+        drawOnChartArea: false,
+      });
     }
 
     if (selectedMetrics.has('restingHeartRate') || selectedMetrics.has('maxHeartRate')) {
       scales['y-heartrate'] = {
-        type: 'linear',
-        display: !isVerySmall,
-        position: 'right',
+        ...createYAxis({
+          display: !isVerySmall,
+          position: 'right',
+          title: !isMobile ? 'Hartslag (bpm)' : undefined,
+          color: 'rgb(107, 114, 128)',
+          fontSize,
+          maxTicksLimit,
+          drawOnChartArea: false,
+          beginAtZero: false,
+        }),
         min: 40,
         max: 220,
-        title: {
-          display: !isMobile,
-          text: 'Hartslag (bpm)',
-          color: 'rgb(107, 114, 128)',
-          font: { size: isMobile ? 10 : 12 },
-        },
-        ticks: {
-          color: 'rgb(107, 114, 128)',
-          font: { size: isMobile ? 9 : 11 },
-          maxTicksLimit: isMobile ? 4 : 6,
-        },
-        grid: {
-          drawOnChartArea: false,
-        },
       };
     }
 
     if (selectedMetrics.has('stressLevel')) {
       scales['y-stress'] = {
-        type: 'linear',
-        display: !isVerySmall,
-        position: 'right',
+        ...createYAxis({
+          display: !isVerySmall,
+          position: 'right',
+          title: !isMobile ? 'Stress' : undefined,
+          color: CHART_COLORS.activity.stress,
+          fontSize,
+          maxTicksLimit: isMobile ? 3 : 5,
+          drawOnChartArea: false,
+        }),
         min: 0,
         max: 100,
-        title: {
-          display: !isMobile,
-          text: 'Stress',
-          color: 'rgb(245, 158, 11)',
-          font: { size: isMobile ? 10 : 12 },
-        },
-        ticks: {
-          color: 'rgb(245, 158, 11)',
-          font: { size: isMobile ? 9 : 11 },
-          maxTicksLimit: isMobile ? 3 : 5,
-        },
-        grid: {
-          drawOnChartArea: false,
-        },
       };
     }
 
     if (selectedMetrics.has('sleepDuration')) {
       scales['y-sleep'] = {
-        type: 'linear',
-        display: !isVerySmall,
-        position: 'right',
+        ...createYAxis({
+          display: !isVerySmall,
+          position: 'right',
+          title: !isMobile ? 'Slaap' : undefined,
+          color: CHART_COLORS.activity.sleep,
+          fontSize,
+          maxTicksLimit,
+          drawOnChartArea: false,
+        }),
         min: 0,
         max: 12,
-        title: {
-          display: !isMobile,
-          text: 'Slaap',
-          color: 'rgb(34, 197, 94)',
-          font: { size: isMobile ? 10 : 12 },
-        },
-        ticks: {
-          color: 'rgb(34, 197, 94)',
-          font: { size: isMobile ? 9 : 11 },
-          maxTicksLimit: isMobile ? 4 : 6,
-        },
-        grid: {
-          drawOnChartArea: false,
-        },
       };
     }
 
     if (selectedMetrics.has('hrvOvernight') || selectedMetrics.has('hrv7DayAvg')) {
-      scales['y-hrv'] = {
-        type: 'linear',
+      scales['y-hrv'] = createYAxis({
         display: !isVerySmall,
         position: 'right',
-        beginAtZero: true,
-        title: {
-          display: !isMobile,
-          text: 'HRV (ms)',
-          color: 'rgb(14, 165, 233)',
-          font: { size: isMobile ? 10 : 12 },
-        },
-        ticks: {
-          color: 'rgb(14, 165, 233)',
-          font: { size: isMobile ? 9 : 11 },
-          maxTicksLimit: isMobile ? 4 : 6,
-        },
-        grid: {
-          drawOnChartArea: false,
-        },
-      };
+        title: !isMobile ? 'HRV (ms)' : undefined,
+        color: CHART_COLORS.activity.hrv,
+        fontSize,
+        maxTicksLimit,
+        drawOnChartArea: false,
+      });
     }
 
     return {
@@ -399,23 +326,7 @@ export function TrendsTab() {
         mode: 'index' as const,
         intersect: false,
       },
-      plugins: {
-        legend: {
-          position: 'bottom' as const,
-          labels: {
-            usePointStyle: true,
-            padding: 15,
-          },
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: 12,
-          titleColor: '#fff',
-          bodyColor: '#fff',
-          borderColor: 'rgba(255, 255, 255, 0.1)',
-          borderWidth: 1,
-        },
-      },
+      plugins: commonPlugins,
       scales,
     };
   }, [selectedMetrics]);
