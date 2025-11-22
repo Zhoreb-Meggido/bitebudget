@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { CHART_COLORS, buildChartOptions, createLineDataset, commonScales } from '@/config/chart.config';
 
 ChartJS.register(
   CategoryScale,
@@ -182,28 +183,20 @@ export function BalanceTab() {
     return {
       labels,
       datasets: [
-        {
+        createLineDataset({
           label: 'Gewicht (kg)',
           data: recentWeights.map((w: Weight) => w.weight),
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.3,
+          color: CHART_COLORS.balance.weight,
           borderWidth: 3,
-          fill: false,
-          pointRadius: 5,
-          pointHoverRadius: 7,
-        },
-        {
+        }),
+        createLineDataset({
           label: 'Trend',
           data: trendLine,
-          borderColor: 'rgba(239, 68, 68, 0.5)',
-          backgroundColor: 'transparent',
+          color: CHART_COLORS.balance.trend,
           borderDash: [5, 5],
-          borderWidth: 2,
-          fill: false,
           pointRadius: 0,
           pointHoverRadius: 0,
-        },
+        }),
       ],
     };
   }, [weights]);
@@ -227,52 +220,21 @@ export function BalanceTab() {
     return {
       labels,
       datasets: [
-        {
+        createLineDataset({
           label: 'Inname (kcal)',
           data: filteredData.map((d: DayBalance) => d.intake),
-          borderColor: 'rgb(59, 130, 246)',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          tension: 0.3,
-          borderWidth: 2,
-          fill: false,
-        },
-        {
+          color: CHART_COLORS.balance.intake,
+        }),
+        createLineDataset({
           label: 'Verbruik (kcal)',
           data: filteredData.map((d: DayBalance) => d.expenditure),
-          borderColor: 'rgb(249, 115, 22)',
-          backgroundColor: 'rgba(249, 115, 22, 0.1)',
-          tension: 0.3,
-          borderWidth: 2,
-          fill: false,
-        },
+          color: CHART_COLORS.balance.expenditure,
+        }),
       ],
     };
   }, [balanceData, chartPeriod]);
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index' as const,
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          usePointStyle: true,
-          padding: 15,
-        },
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
-      },
-    },
+  const chartOptions = buildChartOptions({
     scales: {
       y: {
         beginAtZero: true,
@@ -281,53 +243,14 @@ export function BalanceTab() {
           text: 'Calorieën',
         },
       },
-      x: {
-        grid: {
-          display: false,
-        },
-      },
     },
-  };
+  });
 
-  const weightChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index' as const,
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        position: 'bottom' as const,
-        labels: {
-          usePointStyle: true,
-          padding: 15,
-        },
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
-      },
-    },
+  const weightChartOptions = buildChartOptions({
     scales: {
-      y: {
-        beginAtZero: false,
-        title: {
-          display: true,
-          text: 'Gewicht (kg)',
-        },
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-      },
+      y: commonScales.weight(),
     },
-  };
+  });
 
   if (loading) {
     return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Laden...</div>;
