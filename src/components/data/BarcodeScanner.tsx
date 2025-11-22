@@ -25,7 +25,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   const [showCameraSelector, setShowCameraSelector] = useState(false);
 
   // Define stopScanning as a ref function to avoid dependency issues
-  const stopScanning = async () => {
+  const stopScanning = async (showSelector = false) => {
     if (scannerRef.current) {
       try {
         console.log('Stopping scanner...');
@@ -33,6 +33,9 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
         scannerRef.current.clear();
         scannerRef.current = null;
         setIsScanning(false);
+        if (showSelector && cameras.length > 0) {
+          setShowCameraSelector(true);
+        }
         console.log('Scanner stopped');
       } catch (err) {
         console.error('Error stopping scanner:', err);
@@ -205,7 +208,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
       stopScanning();
       setShowCameraSelector(false);
       setCameras([]);
-      setSelectedCamera('');
+      // Don't reset selectedCamera - keep the preference for next time
       setError(null);
       setIsScanning(false);
     }
@@ -220,8 +223,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChangeCamera = async () => {
-    await stopScanning();
-    setShowCameraSelector(true);
+    await stopScanning(true); // Show selector after stopping
   };
 
   const handleClose = async () => {
@@ -302,7 +304,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
 
               <div className="flex gap-2">
                 <button
-                  onClick={stopScanning}
+                  onClick={() => stopScanning(true)}
                   className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700"
                 >
                   ⏹️ Stop
