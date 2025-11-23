@@ -21,6 +21,7 @@ import { AddMealModalV2 } from '@/components/journal/AddMealModal.v2'
 import { ProductEditModal } from '@/components/data/ProductEditModal'
 import { BarcodeScanner } from '@/components/data/BarcodeScanner'
 import { OpenFoodFactsSearch } from '@/components/data/OpenFoodFactsSearch'
+import { AddWaterModal } from '@/components/modals/AddWaterModal'
 import { useProducts, useEntries } from '@/hooks'
 import { getTodayDate } from '@/utils'
 import { openFoodFactsService } from '@/services/openfoodfacts.service'
@@ -40,6 +41,7 @@ function AppContent() {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showAddWaterModal, setShowAddWaterModal] = useState(false);
 
   // Data hooks for global modals
   const { products, addProduct, updateProduct, reloadProducts } = useProducts();
@@ -64,6 +66,10 @@ function AppContent() {
   const handleQuickSearch = () => {
     setShowQuickActions(false); // Close bottom sheet first
     setShowSearchModal(true);
+  };
+
+  const handleQuickAddWater = () => {
+    setShowAddWaterModal(true);
   };
 
   // Product modal save handler
@@ -298,6 +304,7 @@ function AppContent() {
         onAddProduct={handleQuickAddProduct}
         onScan={handleQuickScan}
         onSearch={handleQuickSearch}
+        onAddWater={handleQuickAddWater}
       />
 
       {/* Global Modals for QuickActions */}
@@ -341,6 +348,13 @@ function AppContent() {
           isOpen={showSearchModal}
           onClose={() => setShowSearchModal(false)}
           onSelectProduct={handleProductSelected}
+        />
+      )}
+
+      {showAddWaterModal && (
+        <AddWaterModal
+          isOpen={showAddWaterModal}
+          onClose={() => setShowAddWaterModal(false)}
         />
       )}
     </div>
