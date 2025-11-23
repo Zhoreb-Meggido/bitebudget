@@ -9,6 +9,7 @@ import type { Entry, MealTemplate, Weight } from '@/types';
 import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
 import { AddMealModalV2 } from './AddMealModal.v2';
 import { MacroBreakdownModal } from './MacroBreakdownModal';
+import { AddWaterModal } from '@/components/modals/AddWaterModal';
 
 export function JournalPage() {
   const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
@@ -19,6 +20,7 @@ export function JournalPage() {
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [showAddMeal, setShowAddMeal] = useState(false);
+  const [showAddWater, setShowAddWater] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
   const [quickAddTemplate, setQuickAddTemplate] = useState<MealTemplate | null>(null);
   const [breakdownModal, setBreakdownModal] = useState<{
@@ -454,6 +456,9 @@ export function JournalPage() {
             <button onClick={() => setShowAddMeal(true)} className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 w-full sm:w-auto">
               ➕ Maaltijd toevoegen
             </button>
+            <button onClick={() => setShowAddWater(true)} className="px-6 py-3 bg-cyan-600 text-white rounded-lg font-semibold hover:bg-cyan-700 w-full sm:w-auto">
+              💧 Water toevoegen
+            </button>
           </div>
         </div>
 
@@ -611,6 +616,13 @@ export function JournalPage() {
             unit={breakdownModal.unit}
           />
         )}
+
+        {/* Add Water Modal */}
+        <AddWaterModal
+          isOpen={showAddWater}
+          onClose={() => setShowAddWater(false)}
+          date={selectedDate}
+        />
 
       </div>
     </div>
