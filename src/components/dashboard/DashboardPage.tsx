@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useEntries, useSettings } from '@/hooks';
+import { useWaterEntries } from '@/hooks/useWaterEntries';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -24,7 +25,7 @@ ChartJS.register(
   Legend
 );
 
-type MetricKey = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium';
+type MetricKey = 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium' | 'water';
 
 interface DayData {
   date: string;
@@ -36,6 +37,7 @@ interface DayData {
   saturatedFat: number;
   fiber: number;
   sodium: number;
+  water: number;
 }
 
 interface MetricConfig {
@@ -54,11 +56,13 @@ const METRICS: MetricConfig[] = [
   { key: 'saturatedFat', label: 'Verzadigd Vet', color: 'rgb(239, 68, 68)', unit: 'g' },
   { key: 'fiber', label: 'Vezels', color: 'rgb(34, 197, 94)', unit: 'g' },
   { key: 'sodium', label: 'Natrium', color: 'rgb(249, 115, 22)', unit: 'mg' },
+  { key: 'water', label: 'Vochtinname', color: 'rgb(6, 182, 212)', unit: 'ml' },
 ];
 
 export function DashboardPage() {
   const { entries } = useEntries();
   const { settings } = useSettings();
+  const { waterEntries } = useWaterEntries();
 
   const [selectedMetrics, setSelectedMetrics] = useState<Set<MetricKey>>(new Set(['calories', 'protein', 'carbohydrates']));
   const [filteredEntries, setFilteredEntries] = useState<Entry[]>(entries);
@@ -67,6 +71,7 @@ export function DashboardPage() {
   const dailyData = useMemo(() => {
     const days: Map<string, DayData> = new Map();
 
+    // Aggregate meal entries
     filteredEntries.forEach(entry => {
       const existing = days.get(entry.date) || {
         date: entry.date,
@@ -78,6 +83,7 @@ export function DashboardPage() {
         saturatedFat: 0,
         fiber: 0,
         sodium: 0,
+        water: 0,
       };
 
       days.set(entry.date, {
@@ -90,11 +96,33 @@ export function DashboardPage() {
         saturatedFat: existing.saturatedFat + (entry.saturatedFat || 0),
         fiber: existing.fiber + (entry.fiber || 0),
         sodium: existing.sodium + (entry.sodium || 0),
+        water: existing.water,
+      });
+    });
+
+    // Aggregate water entries
+    waterEntries.forEach(waterEntry => {
+      const existing = days.get(waterEntry.date) || {
+        date: waterEntry.date,
+        calories: 0,
+        protein: 0,
+        carbohydrates: 0,
+        sugars: 0,
+        fat: 0,
+        saturatedFat: 0,
+        fiber: 0,
+        sodium: 0,
+        water: 0,
+      };
+
+      days.set(waterEntry.date, {
+        ...existing,
+        water: existing.water + waterEntry.amount,
       });
     });
 
     return Array.from(days.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredEntries]);
+  }, [filteredEntries, waterEntries]);
 
   // Calculate averages and stats
   const stats = useMemo(() => {
@@ -109,6 +137,7 @@ export function DashboardPage() {
           saturatedFat: 0,
           fiber: 0,
           sodium: 0,
+          water: 0,
         },
         projectedWeightChange: 0,
       };
@@ -123,6 +152,7 @@ export function DashboardPage() {
       saturatedFat: acc.saturatedFat + day.saturatedFat,
       fiber: acc.fiber + day.fiber,
       sodium: acc.sodium + day.sodium,
+      water: acc.water + day.water,
     }), {
       calories: 0,
       protein: 0,
@@ -132,6 +162,7 @@ export function DashboardPage() {
       saturatedFat: 0,
       fiber: 0,
       sodium: 0,
+      water: 0,
     });
 
     const count = dailyData.length;
@@ -144,6 +175,7 @@ export function DashboardPage() {
       saturatedFat: Math.round(sum.saturatedFat / count),
       fiber: Math.round(sum.fiber / count),
       sodium: Math.round(sum.sodium / count),
+      water: Math.round(sum.water / count),
     };
 
     // Calculate projected weight change per week
@@ -185,6 +217,7 @@ export function DashboardPage() {
   const getYAxisId = (key: MetricKey): string => {
     if (key === 'calories') return 'y-calories';
     if (key === 'sodium') return 'y-sodium';
+    if (key === 'water') return 'y-water';
     return 'y'; // protein, carbohydrates, sugars, fat, saturatedFat, fiber (all in grams)
   };
 
@@ -245,6 +278,22 @@ export function DashboardPage() {
       title: {
         display: true,
         text: 'Natrium (mg)',
+      },
+      grid: {
+        drawOnChartArea: false,
+      },
+    };
+  }
+
+  if (selectedMetrics.has('water')) {
+    scales['y-water'] = {
+      type: 'linear',
+      display: true,
+      position: 'right',
+      beginAtZero: true,
+      title: {
+        display: true,
+        text: 'Vochtinname (ml)',
       },
       grid: {
         drawOnChartArea: false,
