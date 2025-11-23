@@ -14,9 +14,10 @@ import { activitiesService } from './activities.service';
 import { heartRateSamplesService } from './heart-rate-samples.service';
 import { sleepStagesService } from './sleep-stages.service';
 import { stepsSamplesService } from './steps-samples.service';
+import { waterEntriesService } from './water-entries.service';
 import { db } from './database.service';
 import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
-import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages, DayStepsSamples } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages, DayStepsSamples, WaterEntry } from '@/types';
 
 export interface SyncData {
   version: string;
@@ -32,6 +33,7 @@ export interface SyncData {
   heartRateSamples?: DayHeartRateSamples[];  // v1.6+ - 75 day retention
   sleepStages?: DaySleepStages[];      // v1.10+ - 75 day retention
   stepsSamples?: DayStepsSamples[];    // v1.11+ - 75 day retention
+  waterEntries?: WaterEntry[];         // v1.12+ - 14 day retention
 }
 
 class SyncService {
@@ -291,6 +293,20 @@ class SyncService {
         console.log(`🗑️ Cleaned up ${oldDeletedTemplates.length} old deleted templates`);
       }
 
+      // Cleanup water entries
+      const waterEntries = await waterEntriesService.getAllEntriesIncludingDeleted();
+      const oldDeletedWater = waterEntries.filter(
+        w => w.deleted && w.deleted_at && w.deleted_at < cutoffDate
+      );
+      for (const entry of oldDeletedWater) {
+        if (entry.id) {
+          await db.waterEntries.delete(entry.id);
+        }
+      }
+      if (oldDeletedWater.length > 0) {
+        console.log(`🗑️ Cleaned up ${oldDeletedWater.length} old deleted water entries`);
+      }
+
       // Cleanup heart rate samples
       const hrSamples = await heartRateSamplesService.getAllSamplesIncludingDeleted();
       const oldDeletedHRSamples = hrSamples.filter(
@@ -347,6 +363,7 @@ class SyncService {
     const heartRateSamples = await heartRateSamplesService.getAllSamplesIncludingDeleted();
     const sleepStages = await sleepStagesService.getAllStagesIncludingDeleted();
     const stepsSamples = await stepsSamplesService.getAllSamplesIncludingDeleted();
+    const waterEntries = await waterEntriesService.getAllEntriesIncludingDeleted();
 
     // Ensure old rust/sport day fields are removed from settings before export
     const settingsClean = { ...settings } as any;
@@ -366,6 +383,7 @@ class SyncService {
     const hrSamplesDeleted = heartRateSamples.filter(h => h.deleted === true).length;
     const sleepStagesDeleted = sleepStages.filter(s => s.deleted === true).length;
     const stepsSamplesDeleted = stepsSamples.filter(s => s.deleted === true).length;
+    const waterEntriesDeleted = waterEntries.filter(w => w.deleted === true).length;
 
     console.log('📤 Preparing export with:', {
       entries: `${entries.length} (${entriesDeleted} deleted)`,
@@ -378,6 +396,7 @@ class SyncService {
       heartRateSamples: `${heartRateSamples.length} (${hrSamplesDeleted} deleted)`,
       sleepStages: `${sleepStages.length} (${sleepStagesDeleted} deleted)`,
       stepsSamples: `${stepsSamples.length} (${stepsSamplesDeleted} deleted)`,
+      waterEntries: `${waterEntries.length} (${waterEntriesDeleted} deleted)`,
     });
 
     return {
@@ -394,6 +413,7 @@ class SyncService {
       heartRateSamples,
       sleepStages,
       stepsSamples,
+      waterEntries,
     };
   }
 
@@ -413,6 +433,7 @@ class SyncService {
     const cloudHRSamplesDeleted = cloudData.heartRateSamples?.filter(h => h.deleted === true).length || 0;
     const cloudSleepStagesDeleted = cloudData.sleepStages?.filter(s => s.deleted === true).length || 0;
     const cloudStepsSamplesDeleted = cloudData.stepsSamples?.filter(s => s.deleted === true).length || 0;
+    const cloudWaterEntriesDeleted = cloudData.waterEntries?.filter(w => w.deleted === true).length || 0;
 
     console.log('📊 Cloud data contains:', {
       entries: `${cloudData.entries?.length || 0} (${cloudEntriesDeleted} deleted)`,
@@ -424,6 +445,7 @@ class SyncService {
       heartRateSamples: `${cloudData.heartRateSamples?.length || 0} (${cloudHRSamplesDeleted} deleted)`,
       sleepStages: `${cloudData.sleepStages?.length || 0} (${cloudSleepStagesDeleted} deleted)`,
       stepsSamples: `${cloudData.stepsSamples?.length || 0} (${cloudStepsSamplesDeleted} deleted)`,
+      waterEntries: `${cloudData.waterEntries?.length || 0} (${cloudWaterEntriesDeleted} deleted)`,
     });
 
     // Get existing local data (including deleted for proper merge)
@@ -876,6 +898,40 @@ class SyncService {
     } else {
       console.log('ℹ️ No steps samples in cloud backup (might be older version)');
     }
+
+    // Merge water entries - add cloud entries that don't exist locally or are newer
+    if (cloudData.waterEntries && cloudData.waterEntries.length > 0) {
+      console.log(`💧 Merging ${cloudData.waterEntries.length} water entries from cloud...`);
+      const localWaterEntries = await waterEntriesService.getAllEntriesIncludingDeleted();
+      const localWaterMap = new Map(localWaterEntries.map(w => [w.id, w]));
+
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      for (const cloudWater of cloudData.waterEntries) {
+        try {
+          const localWater = localWaterMap.get(cloudWater.id!);
+
+          if (!localWater) {
+            // New water entry from cloud - use put() which handles primary key (id)
+            await db.waterEntries.put(cloudWater);
+            addedCount++;
+          } else if (cloudWater.updated_at && localWater.updated_at &&
+                     new Date(cloudWater.updated_at) > new Date(localWater.updated_at)) {
+            // Cloud entry is newer - replace with cloud data
+            await db.waterEntries.put(cloudWater);
+            updatedCount++;
+          }
+        } catch (err) {
+          console.error(`❌ Error processing water entry ${cloudWater.id}:`, err);
+          throw err;
+        }
+      }
+
+      console.log(`✅ Water Entries: ${addedCount} added, ${updatedCount} updated`);
+    } else {
+      console.log('ℹ️ No water entries in cloud backup (might be older version)');
+    }
   }
 
   /**
@@ -1077,6 +1133,7 @@ class SyncService {
       heartRateSamples: data.heartRateSamples?.length || 0,
       sleepStages: data.sleepStages?.length || 0,
       stepsSamples: data.stepsSamples?.length || 0,
+      waterEntries: data.waterEntries?.length || 0,
     });
 
       // Encrypt

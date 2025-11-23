@@ -19,11 +19,12 @@ interface Props {
   onAddProduct: () => void;
   onScan: () => void;
   onSearch: () => void;
+  onAddWater: () => void;
   isOpen: boolean;
   onToggle: () => void;
 }
 
-export function QuickActions({ onAddMeal, onAddProduct, onScan, onSearch, isOpen, onToggle }: Props) {
+export function QuickActions({ onAddMeal, onAddProduct, onScan, onSearch, onAddWater, isOpen, onToggle }: Props) {
   const actions: QuickAction[] = [
     {
       id: 'add-meal',
@@ -33,6 +34,17 @@ export function QuickActions({ onAddMeal, onAddProduct, onScan, onSearch, isOpen
       color: 'bg-blue-600 hover:bg-blue-700',
       onClick: () => {
         onAddMeal();
+        onToggle();
+      },
+    },
+    {
+      id: 'add-water',
+      icon: '💧',
+      label: 'Water toevoegen',
+      description: 'Houd je dagelijkse vochtinname bij',
+      color: 'bg-cyan-600 hover:bg-cyan-700',
+      onClick: () => {
+        onAddWater();
         onToggle();
       },
     },

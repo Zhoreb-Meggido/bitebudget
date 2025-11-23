@@ -7,11 +7,14 @@
 // ENTRIES (Maaltijden)
 // ============================================
 
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'drink';
+
 export interface Entry {
   id?: string | number;
   date: string;           // yyyy-MM-dd formaat
   time: string;           // HH:mm formaat
   name: string;           // Naam van de maaltijd
+  mealType?: MealType;    // Type maaltijd (optioneel)
   products?: ProductInEntry[];  // Producten in deze maaltijd
   calories: number;
   protein: number;
@@ -295,6 +298,21 @@ export interface DayStepsSamples {
 }
 
 // ============================================
+// WATER ENTRIES (Water Intake Tracking)
+// ============================================
+
+export interface WaterEntry {
+  id?: string;
+  date: string;          // YYYY-MM-DD formaat
+  timestamp: number;     // Unix timestamp in milliseconds (exact tijd)
+  amount: number;        // ml
+  created_at: string;    // ISO timestamp
+  updated_at: string;    // ISO timestamp
+  deleted?: boolean;     // Soft delete flag
+  deleted_at?: string;   // ISO timestamp when deleted
+}
+
+// ============================================
 // SETTINGS
 // ============================================
 
@@ -310,7 +328,8 @@ export interface UserSettings {
   fiberMin: number;
   sodiumMax: number;
   targetWeight: number;
-  autoRefreshOAuth?: boolean; // Enable automatic OAuth token refresh (default: true)
+  waterGoalMl: number;         // Daily water intake goal in ml (default: 2000)
+  autoRefreshOAuth?: boolean;  // Enable automatic OAuth token refresh (default: true)
   theme?: ThemeMode;           // Theme preference (default: 'system')
 }
 
@@ -324,6 +343,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   fiberMin: 35,
   sodiumMax: 2300,
   targetWeight: 78,
+  waterGoalMl: 2000,
   theme: 'system',
 };
 
@@ -359,6 +379,8 @@ export interface BackupData {
   dailyActivities?: DailyActivity[];   // v1.5+ (Google Fit integration)
   heartRateSamples?: DayHeartRateSamples[];  // v1.6+ (Health Connect HR data, 75-day retention)
   sleepStages?: DaySleepStages[];      // v1.10+ (Health Connect sleep stages data, 75-day retention)
+  stepsSamples?: DayStepsSamples[];    // v1.11+ (Health Connect steps data, 75-day retention)
+  waterEntries?: WaterEntry[];         // v1.12+ (Water intake tracking, 14-day retention)
 }
 
 // ============================================

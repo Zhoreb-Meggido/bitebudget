@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Product, Entry, MealTemplate, ProductPortion } from '@/types';
+import type { Product, Entry, MealTemplate, ProductPortion, MealType } from '@/types';
 import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from '@/utils';
 import { useTemplates, usePortions, useDebounce } from '@/hooks';
 import { useModalLock } from '@/contexts/ModalStateContext';
@@ -34,6 +34,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
   const [tab, setTab] = useState<Tab>('products');
   const [cart, setCart] = useState<CartItem[]>([]); // Shopping cart
   const [mealTime, setMealTime] = useState('');
+  const [mealType, setMealType] = useState<MealType | ''>('');
   const [productSearch, setProductSearch] = useState('');
   const [templateSearch, setTemplateSearch] = useState('');
 
@@ -74,6 +75,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
         });
         setCart(items);
         setMealTime(editEntry.time);
+        setMealType(editEntry.mealType || '');
         setStep(2); // Go directly to review
         markDirty(); // Mark modal as having unsaved changes when editing
       }
@@ -83,6 +85,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
       setTab('products');
       setCart([]);
       setMealTime('');
+      setMealType('');
       setProductSearch('');
       setTemplateSearch('');
     }
@@ -189,6 +192,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
       time,
       name,
       products: productDetails,
+      ...(mealType && { mealType }), // Only include mealType if set
       ...roundNutritionValues(mealTotals)
     };
 
@@ -492,6 +496,31 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
                   {mealTime === '' && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Standaard: huidige tijd</p>
                   )}
+                </div>
+
+                {/* Meal Type dropdown */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Type (optioneel)
+                  </label>
+                  <select
+                    value={mealType}
+                    onChange={(e) => {
+                      setMealType(e.target.value as MealType | '');
+                      markDirty();
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="">Geen type</option>
+                    <option value="breakfast">🍳 Ontbijt</option>
+                    <option value="lunch">🥗 Lunch</option>
+                    <option value="dinner">🍽️ Diner</option>
+                    <option value="snack">🍿 Snack</option>
+                    <option value="drink">🥤 Drank</option>
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Markeer als 'Drank' om mee te tellen in vochtinname
+                  </p>
                 </div>
 
                 {/* Cart items */}

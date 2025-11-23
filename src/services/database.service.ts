@@ -9,7 +9,7 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages, DayStepsSamples } from '@/types';
+import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages, DayStepsSamples, WaterEntry } from '@/types';
 
 export class VoedseljournaalDB extends Dexie {
   // Tables
@@ -23,6 +23,7 @@ export class VoedseljournaalDB extends Dexie {
   heartRateSamples!: Table<DayHeartRateSamples, string>;
   sleepStages!: Table<DaySleepStages, string>;
   stepsSamples!: Table<DayStepsSamples, string>;
+  waterEntries!: Table<WaterEntry, string>;
 
   constructor() {
     super('VoedseljournaalDB');
@@ -201,6 +202,38 @@ export class VoedseljournaalDB extends Dexie {
       console.log('👣 Each record stores array of intraday steps samples');
       console.log('📈 Tracks step count throughout the day');
       console.log('ℹ️ Import Health Connect data to populate');
+    });
+
+    // Version 13 - Add water entries (water intake tracking) and mealType to entries
+    this.version(13).stores({
+      entries: 'id, date, created_at, updated_at',
+      products: 'id, name, ean, source, created_at, updated_at',
+      weights: 'id, date, created_at, updated_at',
+      settings: 'key',
+      productPortions: 'id, productName, created_at, updated_at',
+      mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at',
+      dailyActivities: 'id, date, created_at, updated_at',
+      heartRateSamples: 'date, sampleCount, created_at, updated_at',
+      sleepStages: 'date, stageCount, created_at, updated_at',
+      stepsSamples: 'date, sampleCount, created_at, updated_at',
+      waterEntries: 'id, date, timestamp, created_at, updated_at'
+    }).upgrade(async tx => {
+      console.log('✅ V13: Added waterEntries table');
+      console.log('💧 Primary key: id (auto-generated)');
+      console.log('📊 Indexes: date, timestamp for efficient queries');
+      console.log('🥤 Entries now support mealType field (breakfast/lunch/dinner/snack/drink)');
+      console.log('⚙️ UserSettings extended with waterGoalMl (default: 2000ml)');
+
+      // Migrate existing settings to add waterGoalMl if not present
+      const settingsRecord = await tx.table('settings').get('user-settings');
+      if (settingsRecord && settingsRecord.values) {
+        if (!settingsRecord.values.waterGoalMl) {
+          settingsRecord.values.waterGoalMl = 2000;
+          settingsRecord.updated_at = new Date().toISOString();
+          await tx.table('settings').put(settingsRecord);
+          console.log('✅ Migrated user settings to add waterGoalMl');
+        }
+      }
     });
   }
 }

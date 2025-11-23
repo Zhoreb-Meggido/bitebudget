@@ -4,11 +4,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useEntries, useProducts, useSettings, useTemplates, useWeights } from '@/hooks';
+import { useWaterEntries } from '@/hooks/useWaterEntries';
 import { getTodayDate, calculateTotals, calculateProductNutrition } from '@/utils';
-import type { Entry, MealTemplate, Weight } from '@/types';
+import type { Entry, MealTemplate, Weight, WaterEntry } from '@/types';
 import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
 import { AddMealModalV2 } from './AddMealModal.v2';
 import { MacroBreakdownModal } from './MacroBreakdownModal';
+import { AddWaterModal } from '@/components/modals/AddWaterModal';
+import { WaterIntakeCard } from '@/components/dashboard/WaterIntakeCard';
 
 export function JournalPage() {
   const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
@@ -16,9 +19,11 @@ export function JournalPage() {
   const { settings } = useSettings();
   const { weights } = useWeights();
   const { recentTemplates, trackUsage } = useTemplates();
+  const { waterEntries, getEntriesByDate: getWaterEntriesByDate, deleteWaterEntry } = useWaterEntries();
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [showAddMeal, setShowAddMeal] = useState(false);
+  const [showAddWater, setShowAddWater] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
   const [quickAddTemplate, setQuickAddTemplate] = useState<MealTemplate | null>(null);
   const [breakdownModal, setBreakdownModal] = useState<{
@@ -41,6 +46,44 @@ export function JournalPage() {
 
   const todayEntries = getEntriesByDate(selectedDate);
   const totals = calculateTotals(todayEntries);
+
+  // Get water entries for selected date
+  const todayWaterEntries = getWaterEntriesByDate(selectedDate);
+
+  // Combine and sort meal entries and water entries by time
+  type CombinedEntry =
+    | { type: 'meal'; data: Entry; sortTime: string }
+    | { type: 'water'; data: WaterEntry; sortTime: string };
+
+  const combinedEntries = useMemo<CombinedEntry[]>(() => {
+    const combined: CombinedEntry[] = [];
+
+    // Add meal entries
+    todayEntries.forEach(entry => {
+      combined.push({
+        type: 'meal',
+        data: entry,
+        sortTime: entry.time,
+      });
+    });
+
+    // Add water entries (convert timestamp to HH:mm format)
+    todayWaterEntries.forEach(waterEntry => {
+      const date = new Date(waterEntry.timestamp);
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const timeStr = `${hours}:${minutes}`;
+
+      combined.push({
+        type: 'water',
+        data: waterEntry,
+        sortTime: timeStr,
+      });
+    });
+
+    // Sort by time
+    return combined.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
+  }, [todayEntries, todayWaterEntries]);
 
   // Get most recent weight for protein calculation
   const currentWeight = useMemo(() => {
@@ -449,34 +492,46 @@ export function JournalPage() {
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-            <button onClick={() => setShowAddMeal(true)} className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 w-full sm:w-auto">
-              ➕ Maaltijd toevoegen
-            </button>
-          </div>
+          {/* Action Button */}
+          <button onClick={() => setShowAddMeal(true)} className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 w-full sm:w-auto">
+            ➕ Maaltijd toevoegen
+          </button>
         </div>
 
-        {/* Today's Meals */}
+        {/* Water Intake Progress */}
+        <div className="mb-4 sm:mb-6">
+          <WaterIntakeCard onAddWater={() => setShowAddWater(true)} />
+        </div>
+
+        {/* Today's Meals & Water */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Maaltijden</h2>
-          {todayEntries.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-4">Nog geen maaltijden toegevoegd</p>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">Dagboek</h2>
+          {combinedEntries.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">Nog geen items toegevoegd</p>
           ) : (
             <div className="space-y-3">
-              {todayEntries.map(entry => (
-                <div key={entry.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600">
+              {combinedEntries.map((item, index) => (
+                item.type === 'meal' ? (
+                  // Meal Entry
+                <div key={`meal-${item.data.id}`} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600">
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-800 dark:text-gray-100">{entry.time} - {entry.name}</div>
+                      <div className="font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                        <span>{item.data.time} - {item.data.name}</span>
+                        {item.data.mealType === 'drink' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
+                            🥤 Drank
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words">
-                        {entry.calories} kcal • {entry.protein}g eiw • {entry.carbohydrates}g koolh • {entry.sugars}g suik • {entry.saturatedFat}g v.vet • {entry.fiber}g vez • {entry.sodium}mg natr
+                        {item.data.calories} kcal • {item.data.protein}g eiw • {item.data.carbohydrates}g koolh • {item.data.sugars}g suik • {item.data.saturatedFat}g v.vet • {item.data.fiber}g vez • {item.data.sodium}mg natr
                       </div>
                     </div>
                     <div className="flex gap-1 flex-shrink-0">
                       <button
                         onClick={() => {
-                          setEditingEntry(entry);
+                          setEditingEntry(item.data);
                           setShowAddMeal(true);
                         }}
                         className="text-blue-600 hover:text-blue-800 text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -487,7 +542,7 @@ export function JournalPage() {
                       <button
                         onClick={() => {
                           if (confirm('Verwijder deze maaltijd?')) {
-                            deleteEntry(entry.id!);
+                            deleteEntry(item.data.id!);
                           }
                         }}
                         className="text-red-600 hover:text-red-800 text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -498,6 +553,35 @@ export function JournalPage() {
                     </div>
                   </div>
                 </div>
+                ) : (
+                  // Water Entry
+                  <div key={`water-${item.data.id}`} className="bg-cyan-50 dark:bg-cyan-900/20 p-4 rounded-lg border-l-4 border-cyan-500">
+                    <div className="flex justify-between items-center gap-3">
+                      <div className="flex items-center gap-3 flex-1">
+                        <span className="text-3xl">💧</span>
+                        <div>
+                          <div className="font-semibold text-gray-800 dark:text-gray-100">
+                            {item.sortTime} - {item.data.amount}ml water
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Vochtinname
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (confirm('Verwijder deze water entry?')) {
+                            deleteWaterEntry(item.data.id!);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-800 text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        aria-label="Verwijder water"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                )
               ))}
             </div>
           )}
@@ -611,6 +695,13 @@ export function JournalPage() {
             unit={breakdownModal.unit}
           />
         )}
+
+        {/* Add Water Modal */}
+        <AddWaterModal
+          isOpen={showAddWater}
+          onClose={() => setShowAddWater(false)}
+          date={selectedDate}
+        />
 
       </div>
     </div>

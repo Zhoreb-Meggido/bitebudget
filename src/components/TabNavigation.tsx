@@ -11,7 +11,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: 'journaal', label: 'Journaal', icon: '📔' },
+  { id: 'journaal', label: 'Dagboek', icon: '📔' },
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
   { id: 'analyse', label: 'Analyse', icon: '📈' },
   { id: 'data', label: 'Data', icon: '💾' },
