@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProducts, usePortions } from '@/hooks';
+import { useModalLock } from '@/contexts/ModalStateContext';
 import type { MealTemplate, ProductInEntry } from '@/types';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) {
   const { products: allProducts, isLoading: productsLoading } = useProducts();
   const { portions: allPortions } = usePortions();
+  const { markDirty, markClean } = useModalLock('template-edit-modal');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -31,6 +33,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
         isFavorite: template.isFavorite || false,
       });
       setTemplateProducts(template.products || []);
+      markDirty(); // Mark modal as having unsaved changes when editing
     } else if (isOpen && !template) {
       // Reset form for new template
       setFormData({
@@ -40,23 +43,26 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
       });
       setTemplateProducts([]);
     }
-  }, [template, isOpen]);
+  }, [template, isOpen, markDirty]);
 
   const handleAddItem = () => {
     setTemplateProducts([...templateProducts, { name: '', grams: 0, portionName: undefined }]);
     // Clear search query for new item
     const newIndex = templateProducts.length;
     setProductSearchQueries(prev => ({ ...prev, [newIndex]: '' }));
+    markDirty(); // Mark as dirty when adding item
   };
 
   const handleRemoveItem = (index: number) => {
     setTemplateProducts(templateProducts.filter((_, i) => i !== index));
+    markDirty(); // Mark as dirty when removing item
   };
 
   const handleItemChange = (index: number, field: keyof ProductInEntry, value: any) => {
     const newProducts = [...templateProducts];
     newProducts[index] = { ...newProducts[index], [field]: value };
     setTemplateProducts(newProducts);
+    markDirty(); // Mark as dirty when changing item
   };
 
   const handleProductSelect = (index: number, productName: string) => {
@@ -79,6 +85,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
     }
 
     setTemplateProducts(newProducts);
+    markDirty(); // Mark as dirty when selecting product
   };
 
   const handlePortionSelect = (index: number, portionName: string) => {
@@ -92,6 +99,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
       newProducts[index].portionName = portionName;
       newProducts[index].grams = portion.grams;
       setTemplateProducts(newProducts);
+      markDirty(); // Mark as dirty when selecting portion
     }
   };
 
@@ -128,12 +136,18 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
         isFavorite: formData.isFavorite,
         products: templateProducts,
       });
+      markClean(); // Clear dirty state before closing
       onClose();
     } catch (error: any) {
       alert(error.message || 'Fout bij opslaan');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleClose = () => {
+    markClean();
+    onClose();
   };
 
   // Helper function: Get filtered and sorted products for a specific item index
@@ -175,7 +189,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
             {template ? 'Template Bewerken' : 'Nieuwe Template'}
           </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none"
           >
             ×
@@ -193,7 +207,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => { setFormData(prev => ({ ...prev, name: e.target.value })); markDirty(); }}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
@@ -205,7 +219,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
               <input
                 type="text"
                 value={formData.category}
-                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                onChange={(e) => { setFormData(prev => ({ ...prev, category: e.target.value })); markDirty(); }}
                 placeholder="bijv. Ontbijt, Lunch, Diner"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -218,7 +232,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
               <input
                 type="checkbox"
                 checked={formData.isFavorite}
-                onChange={(e) => setFormData(prev => ({ ...prev, isFavorite: e.target.checked }))}
+                onChange={(e) => { setFormData(prev => ({ ...prev, isFavorite: e.target.checked })); markDirty(); }}
                 className="rounded"
               />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Favoriet</span>
@@ -363,7 +377,7 @@ export function TemplateEditModal({ isOpen, onClose, template, onSave }: Props) 
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               Annuleren
