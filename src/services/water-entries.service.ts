@@ -93,9 +93,11 @@ class WaterEntriesService {
    * Verwijder een water entry (soft delete)
    */
   async deleteWaterEntry(id: string): Promise<void> {
+    const now = getTimestamp();
     await db.waterEntries.update(id, {
       deleted: true,
-      deleted_at: getTimestamp(),
+      deleted_at: now,
+      updated_at: now, // Important: update timestamp so sync can detect the change
     });
 
     console.log(`🗑️ Deleted water entry: ${id}`);
