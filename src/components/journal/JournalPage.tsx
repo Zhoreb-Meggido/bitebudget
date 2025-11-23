@@ -11,6 +11,7 @@ import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
 import { AddMealModalV2 } from './AddMealModal.v2';
 import { MacroBreakdownModal } from './MacroBreakdownModal';
 import { AddWaterModal } from '@/components/modals/AddWaterModal';
+import { WaterIntakeCard } from '@/components/dashboard/WaterIntakeCard';
 
 export function JournalPage() {
   const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
@@ -500,6 +501,11 @@ export function JournalPage() {
               💧 Water toevoegen
             </button>
           </div>
+        </div>
+
+        {/* Water Intake Progress */}
+        <div className="mb-4 sm:mb-6">
+          <WaterIntakeCard onAddWater={() => setShowAddWater(true)} />
         </div>
 
         {/* Today's Meals & Water */}

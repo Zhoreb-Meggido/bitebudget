@@ -12,8 +12,6 @@ import {
   Legend,
 } from 'chart.js';
 import { PeriodSelector } from '@/components/shared/PeriodSelector';
-import { WaterIntakeCard } from './WaterIntakeCard';
-import { AddWaterModal } from '@/components/modals/AddWaterModal';
 import type { Entry } from '@/types';
 
 ChartJS.register(
@@ -64,7 +62,6 @@ export function DashboardPage() {
 
   const [selectedMetrics, setSelectedMetrics] = useState<Set<MetricKey>>(new Set(['calories', 'protein', 'carbohydrates']));
   const [filteredEntries, setFilteredEntries] = useState<Entry[]>(entries);
-  const [showAddWater, setShowAddWater] = useState(false);
 
   // Aggregate entries per day
   const dailyData = useMemo(() => {
@@ -291,11 +288,6 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Water Intake Card */}
-      <div className="mb-6">
-        <WaterIntakeCard onAddWater={() => setShowAddWater(true)} />
-      </div>
-
       {dailyData.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
           <p className="text-gray-500 dark:text-gray-400 text-lg">
@@ -380,12 +372,6 @@ export function DashboardPage() {
           </div>
         </>
       )}
-
-      {/* Add Water Modal */}
-      <AddWaterModal
-        isOpen={showAddWater}
-        onClose={() => setShowAddWater(false)}
-      />
     </div>
   );
 }
