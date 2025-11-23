@@ -19,7 +19,9 @@ export function AddWaterModal({ isOpen, onClose, date }: Props) {
 
   const presetAmounts = [
     { label: '250ml', value: 250, icon: '🥤' },
+    { label: '330ml', value: 330, icon: '🥫' },
     { label: '500ml', value: 500, icon: '🧃' },
+    { label: '660ml', value: 660, icon: '🧊' },
     { label: '750ml', value: 750, icon: '🍶' },
     { label: '1L', value: 1000, icon: '💧' },
   ];
@@ -82,16 +84,16 @@ export function AddWaterModal({ isOpen, onClose, date }: Props) {
         </div>
 
         {/* Preset Buttons */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           {presetAmounts.map((preset) => (
             <button
               key={preset.value}
               onClick={() => handleAddWater(preset.value)}
               disabled={isAdding}
-              className="flex flex-col items-center justify-center px-6 py-4 bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="flex flex-col items-center justify-center px-4 py-4 bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <span className="text-3xl mb-1">{preset.icon}</span>
-              <span className="text-lg font-semibold">{preset.label}</span>
+              <span className="text-base font-semibold">{preset.label}</span>
             </button>
           ))}
         </div>
