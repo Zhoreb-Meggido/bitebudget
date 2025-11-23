@@ -50,6 +50,13 @@ export function NutritionTab() {
   const { weights } = useWeights();
   const [selectedMetric, setSelectedMetric] = useState<MetricType>('overall');
 
+  // Calculate yesterday's date to exclude today
+  const yesterday = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split('T')[0];
+  }, []);
+
   // Get most recent weight for protein calculation
   const currentWeight = useMemo(() => {
     const validWeights = weights.filter((w: Weight) => !w.deleted && w.weight > 0);
@@ -60,11 +67,13 @@ export function NutritionTab() {
     return sorted[0].weight;
   }, [weights, settings.targetWeight]);
 
-  // Aggregate entries per day
+  // Aggregate entries per day (exclude today)
   const dailyData = useMemo(() => {
     const days: Map<string, DayData> = new Map();
 
-    entries.forEach((entry: Entry) => {
+    entries
+      .filter((entry: Entry) => entry.date <= yesterday)
+      .forEach((entry: Entry) => {
       const existing = days.get(entry.date) || {
         date: entry.date,
         calories: 0,
@@ -91,7 +100,7 @@ export function NutritionTab() {
     });
 
     return Array.from(days.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [entries]);
+  }, [entries, yesterday]);
 
   // Calculate week comparison data (last 8 weeks)
   const weekData = useMemo(() => {

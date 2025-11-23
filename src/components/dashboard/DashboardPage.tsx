@@ -64,8 +64,15 @@ export function DashboardPage() {
   const { settings } = useSettings();
   const { waterEntries } = useWaterEntries();
 
+  // Calculate yesterday's date to exclude today
+  const yesterday = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split('T')[0];
+  }, []);
+
   const [selectedMetrics, setSelectedMetrics] = useState<Set<MetricKey>>(new Set(['calories', 'protein', 'carbohydrates']));
-  const [filteredEntries, setFilteredEntries] = useState<Entry[]>(entries);
+  const [filteredEntries, setFilteredEntries] = useState<Entry[]>(entries.filter(e => e.date <= yesterday));
 
   // Aggregate entries per day
   const dailyData = useMemo(() => {
@@ -100,29 +107,31 @@ export function DashboardPage() {
       });
     });
 
-    // Aggregate water entries
-    waterEntries.forEach(waterEntry => {
-      const existing = days.get(waterEntry.date) || {
-        date: waterEntry.date,
-        calories: 0,
-        protein: 0,
-        carbohydrates: 0,
-        sugars: 0,
-        fat: 0,
-        saturatedFat: 0,
-        fiber: 0,
-        sodium: 0,
-        water: 0,
-      };
+    // Aggregate water entries (exclude today)
+    waterEntries
+      .filter(waterEntry => waterEntry.date <= yesterday)
+      .forEach(waterEntry => {
+        const existing = days.get(waterEntry.date) || {
+          date: waterEntry.date,
+          calories: 0,
+          protein: 0,
+          carbohydrates: 0,
+          sugars: 0,
+          fat: 0,
+          saturatedFat: 0,
+          fiber: 0,
+          sodium: 0,
+          water: 0,
+        };
 
-      days.set(waterEntry.date, {
-        ...existing,
-        water: existing.water + waterEntry.amount,
+        days.set(waterEntry.date, {
+          ...existing,
+          water: existing.water + waterEntry.amount,
+        });
       });
-    });
 
     return Array.from(days.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredEntries, waterEntries]);
+  }, [filteredEntries, waterEntries, yesterday]);
 
   // Calculate averages and stats
   const stats = useMemo(() => {
