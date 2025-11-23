@@ -57,8 +57,9 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
       setCart(items);
       setMealTime(getCurrentTime());
       setStep(2); // Go directly to review
+      markDirty(); // Mark modal as having unsaved changes
     }
-  }, [quickAddTemplate, isOpen, editEntry, products]);
+  }, [quickAddTemplate, isOpen, editEntry, products, markDirty]);
 
   // Load entry data when editing
   useEffect(() => {
@@ -74,6 +75,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
         setCart(items);
         setMealTime(editEntry.time);
         setStep(2); // Go directly to review
+        markDirty(); // Mark modal as having unsaved changes when editing
       }
     } else if (!isOpen) {
       // Reset when modal closes
@@ -84,7 +86,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
       setProductSearch('');
       setTemplateSearch('');
     }
-  }, [editEntry, isOpen, products]);
+  }, [editEntry, isOpen, products, markDirty]);
 
   const isEditMode = !!editEntry;
 

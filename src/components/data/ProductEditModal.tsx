@@ -80,6 +80,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
         sodium: toDecimalString(product.sodium),
         favorite: product.favorite || false,
       });
+      markDirty(); // Mark modal as having unsaved changes when editing
     } else {
       // Reset form for new product
       setFormData({
@@ -96,7 +97,7 @@ export function ProductEditModal({ isOpen, onClose, product, onSave }: Props) {
         favorite: false,
       });
     }
-  }, [product]);
+  }, [product, markDirty]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

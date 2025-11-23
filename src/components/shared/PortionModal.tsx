@@ -27,6 +27,7 @@ export function PortionModal({ isOpen, onClose, portion, productName, onSave }: 
       setUnit(portion.unit || 'g');
       setGramsPerUnit(portion.gramsPerUnit?.toString() || '');
       setIsDefault(portion.isDefault || false);
+      markDirty(); // Mark modal as having unsaved changes when editing
     } else {
       // Reset form for new portion
       setPortionName('');
@@ -35,7 +36,7 @@ export function PortionModal({ isOpen, onClose, portion, productName, onSave }: 
       setGramsPerUnit('');
       setIsDefault(false);
     }
-  }, [portion, isOpen]);
+  }, [portion, isOpen, markDirty]);
 
   const calculateGrams = (): number => {
     const amt = parseInt(amount) || 0;
