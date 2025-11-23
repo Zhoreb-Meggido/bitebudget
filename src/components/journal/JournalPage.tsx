@@ -473,7 +473,14 @@ export function JournalPage() {
                 <div key={entry.id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600">
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-800 dark:text-gray-100">{entry.time} - {entry.name}</div>
+                      <div className="font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2 flex-wrap">
+                        <span>{entry.time} - {entry.name}</span>
+                        {entry.mealType === 'drink' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200">
+                            🥤 Drank
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words">
                         {entry.calories} kcal • {entry.protein}g eiw • {entry.carbohydrates}g koolh • {entry.sugars}g suik • {entry.saturatedFat}g v.vet • {entry.fiber}g vez • {entry.sodium}mg natr
                       </div>
