@@ -1,10 +1,10 @@
-# BiteBudget v1.12.0
+# BiteBudget v1.13.0
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.12.0:** QuickActions Bottom Sheet - Global snelkoppelingen vanuit de footer naar alle belangrijke functies!
+**🎉 Nieuw in v1.13.0:** Steps Intraday Tracking - Volledige stappen tracking met Health Connect import, bar chart visualisatie en 👣 heatmap integratie!
 
 **📜 [Volledige Versiegeschiedenis →](VERSION_HISTORY.md)**
 
@@ -38,7 +38,7 @@ npm run build
 
 ---
 
-## ✨ Current Features (v1.12.0)
+## ✨ Current Features (v1.13.0)
 
 ### 📱 PWA Features
 - ✅ **Installeerbaar** - "Add to Home Screen" op iOS/Android
@@ -80,10 +80,12 @@ npm run build
 - ✅ **Weight Tracking** - Gewicht grafieken en geschiedenis
 - ✅ **Garmin Connect Import** - CSV import van daily activities
 - ✅ **Activity Metrics** - Steps, calories, active minutes, resting HR
+- ✅ **Steps Tracking** - Intraday steps visualization met bar chart (v1.13+)
 - ✅ **Sleep Stages** - Detailed sleep analysis (Light, Deep, REM, Awake) - v1.10+
 - ✅ **Heart Rate Visualization** - Intraday HR charts met zones (v1.7+)
 - ✅ **HRV Tracking** - Heart Rate Variability monitoring (v1.6+)
 - ✅ **Stress & Body Battery** - Garmin metrics import
+- ✅ **Health Connect Import** - Import HR, Sleep & Steps from Android Health Connect
 
 ### 📊 Analysis & Visualizations
 - ✅ **Dashboard** - Multi-metric visualisaties (8 metrics, 10 time ranges)
@@ -156,7 +158,7 @@ src/
 │   ├── AppFooter.tsx                 ✅ Footer with QuickActions trigger (v1.12+)
 │   └── TabNavigation.tsx             ✅ Responsive nav (6 tabs)
 ├── services/
-│   ├── database.service.ts           ✅ Dexie DB (v11)
+│   ├── database.service.ts           ✅ Dexie DB (v12)
 │   ├── entries.service.ts            ✅ Meal entries CRUD
 │   ├── products.service.ts           ✅ Products CRUD
 │   ├── portions.service.ts           ✅ Portions CRUD
@@ -166,6 +168,7 @@ src/
 │   ├── activities.service.ts         ✅ Daily activities
 │   ├── heartrate.service.ts          ✅ HR samples (v1.7+)
 │   ├── sleepstages.service.ts        ✅ Sleep stages (v1.10+)
+│   ├── steps-samples.service.ts      ✅ Steps samples (v1.13+)
 │   ├── aggregation.service.ts        ✅ Week/month aggregates (v1.8+)
 │   ├── openfoodfacts.service.ts      ✅ OFF API integration
 │   ├── encryption.service.ts         ✅ AES-GCM encryption
@@ -182,6 +185,7 @@ src/
 │   ├── useActivities.ts              ✅ Activities with auto-sync
 │   ├── useHeartRateSamples.ts        ✅ HR samples (v1.7+)
 │   ├── useSleepStages.ts             ✅ Sleep stages (v1.10+)
+│   ├── useStepsSamples.ts            ✅ Steps samples (v1.13+)
 │   ├── useAggregates.ts              ✅ Aggregates (v1.8+)
 │   ├── useDebounce.ts                ✅ Generic debounce
 │   └── useSwipeTabs.ts               ✅ Swipe gestures (v1.6.2+)
@@ -237,7 +241,7 @@ public/
 
 ## 📊 Database Schema
 
-### IndexedDB Tables (Dexie v11)
+### IndexedDB Tables (Dexie v12)
 
 **entries** - Maaltijden
 ```typescript
@@ -391,6 +395,20 @@ public/
 }
 ```
 
+**stepsSamples** - Intraday Steps Data (v1.13+)
+```typescript
+{
+  date: string;                    // Primary key: YYYY-MM-DD
+  samples: StepsSample[];          // Array of intraday steps samples
+  sampleCount: number;
+  totalSteps: number;
+  maxSteps: number;                // Max steps in single sample
+  created_at: string;
+  updated_at: string;
+  deleted?: boolean;
+}
+```
+
 **settings** - User Settings
 ```typescript
 {
@@ -427,7 +445,7 @@ public/
 ### Data Format
 ```typescript
 interface SyncData {
-  version: '1.3';
+  version: '1.11';
   timestamp: string;
   entries: Entry[];
   products: Product[];
@@ -438,6 +456,7 @@ interface SyncData {
   activities: DailyActivity[];
   heartRateSamples: DayHeartRateSamples[];  // v1.7+
   sleepStages: DaySleepStages[];             // v1.10+
+  stepsSamples: DayStepsSamples[];           // v1.13+
 }
 ```
 
@@ -527,8 +546,8 @@ Personal project - All rights reserved
 
 ---
 
-**Current Version:** v1.12.0 (January 22, 2025)
-**Status:** Stable - QuickActions Bottom Sheet met global modals
+**Current Version:** v1.13.0 (January 23, 2025)
+**Status:** Stable - Steps Intraday Tracking met Health Connect import
 **Next:** TBD
 
 **📜 [Complete Version History →](VERSION_HISTORY.md)**

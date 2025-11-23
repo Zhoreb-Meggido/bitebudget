@@ -534,6 +534,36 @@ interface UserSettings {
 
 ---
 
+## Recent Improvements (v1.13.0) ✅
+
+### Steps Intraday Tracking ✅
+**Feature:** Complete steps tracking system with Health Connect import and visualization.
+
+**Implemented:**
+- Database v12 with stepsSamples table (date, sampleCount indices)
+- DayStepsSamples and StepsSample TypeScript interfaces
+- steps-samples.service.ts with full CRUD operations
+- useStepsSamples React hook for data management
+- Health Connect import: extractAndStoreAllStepsSamples(), extractAndStoreStepsSamplesForDay()
+- StepsChart component with bar chart visualization
+- Activity tab integration with 👣 heatmap indicator
+- Collapsible statistics panel (total steps, active hours, avg per hour, most active hour)
+- Cloud sync support with backup schema v1.11
+- Soft delete pattern with 75-day retention
+- Fixed Health Connect import bug (epochDayToDate → epochDaysToDate typo)
+
+**UX Improvements:**
+- HealthConnect preview extended (show HR, Sleep, Steps counts)
+- Period selection unified across Balance/Trends/Overzicht tabs
+- Exclude "today" from all date ranges (incomplete data)
+- Replace toggle buttons with dropdown selectors
+
+**Impact:** Complete intraday steps tracking infrastructure following the same pattern as HR and Sleep data!
+
+**Effort:** ~4-5 uur
+
+---
+
 ## Recent Improvements (v1.12.0) ✅
 
 ### QuickActions Bottom Sheet & Code Cleanup ✅

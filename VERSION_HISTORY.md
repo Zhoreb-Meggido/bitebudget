@@ -6,6 +6,54 @@ Complete changelog van alle releases met feature details en bugfixes.
 
 ## 📋 Detailed Changelog
 
+### **v1.13.0 - Steps Intraday Tracking** (2025-01-23)
+
+#### **Steps Tracking System** 👣
+- ✅ **Intraday Steps Data** - Complete steps tracking infrastructure
+  - Database v12 with stepsSamples table
+  - StepsSample interface (timestamp + count)
+  - DayStepsSamples with aggregations (total, max, count)
+  - 75-day retention policy (consistent with HR/Sleep)
+- ✅ **Health Connect Integration** - Import steps from Health Connect
+  - extractAndStoreAllStepsSamples() - Batch import
+  - extractAndStoreStepsSamplesForDay() - Single day import
+  - Parse steps_record_table from Health Connect SQLite
+- ✅ **StepsChart Visualization** - Bar chart showing intraday steps
+  - Time-based X-axis (00:00 to 23:59)
+  - Step count Y-axis with dynamic scaling
+  - Skip zero-value bars for cleaner visualization
+  - Collapsible statistics panel with hourly breakdown
+- ✅ **Activity Tab Integration** - 👣 indicator in heatmap
+  - Click days to view detailed intraday chart
+  - Shows total steps, max steps, sample count
+  - Hourly statistics: active hours, avg per hour, most active time
+- ✅ **Cloud Sync Support** - Full backup integration
+  - Backup schema v1.11 (includes HR, Sleep, Steps)
+  - Soft delete pattern with deleted flag
+  - Smart merge strategy (newest wins)
+  - Auto cleanup of old data (75-day retention)
+
+#### **UX Improvements** 🎯
+- ✅ **HealthConnect Preview** - Extended import preview
+  - Show counts for HR samples, sleep stages, and steps samples
+  - Preview available for both direct DB upload and ZIP import
+  - Better visibility before importing data
+- ✅ **Period Selection** - Unified across analysis tabs
+  - Exclude "today" from all datasets (incomplete data)
+  - Replace toggle buttons with dropdown selectors
+  - Consistent UX across Balance, Trends, and Overzicht tabs
+  - All date ranges end at "yesterday" instead of "today"
+
+#### **Technical Changes** 🔧
+- ✅ **Database Migration** - v11 → v12
+  - Added stepsSamples table (date, sampleCount indices)
+  - Consistent schema with heartRateSamples and sleepStages
+- ✅ **Type Safety** - TypeScript interfaces for steps data
+- ✅ **Service Layer** - steps-samples.service.ts with full CRUD
+- ✅ **React Hook** - useStepsSamples for data management
+- ✅ **Constants** - Updated BACKUP_SCHEMA_VERSION to 1.11
+- ✅ **Bug Fix** - Fixed Health Connect import typo (epochDayToDate → epochDaysToDate)
+
 ### **v1.12.0 - QuickActions Bottom Sheet** (2025-01-22)
 
 #### **Global QuickActions System** 🚀
@@ -284,6 +332,7 @@ Complete changelog van alle releases met feature details en bugfixes.
 
 | Version | Date | Key Features |
 |---------|------|--------------|
+| v1.13.0 | 2025-01-23 | Steps Intraday Tracking, HealthConnect Preview, Period Selection UX |
 | v1.12.0 | 2025-01-22 | QuickActions Bottom Sheet, Global modals |
 | v1.11.0 | 2025-01-22 | Add Meal Flow Redesigned (2-step) |
 | v1.10.0 | 2025-01-20 | Sleep Stages Tracking & Visualization |
@@ -306,5 +355,5 @@ Complete changelog van alle releases met feature details en bugfixes.
 
 ---
 
-**Last Updated:** January 22, 2025
-**Current Version:** v1.12.0
+**Last Updated:** January 23, 2025
+**Current Version:** v1.13.0
