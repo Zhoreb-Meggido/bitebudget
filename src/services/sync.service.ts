@@ -13,9 +13,10 @@ import { templatesService } from './templates.service';
 import { activitiesService } from './activities.service';
 import { heartRateSamplesService } from './heart-rate-samples.service';
 import { sleepStagesService } from './sleep-stages.service';
+import { stepsSamplesService } from './steps-samples.service';
 import { db } from './database.service';
 import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
-import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages, DayStepsSamples } from '@/types';
 
 export interface SyncData {
   version: string;
@@ -30,6 +31,7 @@ export interface SyncData {
   dailyActivities?: DailyActivity[];   // v1.5+
   heartRateSamples?: DayHeartRateSamples[];  // v1.6+ - 75 day retention
   sleepStages?: DaySleepStages[];      // v1.10+ - 75 day retention
+  stepsSamples?: DayStepsSamples[];    // v1.11+ - 75 day retention
 }
 
 class SyncService {
@@ -312,6 +314,18 @@ class SyncService {
       if (oldDeletedSleepStages.length > 0) {
         console.log(`🗑️ Cleaned up ${oldDeletedSleepStages.length} old deleted sleep stage nights`);
       }
+
+      // Cleanup steps samples
+      const stepsSamples = await stepsSamplesService.getAllSamplesIncludingDeleted();
+      const oldDeletedStepsSamples = stepsSamples.filter(
+        s => s.deleted && s.deleted_at && s.deleted_at < cutoffDate
+      );
+      for (const sample of oldDeletedStepsSamples) {
+        await db.stepsSamples.delete(sample.date);
+      }
+      if (oldDeletedStepsSamples.length > 0) {
+        console.log(`🗑️ Cleaned up ${oldDeletedStepsSamples.length} old deleted steps sample days`);
+      }
     } catch (error) {
       console.error('❌ Error during cleanup of old deleted items:', error);
     }
@@ -332,6 +346,7 @@ class SyncService {
     const dailyActivities = await activitiesService.getAllActivitiesIncludingDeleted();
     const heartRateSamples = await heartRateSamplesService.getAllSamplesIncludingDeleted();
     const sleepStages = await sleepStagesService.getAllStagesIncludingDeleted();
+    const stepsSamples = await stepsSamplesService.getAllSamplesIncludingDeleted();
 
     // Ensure old rust/sport day fields are removed from settings before export
     const settingsClean = { ...settings } as any;
@@ -350,6 +365,7 @@ class SyncService {
     const activitiesDeleted = dailyActivities.filter(a => a.deleted === true).length;
     const hrSamplesDeleted = heartRateSamples.filter(h => h.deleted === true).length;
     const sleepStagesDeleted = sleepStages.filter(s => s.deleted === true).length;
+    const stepsSamplesDeleted = stepsSamples.filter(s => s.deleted === true).length;
 
     console.log('📤 Preparing export with:', {
       entries: `${entries.length} (${entriesDeleted} deleted)`,
@@ -361,6 +377,7 @@ class SyncService {
       dailyActivities: `${dailyActivities.length} (${activitiesDeleted} deleted)`,
       heartRateSamples: `${heartRateSamples.length} (${hrSamplesDeleted} deleted)`,
       sleepStages: `${sleepStages.length} (${sleepStagesDeleted} deleted)`,
+      stepsSamples: `${stepsSamples.length} (${stepsSamplesDeleted} deleted)`,
     });
 
     return {
@@ -376,6 +393,7 @@ class SyncService {
       dailyActivities,
       heartRateSamples,
       sleepStages,
+      stepsSamples,
     };
   }
 
@@ -393,6 +411,8 @@ class SyncService {
     const cloudTemplatesDeleted = cloudData.mealTemplates?.filter(t => t.deleted === true).length || 0;
     const cloudActivitiesDeleted = cloudData.dailyActivities?.filter(a => a.deleted === true).length || 0;
     const cloudHRSamplesDeleted = cloudData.heartRateSamples?.filter(h => h.deleted === true).length || 0;
+    const cloudSleepStagesDeleted = cloudData.sleepStages?.filter(s => s.deleted === true).length || 0;
+    const cloudStepsSamplesDeleted = cloudData.stepsSamples?.filter(s => s.deleted === true).length || 0;
 
     console.log('📊 Cloud data contains:', {
       entries: `${cloudData.entries?.length || 0} (${cloudEntriesDeleted} deleted)`,
@@ -402,6 +422,8 @@ class SyncService {
       mealTemplates: `${cloudData.mealTemplates?.length || 0} (${cloudTemplatesDeleted} deleted)`,
       dailyActivities: `${cloudData.dailyActivities?.length || 0} (${cloudActivitiesDeleted} deleted)`,
       heartRateSamples: `${cloudData.heartRateSamples?.length || 0} (${cloudHRSamplesDeleted} deleted)`,
+      sleepStages: `${cloudData.sleepStages?.length || 0} (${cloudSleepStagesDeleted} deleted)`,
+      stepsSamples: `${cloudData.stepsSamples?.length || 0} (${cloudStepsSamplesDeleted} deleted)`,
     });
 
     // Get existing local data (including deleted for proper merge)
@@ -820,6 +842,40 @@ class SyncService {
     } else {
       console.log('ℹ️ No sleep stages in cloud backup (might be older version)');
     }
+
+    // Merge steps samples - add cloud samples that don't exist locally or are newer
+    if (cloudData.stepsSamples && cloudData.stepsSamples.length > 0) {
+      console.log(`👣 Merging ${cloudData.stepsSamples.length} steps sample days from cloud...`);
+      const localSamples = await stepsSamplesService.getAllSamplesIncludingDeleted();
+      const localSamplesMap = new Map(localSamples.map(s => [s.date, s]));
+
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      for (const cloudSample of cloudData.stepsSamples) {
+        try {
+          const localSample = localSamplesMap.get(cloudSample.date);
+
+          if (!localSample) {
+            // New steps sample day from cloud - use put() which handles primary key (date)
+            await db.stepsSamples.put(cloudSample);
+            addedCount++;
+          } else if (cloudSample.updated_at && localSample.updated_at &&
+                     new Date(cloudSample.updated_at) > new Date(localSample.updated_at)) {
+            // Cloud sample is newer - replace with cloud data
+            await db.stepsSamples.put(cloudSample);
+            updatedCount++;
+          }
+        } catch (err) {
+          console.error(`❌ Error processing steps samples ${cloudSample.date}:`, err);
+          throw err;
+        }
+      }
+
+      console.log(`✅ Steps Samples: ${addedCount} added, ${updatedCount} updated`);
+    } else {
+      console.log('ℹ️ No steps samples in cloud backup (might be older version)');
+    }
   }
 
   /**
@@ -1019,6 +1075,8 @@ class SyncService {
       mealTemplates: data.mealTemplates?.length || 0,
       dailyActivities: data.dailyActivities?.length || 0,
       heartRateSamples: data.heartRateSamples?.length || 0,
+      sleepStages: data.sleepStages?.length || 0,
+      stepsSamples: data.stepsSamples?.length || 0,
     });
 
       // Encrypt

@@ -275,6 +275,26 @@ export interface DaySleepStages {
 }
 
 // ============================================
+// STEPS SAMPLES (Intraday steps data)
+// ============================================
+
+export interface StepsSample {
+  timestamp: number;  // Unix timestamp in milliseconds
+  count: number;      // Number of steps
+}
+
+export interface DayStepsSamples {
+  date: string;                    // Primary key: YYYY-MM-DD
+  samples: StepsSample[];          // Array of intraday samples
+  sampleCount: number;             // Number of samples
+  totalSteps: number;              // Total steps for the day
+  maxSteps: number;                // Maximum steps in a single sample
+  created_at: string;              // ISO timestamp
+  updated_at: string;              // ISO timestamp
+  deleted?: boolean;               // Soft delete flag
+}
+
+// ============================================
 // SETTINGS
 // ============================================
 

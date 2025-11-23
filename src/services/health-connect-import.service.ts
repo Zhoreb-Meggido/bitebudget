@@ -1,7 +1,8 @@
 import initSqlJs, { Database } from 'sql.js';
-import { DailyActivity, HeartRateSample, Weight, SleepStage, SleepStageType } from '@/types/database.types';
+import { DailyActivity, HeartRateSample, Weight, SleepStage, SleepStageType, StepsSample } from '@/types/database.types';
 import { heartRateSamplesService } from './heart-rate-samples.service';
 import { sleepStagesService } from './sleep-stages.service';
+import { stepsSamplesService } from './steps-samples.service';
 
 export interface HealthConnectImportResult {
   success: boolean;
@@ -550,6 +551,77 @@ class HealthConnectImportService {
   }
 
   /**
+   * Extract and store steps samples (intraday data) for all dates
+   * Should be called during import, not during preview
+   */
+  async extractAndStoreAllStepsSamples(): Promise<void> {
+    if (!this.db) {
+      console.warn('❌ Database not loaded, cannot extract steps samples');
+      return;
+    }
+
+    // Get all unique dates that have steps data
+    const datesResult = this.db.exec(`
+      SELECT DISTINCT local_date
+      FROM steps_record_table
+      WHERE app_info_id = 4  -- Garmin Connect
+      ORDER BY local_date
+    `);
+
+    if (!datesResult[0]?.values || datesResult[0].values.length === 0) {
+      console.log('ℹ️ No steps data found');
+      return;
+    }
+
+    console.log(`👣 Extracting steps samples for ${datesResult[0].values.length} days...`);
+
+    // Extract and store for each date
+    for (const row of datesResult[0].values) {
+      const epochDay = row[0] as number;
+      const date = this.epochDaysToDate(epochDay);
+
+      try {
+        await this.extractAndStoreStepsSamplesForDay(epochDay, date);
+      } catch (err) {
+        console.warn(`Could not extract steps samples for ${date}:`, err);
+      }
+    }
+
+    console.log(`✅ Finished extracting steps samples`);
+  }
+
+  /**
+   * Extract and store steps samples (intraday data) for a specific day
+   */
+  private async extractAndStoreStepsSamplesForDay(epochDay: number, date: string): Promise<void> {
+    if (!this.db) return;
+
+    // Get all steps samples for this day
+    const samplesResult = this.db.exec(`
+      SELECT start_time, count
+      FROM steps_record_table
+      WHERE local_date = ${epochDay}
+        AND app_info_id = 4  -- Garmin Connect
+      ORDER BY start_time ASC
+    `);
+
+    if (!samplesResult[0]?.values || samplesResult[0].values.length === 0) {
+      return; // No steps data for this day
+    }
+
+    // Convert to StepsSample format
+    const samples: StepsSample[] = samplesResult[0].values.map(row => ({
+      timestamp: row[0] as number,  // start_time (epoch_millis)
+      count: row[1] as number        // count (number of steps)
+    }));
+
+    // Store in database
+    await stepsSamplesService.addOrUpdateSamples(date, samples);
+
+    console.log(`👣 Stored ${samples.length} steps samples for ${date}`);
+  }
+
+  /**
    * Extract FitDays body composition data (weight, body fat, bone mass, BMR)
    * Returns array of Weight objects with body composition metrics
    */
@@ -687,6 +759,57 @@ class HealthConnectImportService {
 
       return activity as DailyActivity;
     });
+  }
+
+  /**
+   * Preview: Get count of days with heart rate samples (don't import)
+   */
+  async previewHeartRateSamplesCount(): Promise<number> {
+    if (!this.db) {
+      throw new Error('Database not loaded');
+    }
+
+    const datesResult = this.db.exec(`
+      SELECT COUNT(DISTINCT local_date) as count
+      FROM heart_rate_record_table
+      WHERE app_info_id = 4
+    `);
+
+    return (datesResult[0]?.values[0]?.[0] as number) || 0;
+  }
+
+  /**
+   * Preview: Get count of nights with sleep stages (don't import)
+   */
+  async previewSleepStagesCount(): Promise<number> {
+    if (!this.db) {
+      throw new Error('Database not loaded');
+    }
+
+    const datesResult = this.db.exec(`
+      SELECT COUNT(DISTINCT local_date) as count
+      FROM sleep_session_record_table
+      WHERE app_info_id = 4
+    `);
+
+    return (datesResult[0]?.values[0]?.[0] as number) || 0;
+  }
+
+  /**
+   * Preview: Get count of days with steps samples (don't import)
+   */
+  async previewStepsSamplesCount(): Promise<number> {
+    if (!this.db) {
+      throw new Error('Database not loaded');
+    }
+
+    const datesResult = this.db.exec(`
+      SELECT COUNT(DISTINCT local_date) as count
+      FROM steps_record_table
+      WHERE app_info_id = 4
+    `);
+
+    return (datesResult[0]?.values[0]?.[0] as number) || 0;
   }
 
   /**

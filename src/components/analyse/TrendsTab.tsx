@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useActivities } from '@/hooks';
 import { Line, Scatter } from 'react-chartjs-2';
 import type { DailyActivity } from '@/types';
+import type { TimeRange } from '@/components/shared/PeriodSelector';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -68,20 +69,119 @@ export function TrendsTab() {
   const [selectedMetrics, setSelectedMetrics] = useState<Set<MetricKey>>(
     new Set(['steps', 'calories', 'intensityMinutes'])
   );
-  const [period, setPeriod] = useState<7 | 14 | 30 | 90>(30);
+  const [timeRange, setTimeRange] = useState<TimeRange>('28');
   const [correlationMetricX, setCorrelationMetricX] = useState<MetricKey>('steps');
   const [correlationMetricY, setCorrelationMetricY] = useState<MetricKey>('calories');
 
-  // Filter activities by period
-  const filteredActivities = useMemo(() => {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - period);
-    const cutoff = cutoffDate.toISOString().split('T')[0];
+  // Helper to get period label from timeRange
+  const getPeriodLabel = (range: TimeRange): string => {
+    switch (range) {
+      case '7': return '7 dagen';
+      case '14': return '14 dagen';
+      case '28': return '28 dagen';
+      case '90': return '90 dagen';
+      case 'this-week': return 'deze week';
+      case 'last-week': return 'vorige week';
+      case 'this-month': return 'deze maand';
+      case 'last-month': return 'vorige maand';
+      case 'all': return 'alles';
+      default: return '28 dagen';
+    }
+  };
 
+  // Calculate date range based on selected time range (excluding today)
+  const dateRange = useMemo(() => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    let startDate: string;
+    let endDate: string;
+
+    switch (timeRange) {
+      case '7': {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 6);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case '14': {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 13);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case '28': {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 27);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case '90': {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 89);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case 'this-week': {
+        const dayOfWeek = today.getDay();
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        startDate = monday.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case 'last-week': {
+        const dayOfWeek = today.getDay();
+        const lastMonday = new Date(today);
+        lastMonday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) - 7);
+        const lastSunday = new Date(lastMonday);
+        lastSunday.setDate(lastMonday.getDate() + 6);
+        startDate = lastMonday.toISOString().split('T')[0];
+        endDate = lastSunday.toISOString().split('T')[0];
+        break;
+      }
+      case 'this-month': {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        startDate = firstDay.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case 'last-month': {
+        const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+        startDate = firstDay.toISOString().split('T')[0];
+        endDate = lastDay.toISOString().split('T')[0];
+        break;
+      }
+      case 'all': {
+        const allDates = activities.map((a: DailyActivity) => a.date).filter(d => d < today.toISOString().split('T')[0]).sort();
+        startDate = allDates[0] || yesterdayStr;
+        endDate = allDates[allDates.length - 1] || yesterdayStr;
+        break;
+      }
+      default: {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 27);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+      }
+    }
+
+    return { startDate, endDate };
+  }, [timeRange, activities]);
+
+  // Filter activities by date range (excluding today)
+  const filteredActivities = useMemo(() => {
     return activities
-      .filter((a: DailyActivity) => a.date >= cutoff)
+      .filter((a: DailyActivity) => a.date >= dateRange.startDate && a.date <= dateRange.endDate)
       .sort((a: DailyActivity, b: DailyActivity) => a.date.localeCompare(b.date));
-  }, [activities, period]);
+  }, [activities, dateRange]);
 
   // Calculate stats for the period
   const stats = useMemo(() => {
@@ -535,7 +635,7 @@ export function TrendsTab() {
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
           <div className="text-sm text-gray-600 dark:text-gray-400 font-medium mb-1">Dagen Data</div>
           <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.daysWithData}</div>
-          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">van {period}</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">van {getPeriodLabel(timeRange)}</div>
         </div>
         </div>
       </div>
@@ -546,24 +646,22 @@ export function TrendsTab() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Activity Trends</h2>
 
-            {/* Period Selector */}
-            <div className="flex gap-2">
-              {[7, 14, 30, 90].map((days: number) => (
-                <button
-                  key={days}
-                  onClick={() => setPeriod(days as typeof period)}
-                  className={`
-                    px-4 py-2 rounded-lg font-medium text-sm transition-colors
-                    ${period === days
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }
-                  `}
-                >
-                  {days}d
-                </button>
-              ))}
-            </div>
+            {/* Period Selector Dropdown */}
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+              className="w-full sm:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="7">Laatste 7 dagen</option>
+              <option value="14">Laatste 14 dagen</option>
+              <option value="28">Laatste 28 dagen</option>
+              <option value="90">Laatste 90 dagen</option>
+              <option value="this-week">Deze week</option>
+              <option value="last-week">Vorige week</option>
+              <option value="this-month">Deze maand</option>
+              <option value="last-month">Vorige maand</option>
+              <option value="all">Alles</option>
+            </select>
           </div>
 
           {/* Metric Toggles */}
@@ -685,7 +783,7 @@ export function TrendsTab() {
                       {correlationData.dataPoints}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Laatste {period} dagen
+                      {getPeriodLabel(timeRange)}
                     </div>
                   </div>
 

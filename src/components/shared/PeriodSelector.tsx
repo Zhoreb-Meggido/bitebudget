@@ -57,36 +57,40 @@ export function PeriodSelector({
   // Calculate date range based on selected time range
   const dateRange = useMemo(() => {
     const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
     let startDate: string;
     let endDate: string;
 
     switch (timeRange) {
       case '7': {
-        const date = new Date(today);
-        date.setDate(today.getDate() - 6);
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 6);
         startDate = date.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        endDate = yesterdayStr;
         break;
       }
       case '14': {
-        const date = new Date(today);
-        date.setDate(today.getDate() - 13);
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 13);
         startDate = date.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        endDate = yesterdayStr;
         break;
       }
       case '28': {
-        const date = new Date(today);
-        date.setDate(today.getDate() - 27);
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 27);
         startDate = date.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        endDate = yesterdayStr;
         break;
       }
       case '90': {
-        const date = new Date(today);
-        date.setDate(today.getDate() - 89);
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 89);
         startDate = date.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        endDate = yesterdayStr;
         break;
       }
       case 'this-week': {
@@ -94,7 +98,7 @@ export function PeriodSelector({
         const monday = new Date(today);
         monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
         startDate = monday.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        endDate = yesterdayStr;
         break;
       }
       case 'last-week': {
@@ -110,7 +114,7 @@ export function PeriodSelector({
       case 'this-month': {
         const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
         startDate = firstDay.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        endDate = yesterdayStr;
         break;
       }
       case 'last-month': {
@@ -121,23 +125,23 @@ export function PeriodSelector({
         break;
       }
       case 'all': {
-        // Get earliest and latest date from entries
-        const allDates = entries.map(e => e.date).sort();
-        startDate = allDates[0] || today.toISOString().split('T')[0];
-        endDate = allDates[allDates.length - 1] || today.toISOString().split('T')[0];
+        // Get earliest and latest date from entries (excluding today)
+        const allDates = entries.map(e => e.date).filter(d => d < today.toISOString().split('T')[0]).sort();
+        startDate = allDates[0] || yesterdayStr;
+        endDate = allDates[allDates.length - 1] || yesterdayStr;
         break;
       }
       case 'custom': {
-        startDate = customStartDate || today.toISOString().split('T')[0];
-        endDate = customEndDate || today.toISOString().split('T')[0];
+        startDate = customStartDate || yesterdayStr;
+        endDate = customEndDate || yesterdayStr;
         break;
       }
       case 'custom-months': {
         // Calculate actual date range from selected months
         if (selectedMonths.length === 0) {
-          // No months selected - use today as dummy
-          startDate = today.toISOString().split('T')[0];
-          endDate = today.toISOString().split('T')[0];
+          // No months selected - use yesterday as dummy
+          startDate = yesterdayStr;
+          endDate = yesterdayStr;
         } else {
           // Sort months to get earliest and latest
           const sortedMonths = [...selectedMonths].sort();
@@ -157,10 +161,10 @@ export function PeriodSelector({
         break;
       }
       default: {
-        const date = new Date(today);
-        date.setDate(today.getDate() - 27);
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 27);
         startDate = date.toISOString().split('T')[0];
-        endDate = today.toISOString().split('T')[0];
+        endDate = yesterdayStr;
       }
     }
 

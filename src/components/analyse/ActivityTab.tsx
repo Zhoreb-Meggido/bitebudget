@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { useActivities, useHeartRateSamples, useSleepStages } from '@/hooks';
+import { useActivities, useHeartRateSamples, useSleepStages, useStepsSamples } from '@/hooks';
 import { HeartRateChart } from './HeartRateChart';
 import { SleepStagesChart } from './SleepStagesChart';
+import { StepsChart } from './StepsChart';
 import type { DailyActivity } from '@/types';
 
 type ActivityMetric = 'heartRate' | 'steps' | 'calories' | 'intensityMinutes' | 'sleep' | 'bodyBattery' | 'stress';
@@ -35,6 +36,7 @@ export function ActivityTab() {
   const { activities, isLoading: loading } = useActivities();
   const { samples: hrSamples, getSamplesMap } = useHeartRateSamples();
   const { stages: sleepStages, getStagesMap } = useSleepStages();
+  const { samples: stepsSamples, getSamplesMap: getStepsSamplesMap } = useStepsSamples();
   const [selectedMetric, setSelectedMetric] = useState<ActivityMetric>('heartRate');
   const [showTable, setShowTable] = useState(false);
   const [showSleepTable, setShowSleepTable] = useState(false);
@@ -76,8 +78,9 @@ export function ActivityTab() {
       totalDays: activities.length,
       totalHRDays: hrSamples.length,
       totalSleepNights: sleepStages.length,
+      totalStepsDays: stepsSamples.length,
     };
-  }, [activities, hrSamples, sleepStages]);
+  }, [activities, hrSamples, sleepStages, stepsSamples]);
 
   // Weekday patterns (last 60 days)
   const weekdayPatterns = useMemo(() => {
@@ -111,16 +114,17 @@ export function ActivityTab() {
   const heatmapData = useMemo(() => {
     const today = new Date();
     const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-    const weeks: Array<Array<{ date: string; activity?: typeof activities[0]; hrSample?: typeof hrSamples[0]; sleepStage?: typeof sleepStages[0] }>> = [];
+    const weeks: Array<Array<{ date: string; activity?: typeof activities[0]; hrSample?: typeof hrSamples[0]; sleepStage?: typeof sleepStages[0]; stepsSample?: typeof stepsSamples[0] }>> = [];
 
     // Create data maps for quick lookup
     const dataMap = new Map(activities.map((a: DailyActivity) => [a.date, a]));
     const hrMap = getSamplesMap();
     const sleepMap = getStagesMap();
+    const stepsMap = getStepsSamplesMap();
 
     // Generate 8 weeks
     for (let weekIndex = 0; weekIndex < 8; weekIndex++) {
-      const week: Array<{ date: string; activity?: typeof activities[0]; hrSample?: typeof hrSamples[0] }> = [];
+      const week: Array<{ date: string; activity?: typeof activities[0]; hrSample?: typeof hrSamples[0]; sleepStage?: typeof sleepStages[0]; stepsSample?: typeof stepsSamples[0] }> = [];
 
       // Calculate Monday of this week in UTC
       const currentDayUTC = new Date(todayUTC);
@@ -143,6 +147,7 @@ export function ActivityTab() {
           activity: dataMap.get(dateStr),
           hrSample: hrMap.get(dateStr),
           sleepStage: sleepMap.get(dateStr),
+          stepsSample: stepsMap.get(dateStr),
         });
       }
 
@@ -150,7 +155,7 @@ export function ActivityTab() {
     }
 
     return weeks.reverse(); // Oldest week first
-  }, [activities, hrSamples, sleepStages, getSamplesMap, getStagesMap]);
+  }, [activities, hrSamples, sleepStages, stepsSamples, getSamplesMap, getStagesMap, getStepsSamplesMap]);
 
   // Get color for metric value
   const getColor = (metric: ActivityMetric, activity?: typeof activities[0], _hrSample?: typeof hrSamples[0]): string => {
@@ -319,7 +324,7 @@ export function ActivityTab() {
         ) : (
           <div className="p-2 md:p-4 flex flex-col lg:flex-row gap-4">
             {/* Heatmap (left side on desktop, top on mobile) */}
-            <div className={`flex-shrink-0 overflow-x-auto ${selectedDate && (selectedMetric === 'heartRate' || selectedMetric === 'sleep') ? 'lg:w-auto' : 'w-full'}`}>
+            <div className={`flex-shrink-0 overflow-x-auto ${selectedDate && (selectedMetric === 'heartRate' || selectedMetric === 'sleep' || selectedMetric === 'steps') ? 'lg:w-auto' : 'w-full'}`}>
             <div className="inline-block min-w-full">
               {/* Day labels */}
               <div className="flex gap-1 mb-2">
@@ -332,7 +337,7 @@ export function ActivityTab() {
               </div>
 
               {/* Heatmap grid */}
-              {heatmapData.map((week: Array<{ date: string; activity?: DailyActivity; hrSample?: any; sleepStage?: any }>, weekIndex: number) => {
+              {heatmapData.map((week: Array<{ date: string; activity?: DailyActivity; hrSample?: any; sleepStage?: any; stepsSample?: any }>, weekIndex: number) => {
                 const mondayDate = new Date(week[0].date + 'T12:00:00');
                 const weekNumber = getISOWeekNumber(mondayDate);
 
@@ -341,13 +346,14 @@ export function ActivityTab() {
                     <div className="w-12 text-xs text-gray-600 dark:text-gray-400 flex items-center">
                       W{weekNumber}
                     </div>
-                    {week.map((day: { date: string; activity?: DailyActivity; hrSample?: any; sleepStage?: any }, dayIndex: number) => {
+                    {week.map((day: { date: string; activity?: DailyActivity; hrSample?: any; sleepStage?: any; stepsSample?: any }, dayIndex: number) => {
                       const dayDate = new Date(day.date);
                       const dayNum = dayDate.getDate();
                       const colorClass = getColor(selectedMetric, day.activity, day.hrSample);
                       const hasHRData = day.hrSample && day.hrSample.sampleCount > 0;
                       const hasSleepData = day.sleepStage && day.sleepStage.stageCount > 0;
-                      const isClickable = (selectedMetric === 'heartRate' && hasHRData) || (selectedMetric === 'sleep' && hasSleepData);
+                      const hasStepsData = day.stepsSample && day.stepsSample.sampleCount > 0;
+                      const isClickable = (selectedMetric === 'heartRate' && hasHRData) || (selectedMetric === 'sleep' && hasSleepData) || (selectedMetric === 'steps' && hasStepsData);
 
                       // Build tooltip
                       let tooltipText = day.date;
@@ -409,6 +415,12 @@ export function ActivityTab() {
                               😴
                             </span>
                           )}
+                          {/* Steps indicator for days with intraday steps samples */}
+                          {hasStepsData && selectedMetric === 'steps' && (
+                            <span className="absolute top-0 right-0 text-[8px]" style={{ lineHeight: '1' }}>
+                              👣
+                            </span>
+                          )}
                         </div>
                       );
                     })}
@@ -457,6 +469,16 @@ export function ActivityTab() {
               <div className="flex-1 min-w-0">
                 <SleepStagesChart
                   data={getStagesMap().get(selectedDate)!}
+                  onClose={() => setSelectedDate(null)}
+                />
+              </div>
+            )}
+
+            {/* Steps Chart (right side on desktop, below on mobile) */}
+            {selectedDate && selectedMetric === 'steps' && (
+              <div className="flex-1 min-w-0">
+                <StepsChart
+                  data={getStepsSamplesMap().get(selectedDate)!}
                   onClose={() => setSelectedDate(null)}
                 />
               </div>

@@ -9,7 +9,7 @@
  */
 
 import Dexie, { Table } from 'dexie';
-import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages } from '@/types';
+import type { Entry, Product, Weight, SettingsRecord, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages, DayStepsSamples } from '@/types';
 
 export class VoedseljournaalDB extends Dexie {
   // Tables
@@ -22,6 +22,7 @@ export class VoedseljournaalDB extends Dexie {
   dailyActivities!: Table<DailyActivity, number>;
   heartRateSamples!: Table<DayHeartRateSamples, string>;
   sleepStages!: Table<DaySleepStages, string>;
+  stepsSamples!: Table<DayStepsSamples, string>;
 
   constructor() {
     super('VoedseljournaalDB');
@@ -179,6 +180,26 @@ export class VoedseljournaalDB extends Dexie {
       console.log('📊 Primary key: date (YYYY-MM-DD)');
       console.log('😴 Each record stores array of sleep stages for one night');
       console.log('💤 Includes breakdown: light, deep, REM, awake time');
+      console.log('ℹ️ Import Health Connect data to populate');
+    });
+
+    // Version 12 - Add steps samples (intraday steps data)
+    this.version(12).stores({
+      entries: 'id, date, created_at, updated_at',
+      products: 'id, name, ean, source, created_at, updated_at',
+      weights: 'id, date, created_at, updated_at',
+      settings: 'key',
+      productPortions: 'id, productName, created_at, updated_at',
+      mealTemplates: 'id, name, category, lastUsed, useCount, created_at, updated_at',
+      dailyActivities: 'id, date, created_at, updated_at',
+      heartRateSamples: 'date, sampleCount, created_at, updated_at',
+      sleepStages: 'date, stageCount, created_at, updated_at',
+      stepsSamples: 'date, sampleCount, created_at, updated_at'
+    }).upgrade(async tx => {
+      console.log('✅ V12: Added stepsSamples table');
+      console.log('📊 Primary key: date (YYYY-MM-DD)');
+      console.log('👣 Each record stores array of intraday steps samples');
+      console.log('📈 Tracks step count throughout the day');
       console.log('ℹ️ Import Health Connect data to populate');
     });
   }

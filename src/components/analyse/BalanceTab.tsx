@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useEntries, useActivities, useWeights } from '@/hooks';
 import { Line } from 'react-chartjs-2';
 import type { Entry, DailyActivity, Weight } from '@/types';
+import type { TimeRange } from '@/components/shared/PeriodSelector';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,7 +36,7 @@ export function BalanceTab() {
   const { entries } = useEntries();
   const { activities, isLoading: loading } = useActivities();
   const { weights } = useWeights();
-  const [chartPeriod, setChartPeriod] = useState<7 | 14 | 30>(30);
+  const [timeRange, setTimeRange] = useState<TimeRange>('28');
 
   // Combine food intake with activity expenditure
   const balanceData = useMemo(() => {
@@ -201,15 +202,98 @@ export function BalanceTab() {
     };
   }, [weights]);
 
-  // Prepare chart data for the selected period
+  // Calculate date range based on selected time range (excluding today)
+  const dateRange = useMemo(() => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+    let startDate: string;
+    let endDate: string;
+
+    switch (timeRange) {
+      case '7': {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 6);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case '14': {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 13);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case '28': {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 27);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case '90': {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 89);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case 'this-week': {
+        const dayOfWeek = today.getDay();
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+        startDate = monday.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case 'last-week': {
+        const dayOfWeek = today.getDay();
+        const lastMonday = new Date(today);
+        lastMonday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) - 7);
+        const lastSunday = new Date(lastMonday);
+        lastSunday.setDate(lastMonday.getDate() + 6);
+        startDate = lastMonday.toISOString().split('T')[0];
+        endDate = lastSunday.toISOString().split('T')[0];
+        break;
+      }
+      case 'this-month': {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        startDate = firstDay.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+        break;
+      }
+      case 'last-month': {
+        const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+        startDate = firstDay.toISOString().split('T')[0];
+        endDate = lastDay.toISOString().split('T')[0];
+        break;
+      }
+      case 'all': {
+        const allDates = balanceData.map((d: DayBalance) => d.date).filter(d => d < today.toISOString().split('T')[0]).sort();
+        startDate = allDates[0] || yesterdayStr;
+        endDate = allDates[allDates.length - 1] || yesterdayStr;
+        break;
+      }
+      default: {
+        const date = new Date(yesterday);
+        date.setDate(yesterday.getDate() - 27);
+        startDate = date.toISOString().split('T')[0];
+        endDate = yesterdayStr;
+      }
+    }
+
+    return { startDate, endDate };
+  }, [timeRange, balanceData]);
+
+  // Prepare chart data for the selected period (excluding today)
   const chartData = useMemo(() => {
     // Filter data for the selected period, sorted chronologically (oldest first)
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - chartPeriod);
-    const cutoff = cutoffDate.toISOString().split('T')[0];
-
     const filteredData = balanceData
-      .filter((d: DayBalance) => d.date >= cutoff && d.intake > 0 && d.expenditure > 0)
+      .filter((d: DayBalance) => d.date >= dateRange.startDate && d.date <= dateRange.endDate && d.intake > 0 && d.expenditure > 0)
       .sort((a: DayBalance, b: DayBalance) => a.date.localeCompare(b.date)); // Oldest first for chart
 
     const labels = filteredData.map((d: DayBalance) => {
@@ -232,7 +316,7 @@ export function BalanceTab() {
         }),
       ],
     };
-  }, [balanceData, chartPeriod]);
+  }, [balanceData, dateRange]);
 
   const chartOptions = buildChartOptions({
     scales: {
@@ -431,24 +515,22 @@ export function BalanceTab() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Inname vs Verbruik</h3>
 
-            {/* Period Selector */}
-            <div className="flex gap-2">
-              {[7, 14, 30].map((days) => (
-                <button
-                  key={days}
-                  onClick={() => setChartPeriod(days as typeof chartPeriod)}
-                  className={`
-                    px-4 py-2 rounded-lg font-medium text-sm transition-colors
-                    ${chartPeriod === days
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }
-                  `}
-                >
-                  {days}d
-                </button>
-              ))}
-            </div>
+            {/* Period Selector Dropdown */}
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+              className="w-full sm:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="7">Laatste 7 dagen</option>
+              <option value="14">Laatste 14 dagen</option>
+              <option value="28">Laatste 28 dagen</option>
+              <option value="90">Laatste 90 dagen</option>
+              <option value="this-week">Deze week</option>
+              <option value="last-week">Vorige week</option>
+              <option value="this-month">Deze maand</option>
+              <option value="last-month">Vorige maand</option>
+              <option value="all">Alles</option>
+            </select>
           </div>
         </div>
 

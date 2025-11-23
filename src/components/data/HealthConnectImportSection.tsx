@@ -6,6 +6,7 @@ import { activitiesService } from '@/services/activities.service';
 import { weightsService } from '@/services/weights.service';
 import { heartRateSamplesService } from '@/services/heart-rate-samples.service';
 import { sleepStagesService } from '@/services/sleep-stages.service';
+import { stepsSamplesService } from '@/services/steps-samples.service';
 
 export function HealthConnectImportSection() {
   const [file, setFile] = useState<File | null>(null);
@@ -58,6 +59,20 @@ export function HealthConnectImportSection() {
         });
       } catch (err) {
         console.warn('Could not preview body composition:', err);
+      }
+
+      // Preview intraday data counts
+      try {
+        const hrDaysCount = await healthConnectImportService.previewHeartRateSamplesCount();
+        const sleepNightsCount = await healthConnectImportService.previewSleepStagesCount();
+        const stepsDaysCount = await healthConnectImportService.previewStepsSamplesCount();
+
+        console.log(`📈 Preview: Intraday data available:`);
+        if (hrDaysCount > 0) console.log(`  💓 ${hrDaysCount} dagen hartslag metingen`);
+        if (sleepNightsCount > 0) console.log(`  😴 ${sleepNightsCount} nachten slaapfases`);
+        if (stepsDaysCount > 0) console.log(`  👣 ${stepsDaysCount} dagen stappen metingen`);
+      } catch (err) {
+        console.warn('Could not preview intraday data:', err);
       }
     } catch (err: any) {
       setError(err?.message || 'Fout bij het parsen van de database');
@@ -122,8 +137,13 @@ export function HealthConnectImportSection() {
       }
 
       // 2. Import Heart Rate Samples (intraday HR data)
+      let hrDaysImported = 0;
       try {
         await healthConnectImportService.extractAndStoreAllHeartRateSamples();
+
+        // Get count of HR days
+        const hrSummary = await heartRateSamplesService.getSampleCountSummary();
+        hrDaysImported = hrSummary.totalDays;
 
         // Cleanup old HR samples (75-day retention)
         const deletedDays = await heartRateSamplesService.cleanupOldSamples();
@@ -135,8 +155,13 @@ export function HealthConnectImportSection() {
       }
 
       // 3. Import Sleep Stages (intraday sleep data)
+      let sleepNightsImported = 0;
       try {
         await healthConnectImportService.extractAndStoreAllSleepStages();
+
+        // Get count of sleep nights
+        const sleepSummary = await sleepStagesService.getStageCountSummary();
+        sleepNightsImported = sleepSummary.totalNights;
 
         // Cleanup old sleep stages (75-day retention)
         const deletedNights = await sleepStagesService.cleanupOldStages();
@@ -147,7 +172,25 @@ export function HealthConnectImportSection() {
         console.error('Failed to import sleep stages:', err);
       }
 
-      // 4. Import Body Composition (FitDays weight data)
+      // 4. Import Steps Samples (intraday steps data)
+      let stepsDaysImported = 0;
+      try {
+        await healthConnectImportService.extractAndStoreAllStepsSamples();
+
+        // Get count of steps days
+        const stepsSummary = await stepsSamplesService.getSampleCountSummary();
+        stepsDaysImported = stepsSummary.totalDays;
+
+        // Cleanup old steps samples (75-day retention)
+        const deletedDays = await stepsSamplesService.cleanupOldSamples();
+        if (deletedDays > 0) {
+          console.log(`🗑️ Cleaned up ${deletedDays} days of old steps samples (75-day retention)`);
+        }
+      } catch (err) {
+        console.error('Failed to import steps samples:', err);
+      }
+
+      // 5. Import Body Composition (FitDays weight data)
       let weightsImported = 0;
       let weightsUpdated = 0;
       let weightsSkipped = 0;
@@ -176,6 +219,23 @@ export function HealthConnectImportSection() {
         `  • ${imported} nieuwe dagen toegevoegd`,
         `  • ${skipped} bestaande dagen samengevoegd`,
       ];
+
+      // Add intraday data summary
+      if (hrDaysImported > 0 || sleepNightsImported > 0 || stepsDaysImported > 0) {
+        summary.push(
+          ``,
+          `📈 Intraday Data:`
+        );
+        if (hrDaysImported > 0) {
+          summary.push(`  • 💓 ${hrDaysImported} dagen hartslag metingen`);
+        }
+        if (sleepNightsImported > 0) {
+          summary.push(`  • 😴 ${sleepNightsImported} nachten slaapfases`);
+        }
+        if (stepsDaysImported > 0) {
+          summary.push(`  • 👣 ${stepsDaysImported} dagen stappen metingen`);
+        }
+      }
 
       if (weightsImported > 0 || weightsUpdated > 0 || weightsSkipped > 0) {
         summary.push(
@@ -251,6 +311,20 @@ export function HealthConnectImportSection() {
         } catch (err) {
           console.warn('Could not preview body composition:', err);
         }
+
+        // Preview intraday data counts
+        try {
+          const hrDaysCount = await healthConnectImportService.previewHeartRateSamplesCount();
+          const sleepNightsCount = await healthConnectImportService.previewSleepStagesCount();
+          const stepsDaysCount = await healthConnectImportService.previewStepsSamplesCount();
+
+          console.log(`📈 Preview: Intraday data available:`);
+          if (hrDaysCount > 0) console.log(`  💓 ${hrDaysCount} dagen hartslag metingen`);
+          if (sleepNightsCount > 0) console.log(`  😴 ${sleepNightsCount} nachten slaapfases`);
+          if (stepsDaysCount > 0) console.log(`  👣 ${stepsDaysCount} dagen stappen metingen`);
+        } catch (err) {
+          console.warn('Could not preview intraday data:', err);
+        }
       } catch (err: any) {
         setError(err?.message || 'Fout bij het parsen van de database');
         console.error('Health Connect parse error:', err);
@@ -304,6 +378,20 @@ export function HealthConnectImportSection() {
           console.log(`📊 Preview: Found ${bodyCompData.length} weight measurements with body composition`);
         } catch (err) {
           console.warn('Could not preview body composition:', err);
+        }
+
+        // Preview intraday data counts
+        try {
+          const hrDaysCount = await healthConnectImportService.previewHeartRateSamplesCount();
+          const sleepNightsCount = await healthConnectImportService.previewSleepStagesCount();
+          const stepsDaysCount = await healthConnectImportService.previewStepsSamplesCount();
+
+          console.log(`📈 Preview: Intraday data available:`);
+          if (hrDaysCount > 0) console.log(`  💓 ${hrDaysCount} dagen hartslag metingen`);
+          if (sleepNightsCount > 0) console.log(`  😴 ${sleepNightsCount} nachten slaapfases`);
+          if (stepsDaysCount > 0) console.log(`  👣 ${stepsDaysCount} dagen stappen metingen`);
+        } catch (err) {
+          console.warn('Could not preview intraday data:', err);
         }
       } catch (err: any) {
         setError(err?.message || 'Fout bij het parsen van de database');
