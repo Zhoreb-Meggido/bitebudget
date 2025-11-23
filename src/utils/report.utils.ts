@@ -9,7 +9,8 @@ import autoTable from 'jspdf-autotable';
 import { downloadTextFile } from './download.utils';
 import { NUTRITION_CONSTANTS } from '@/config/nutrition.constants';
 import { DEFAULT_SETTINGS } from '@/types/database.types';
-import type { Entry } from '@/types';
+import type { Entry, WaterEntry } from '@/types';
+import { waterEntriesService } from '@/services/water-entries.service';
 
 interface DayData {
   date: string;
@@ -19,6 +20,7 @@ interface DayData {
   saturatedFat: number;
   fiber: number;
   sodium: number;
+  water?: number; // ml
 }
 
 interface DayGroup {
@@ -332,20 +334,23 @@ function shouldGenerateMonthlyReport(options: ReportOptions): boolean {
 /**
  * Generate PDF report (delegates to appropriate format)
  */
-export function generatePdfReport(entries: Entry[], options: ReportOptions = { days: 14 }): void {
+export async function generatePdfReport(entries: Entry[], options: ReportOptions = { days: 14 }): Promise<void> {
   if (shouldGenerateMonthlyReport(options)) {
-    generateMonthlyPdfReport(entries, options);
+    await generateMonthlyPdfReport(entries, options);
   } else {
-    generateStandardPdfReport(entries, options);
+    await generateStandardPdfReport(entries, options);
   }
 }
 
 /**
  * Generate standard weekly PDF report (original format)
  */
-function generateStandardPdfReport(entries: Entry[], options: ReportOptions): void {
+async function generateStandardPdfReport(entries: Entry[], options: ReportOptions): Promise<void> {
   const doc = new jsPDF();
   const filteredEntries = filterEntriesByDateRange(entries, options);
+
+  // Load water entries for the report period
+  const waterEntries = await waterEntriesService.getAllWaterEntries();
 
   // Helper function to format date
   function formatDateForPDF(dateStr: string): string {
@@ -777,6 +782,26 @@ function generateStandardPdfReport(entries: Entry[], options: ReportOptions): vo
         entry.sodium || 0,
       ]);
 
+    // Add water entries for this day
+    const dayWaterEntries = waterEntries.filter(we => we.date === date);
+    dayWaterEntries
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .forEach(waterEntry => {
+        const time = new Date(waterEntry.timestamp).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+        mealRows.push([
+          time,
+          `Water ${waterEntry.amount}ml`,
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+          '-',
+        ]);
+      });
+
     const dayTotal = dayEntries.reduce(
       (acc, e) => ({
         calories: acc.calories + (e.calories || 0),
@@ -791,6 +816,9 @@ function generateStandardPdfReport(entries: Entry[], options: ReportOptions): vo
       { calories: 0, protein: 0, carbohydrates: 0, sugars: 0, fat: 0, saturatedFat: 0, fiber: 0, sodium: 0 }
     );
 
+    // Calculate total water for the day
+    const totalWater = dayWaterEntries.reduce((sum, we) => sum + we.amount, 0);
+
     mealRows.push([
       '',
       'TOTAAL',
@@ -803,6 +831,22 @@ function generateStandardPdfReport(entries: Entry[], options: ReportOptions): vo
       dayTotal.fiber.toFixed(1),
       dayTotal.sodium,
     ]);
+
+    // Add water total row if there's water intake
+    if (totalWater > 0) {
+      mealRows.push([
+        '',
+        'WATER TOTAAL',
+        `${totalWater}ml`,
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+        '-',
+      ]);
+    }
 
     autoTable(doc, {
       startY: yPos,
@@ -851,8 +895,11 @@ function generateStandardPdfReport(entries: Entry[], options: ReportOptions): vo
 /**
  * Generate monthly PDF report (new format for full months)
  */
-function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): void {
+async function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): Promise<void> {
   const doc = new jsPDF();
+
+  // Load water entries for the report period
+  const waterEntries = await waterEntriesService.getAllWaterEntries();
 
   // Helper function to format date
   function formatDateForPDF(dateStr: string): string {
@@ -1154,6 +1201,23 @@ function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): voi
           entry.sodium || 0,
         ]);
 
+      // Add water entries for this day
+      const dayWaterEntries = waterEntries.filter(we => we.date === date);
+      dayWaterEntries
+        .sort((a, b) => a.timestamp - b.timestamp)
+        .forEach(waterEntry => {
+          const time = new Date(waterEntry.timestamp).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+          mealRows.push([
+            time,
+            `Water ${waterEntry.amount}ml`,
+            '-',
+            '-',
+            '-',
+            '-',
+            '-',
+          ]);
+        });
+
       const dayTotal = dayEntries.reduce(
         (acc, e) => ({
           calories: acc.calories + (e.calories || 0),
@@ -1165,6 +1229,9 @@ function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): voi
         { calories: 0, protein: 0, saturatedFat: 0, fiber: 0, sodium: 0 }
       );
 
+      // Calculate total water for the day
+      const totalWater = dayWaterEntries.reduce((sum, we) => sum + we.amount, 0);
+
       mealRows.push([
         '',
         'TOTAAL',
@@ -1174,6 +1241,19 @@ function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): voi
         dayTotal.fiber.toFixed(1),
         dayTotal.sodium,
       ]);
+
+      // Add water total row if there's water intake
+      if (totalWater > 0) {
+        mealRows.push([
+          '',
+          'WATER TOTAAL',
+          `${totalWater}ml`,
+          '-',
+          '-',
+          '-',
+          '-',
+        ]);
+      }
 
       autoTable(doc, {
         startY: yPos,
@@ -1220,7 +1300,9 @@ function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions): voi
  * Export daily aggregates to CSV (for periods <= 90 days)
  * Combines nutrition entries with activity data per day
  */
-export function exportDailyAggregatesToCSV(entries: any[], activities: any[], startDate: string, endDate: string): void {
+export async function exportDailyAggregatesToCSV(entries: any[], activities: any[], startDate: string, endDate: string): Promise<void> {
+  // Load water entries
+  const waterEntries = await waterEntriesService.getAllWaterEntries();
   // Generate all dates in range
   const start = new Date(startDate);
   const end = new Date(endDate);
@@ -1244,6 +1326,13 @@ export function exportDailyAggregatesToCSV(entries: any[], activities: any[], st
     activitiesByDate.set(activity.date, activity);
   });
 
+  // Group water entries by date
+  const waterByDate = new Map<string, number>();
+  waterEntries.forEach(waterEntry => {
+    const existing = waterByDate.get(waterEntry.date) || 0;
+    waterByDate.set(waterEntry.date, existing + waterEntry.amount);
+  });
+
   // CSV Header
   const headers = [
     'Datum',
@@ -1256,6 +1345,7 @@ export function exportDailyAggregatesToCSV(entries: any[], activities: any[], st
     'Verz. vet (g)',
     'Vezels (g)',
     'Natrium (mg)',
+    'Water (ml)',
     'Stappen',
     'Actieve Cal (kcal)',
     'Totaal Cal (kcal)',
@@ -1295,6 +1385,9 @@ export function exportDailyAggregatesToCSV(entries: any[], activities: any[], st
     // Get activity data for the day
     const activity = activitiesByDate.get(dateStr) || {};
 
+    // Get water data for the day
+    const waterAmount = waterByDate.get(dateStr) || 0;
+
     return [
       dateStr,
       weekday,
@@ -1306,6 +1399,7 @@ export function exportDailyAggregatesToCSV(entries: any[], activities: any[], st
       nutrition.saturatedFat ? nutrition.saturatedFat.toFixed(1) : '',
       nutrition.fiber ? nutrition.fiber.toFixed(1) : '',
       nutrition.sodium || '',
+      waterAmount || '',
       activity.steps || '',
       activity.activeCalories || '',
       activity.totalCalories || '',

@@ -1,21 +1,44 @@
 /**
  * AddWaterModal - Quick-add water intake modal
  * Preset buttons for common amounts + custom input
+ * Also supports editing existing water entries
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWaterEntries } from '@/hooks/useWaterEntries';
+import type { WaterEntry } from '@/types';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   date?: string; // Optional: defaults to today
+  editEntry?: WaterEntry; // Optional: entry to edit
 }
 
-export function AddWaterModal({ isOpen, onClose, date }: Props) {
-  const { addWaterEntry } = useWaterEntries();
+export function AddWaterModal({ isOpen, onClose, date, editEntry }: Props) {
+  const { addWaterEntry, updateWaterEntry } = useWaterEntries();
   const [customAmount, setCustomAmount] = useState<string>('');
   const [isAdding, setIsAdding] = useState(false);
+  const [customTime, setCustomTime] = useState<string>(() => {
+    // Default to current time in HH:mm format
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  });
+
+  // Load edit entry data when modal opens
+  useEffect(() => {
+    if (isOpen && editEntry) {
+      setCustomAmount(editEntry.amount.toString());
+      // Extract time from timestamp
+      const entryTime = new Date(editEntry.timestamp);
+      setCustomTime(`${String(entryTime.getHours()).padStart(2, '0')}:${String(entryTime.getMinutes()).padStart(2, '0')}`);
+    } else if (isOpen && !editEntry) {
+      // Reset to defaults when adding new entry
+      setCustomAmount('');
+      const now = new Date();
+      setCustomTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+    }
+  }, [isOpen, editEntry]);
 
   const presetAmounts = [
     { label: '250ml', value: 250, icon: '🥤' },
@@ -34,21 +57,37 @@ export function AddWaterModal({ isOpen, onClose, date }: Props) {
 
     setIsAdding(true);
     try {
-      const targetDate = date || new Date().toISOString().split('T')[0];
-      const timestamp = Date.now();
+      const targetDate = date || editEntry?.date || new Date().toISOString().split('T')[0];
 
-      await addWaterEntry({
-        date: targetDate,
-        timestamp,
-        amount,
-      });
+      // Parse custom time and create timestamp
+      const [hours, minutes] = customTime.split(':').map(Number);
+      const timestamp = new Date(targetDate + 'T00:00:00').getTime() + (hours * 60 + minutes) * 60 * 1000;
 
-      console.log(`✓ ${amount}ml water toegevoegd 💧`);
+      if (editEntry) {
+        // Update existing entry
+        await updateWaterEntry(editEntry.id!, {
+          timestamp,
+          amount,
+        });
+        console.log(`✓ Water entry bijgewerkt: ${amount}ml om ${customTime}`);
+      } else {
+        // Add new entry
+        await addWaterEntry({
+          date: targetDate,
+          timestamp,
+          amount,
+        });
+        console.log(`✓ ${amount}ml water toegevoegd 💧 om ${customTime}`);
+      }
+
       setCustomAmount('');
+      // Reset time to current time
+      const now = new Date();
+      setCustomTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
       onClose();
     } catch (error) {
-      console.error('Failed to add water:', error);
-      alert('Kan water niet toevoegen');
+      console.error('Failed to save water:', error);
+      alert(editEntry ? 'Kan water niet bijwerken' : 'Kan water niet toevoegen');
     } finally {
       setIsAdding(false);
     }
@@ -72,7 +111,7 @@ export function AddWaterModal({ isOpen, onClose, date }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            💧 Water toevoegen
+            💧 {editEntry ? 'Water bewerken' : 'Water toevoegen'}
           </h2>
           <button
             onClick={onClose}
@@ -98,6 +137,20 @@ export function AddWaterModal({ isOpen, onClose, date }: Props) {
           ))}
         </div>
 
+        {/* Time Selection */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Tijd
+          </label>
+          <input
+            type="time"
+            value={customTime}
+            onChange={(e) => setCustomTime(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            disabled={isAdding}
+          />
+        </div>
+
         {/* Custom Amount */}
         <form onSubmit={handleCustomSubmit} className="space-y-4">
           <div>
@@ -120,7 +173,7 @@ export function AddWaterModal({ isOpen, onClose, date }: Props) {
                 disabled={isAdding || !customAmount}
                 className="px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isAdding ? 'Bezig...' : 'Toevoegen'}
+                {isAdding ? 'Bezig...' : (editEntry ? 'Bijwerken' : 'Toevoegen')}
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useEntries, useProducts, useWeights, useSettings, usePortions, useTemplates, useActivities } from '@/hooks';
+import { useWaterEntries } from '@/hooks/useWaterEntries';
 import { entriesService } from '@/services/entries.service';
 import { productsService } from '@/services/products.service';
 import { weightsService } from '@/services/weights.service';
@@ -7,11 +8,13 @@ import { settingsService } from '@/services/settings.service';
 import { portionsService } from '@/services/portions.service';
 import { templatesService } from '@/services/templates.service';
 import { activitiesService } from '@/services/activities.service';
+import { waterEntriesService } from '@/services/water-entries.service';
 import { downloadTextFile } from '@/utils/download.utils';
-import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, WaterEntry, HeartRateSample, SleepSample, StepsSample } from '@/types';
 import { GarminImportSection } from './GarminImportSection';
 import { HealthConnectImportSection } from './HealthConnectImportSection';
 import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
+import { db } from '@/services/database.service';
 
 interface BackupData {
   version: string;
@@ -23,6 +26,10 @@ interface BackupData {
   productPortions?: ProductPortion[];
   mealTemplates?: MealTemplate[];
   dailyActivities?: DailyActivity[];
+  waterEntries?: WaterEntry[];
+  heartRateSamples?: HeartRateSample[];
+  sleepSamples?: SleepSample[];
+  stepsSamples?: StepsSample[];
 }
 
 export function ImportExportTab() {
@@ -33,13 +40,19 @@ export function ImportExportTab() {
   const { portions, reloadPortions } = usePortions();
   const { templates, reloadTemplates } = useTemplates();
   const { activities, reloadActivities } = useActivities();
+  const { waterEntries, reloadWaterEntries } = useWaterEntries();
 
   const [importing, setImporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<string>('');
   const [importStatus, setImportStatus] = useState<string>('');
 
   // Export all data
-  const handleExportAll = () => {
+  const handleExportAll = async () => {
+    // Load health data samples from IndexedDB
+    const heartRateSamples = await db.heartRateSamples.toArray();
+    const sleepSamples = await db.sleepSamples.toArray();
+    const stepsSamples = await db.stepsSamples.toArray();
+
     const backup: BackupData = {
       version: BACKUP_SCHEMA_VERSION.CURRENT,
       exportDate: new Date().toISOString(),
@@ -50,6 +63,10 @@ export function ImportExportTab() {
       productPortions: portions,
       mealTemplates: templates,
       dailyActivities: activities,
+      waterEntries,
+      heartRateSamples,
+      sleepSamples,
+      stepsSamples,
     };
 
     const json = JSON.stringify(backup, null, 2);
@@ -146,6 +163,40 @@ export function ImportExportTab() {
     setTimeout(() => setExportStatus(''), 3000);
   };
 
+  const handleExportWaterEntries = () => {
+    const backup: BackupData = {
+      version: BACKUP_SCHEMA_VERSION.CURRENT,
+      exportDate: new Date().toISOString(),
+      waterEntries,
+    };
+
+    const json = JSON.stringify(backup, null, 2);
+    const filename = `voedseljournaal-water-${new Date().toISOString().split('T')[0]}.json`;
+    downloadTextFile(json, filename);
+    setExportStatus('✓ Water entries geëxporteerd');
+    setTimeout(() => setExportStatus(''), 3000);
+  };
+
+  const handleExportHealthData = async () => {
+    const heartRateSamples = await db.heartRateSamples.toArray();
+    const sleepSamples = await db.sleepSamples.toArray();
+    const stepsSamples = await db.stepsSamples.toArray();
+
+    const backup: BackupData = {
+      version: BACKUP_SCHEMA_VERSION.CURRENT,
+      exportDate: new Date().toISOString(),
+      heartRateSamples,
+      sleepSamples,
+      stepsSamples,
+    };
+
+    const json = JSON.stringify(backup, null, 2);
+    const filename = `voedseljournaal-health-data-${new Date().toISOString().split('T')[0]}.json`;
+    downloadTextFile(json, filename);
+    setExportStatus('✓ Health data geëxporteerd');
+    setTimeout(() => setExportStatus(''), 3000);
+  };
+
   // Import data
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -229,6 +280,30 @@ export function ImportExportTab() {
         console.log(`✅ Imported ${data.dailyActivities.length} activities`);
       }
 
+      // Import water entries (v1.13+)
+      if (data.waterEntries && data.waterEntries.length > 0) {
+        await waterEntriesService.importWaterEntries(data.waterEntries);
+        console.log(`✅ Imported ${data.waterEntries.length} water entries`);
+      }
+
+      // Import heart rate samples (v1.13+)
+      if (data.heartRateSamples && data.heartRateSamples.length > 0) {
+        await db.heartRateSamples.bulkPut(data.heartRateSamples);
+        console.log(`✅ Imported ${data.heartRateSamples.length} heart rate samples`);
+      }
+
+      // Import sleep samples (v1.13+)
+      if (data.sleepSamples && data.sleepSamples.length > 0) {
+        await db.sleepSamples.bulkPut(data.sleepSamples);
+        console.log(`✅ Imported ${data.sleepSamples.length} sleep samples`);
+      }
+
+      // Import steps samples (v1.13+)
+      if (data.stepsSamples && data.stepsSamples.length > 0) {
+        await db.stepsSamples.bulkPut(data.stepsSamples);
+        console.log(`✅ Imported ${data.stepsSamples.length} steps samples`);
+      }
+
       // Reload all data
       await Promise.all([
         reloadEntries(),
@@ -238,6 +313,7 @@ export function ImportExportTab() {
         reloadPortions(),
         reloadTemplates(),
         reloadActivities(),
+        reloadWaterEntries(),
       ]);
 
       const summary = [
@@ -333,7 +409,7 @@ export function ImportExportTab() {
             <div className="min-w-0 flex-1 mr-3">
               <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Volledige Backup</h3>
               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                {entries.length} maaltijden, {products.length} producten, {weights.length} gewichten, {portions.length} porties, {templates.length} templates, {activities.length} activiteiten
+                Alle data: maaltijden, producten, gewichten, porties, templates, activiteiten, water, health samples
               </p>
             </div>
             <button
@@ -416,6 +492,32 @@ export function ImportExportTab() {
             </div>
             <button
               onClick={handleExportActivities}
+              className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
+            >
+              Exporteer
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Water Intake</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{waterEntries.length} entries</p>
+            </div>
+            <button
+              onClick={handleExportWaterEntries}
+              className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
+            >
+              Exporteer
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div className="min-w-0 flex-1 mr-3">
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 text-sm sm:text-base">Health Data</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Heart rate, sleep, steps samples</p>
+            </div>
+            <button
+              onClick={handleExportHealthData}
               className="px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium text-sm whitespace-nowrap flex-shrink-0"
             >
               Exporteer

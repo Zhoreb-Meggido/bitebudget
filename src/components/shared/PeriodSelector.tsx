@@ -201,7 +201,7 @@ export function PeriodSelector({
   }, [dateRange, filteredEntries, onPeriodChange]);
 
   // Handle export
-  const handleExport = (format: 'csv' | 'pdf') => {
+  const handleExport = async (format: 'csv' | 'pdf') => {
     if (format === 'csv') {
       if (filteredEntries.length === 0) {
         alert('Geen data beschikbaar voor de geselecteerde periode.');
@@ -215,7 +215,7 @@ export function PeriodSelector({
 
       if (daysDiff <= 90) {
         // Daily aggregates with activity data (≤ 90 days)
-        exportDailyAggregatesToCSV(filteredEntries, activities, dateRange.startDate, dateRange.endDate);
+        await exportDailyAggregatesToCSV(filteredEntries, activities, dateRange.startDate, dateRange.endDate);
       } else if (daysDiff <= 365) {
         // Weekly aggregates (90-365 days)
         if (weeklyAggregates.length === 0) {
@@ -247,7 +247,7 @@ export function PeriodSelector({
         reportOptions = { startDate: dateRange.startDate, endDate: dateRange.endDate };
       }
 
-      generatePdfReport(entries, reportOptions);
+      await generatePdfReport(entries, reportOptions);
     }
   };
 

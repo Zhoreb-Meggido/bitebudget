@@ -25,6 +25,7 @@ export function JournalPage() {
   const [showAddMeal, setShowAddMeal] = useState(false);
   const [showAddWater, setShowAddWater] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Entry | undefined>();
+  const [editingWaterEntry, setEditingWaterEntry] = useState<WaterEntry | undefined>();
   const [quickAddTemplate, setQuickAddTemplate] = useState<MealTemplate | null>(null);
   const [breakdownModal, setBreakdownModal] = useState<{
     macroType: 'calories' | 'protein' | 'carbohydrates' | 'sugars' | 'fat' | 'saturatedFat' | 'fiber' | 'sodium';
@@ -568,17 +569,29 @@ export function JournalPage() {
                           </div>
                         </div>
                       </div>
-                      <button
-                        onClick={() => {
-                          if (confirm('Verwijder deze water entry?')) {
-                            deleteWaterEntry(item.data.id!);
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-800 text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
-                        aria-label="Verwijder water"
-                      >
-                        🗑️
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingWaterEntry(item.data);
+                            setShowAddWater(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800 text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
+                          aria-label="Bewerk water"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm('Verwijder deze water entry?')) {
+                              deleteWaterEntry(item.data.id!);
+                            }
+                          }}
+                          className="text-red-600 hover:text-red-800 text-xl min-w-[44px] min-h-[44px] flex items-center justify-center"
+                          aria-label="Verwijder water"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
@@ -699,8 +712,12 @@ export function JournalPage() {
         {/* Add Water Modal */}
         <AddWaterModal
           isOpen={showAddWater}
-          onClose={() => setShowAddWater(false)}
+          onClose={() => {
+            setShowAddWater(false);
+            setEditingWaterEntry(undefined);
+          }}
           date={selectedDate}
+          editEntry={editingWaterEntry}
         />
 
       </div>
