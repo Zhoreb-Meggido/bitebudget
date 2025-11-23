@@ -13,9 +13,10 @@ interface Props {
   onClose: () => void;
   date?: string; // Optional: defaults to today
   editEntry?: WaterEntry; // Optional: entry to edit
+  onSave?: () => void; // Optional: callback after save completes
 }
 
-export function AddWaterModal({ isOpen, onClose, date, editEntry }: Props) {
+export function AddWaterModal({ isOpen, onClose, date, editEntry, onSave }: Props) {
   const { addWaterEntry, updateWaterEntry } = useWaterEntries();
   const [customAmount, setCustomAmount] = useState<string>('');
   const [isAdding, setIsAdding] = useState(false);
@@ -84,6 +85,12 @@ export function AddWaterModal({ isOpen, onClose, date, editEntry }: Props) {
       // Reset time to current time
       const now = new Date();
       setCustomTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+
+      // Trigger reload callback if provided
+      if (onSave) {
+        onSave();
+      }
+
       onClose();
     } catch (error) {
       console.error('Failed to save water:', error);

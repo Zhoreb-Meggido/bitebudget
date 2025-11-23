@@ -19,7 +19,7 @@ export function JournalPage() {
   const { settings } = useSettings();
   const { weights } = useWeights();
   const { recentTemplates, trackUsage } = useTemplates();
-  const { waterEntries, getEntriesByDate: getWaterEntriesByDate, deleteWaterEntry } = useWaterEntries();
+  const { waterEntries, getEntriesByDate: getWaterEntriesByDate, deleteWaterEntry, reloadWaterEntries } = useWaterEntries();
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [showAddMeal, setShowAddMeal] = useState(false);
@@ -718,6 +718,11 @@ export function JournalPage() {
           }}
           date={selectedDate}
           editEntry={editingWaterEntry}
+          onSave={async () => {
+            // Force reload of water entries after save
+            // This ensures the journal updates immediately
+            await reloadWaterEntries();
+          }}
         />
 
       </div>
