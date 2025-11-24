@@ -411,7 +411,7 @@ interface UserSettings {
 
 ---
 
-### 9. Water Intake Tracking
+### 9. Water Intake Tracking ✅
 **Feature:** Dagelijkse water consumptie bijhouden met quick-add interface.
 
 **Database Schema:**
@@ -433,27 +433,40 @@ interface UserSettings {
 }
 ```
 
-**Features:**
-- [ ] **Quick Add Water**
+**Implemented:**
+- [x] **Database & Core Functionality**
+  - WaterEntry schema met date, timestamp, amount, soft delete
+  - water-entries.service.ts met CRUD operations
+  - useWaterEntries React hook
+  - Cloud sync support (backup schema v1.11)
+
+- [x] **Quick Add Water**
   - QuickActions: "💧 Water" button
   - Preset buttons: 250ml | 500ml | 750ml | Custom
   - One-tap toevoegen (geen modal nodig)
   - Toast notification: "250ml toegevoegd ✓"
 
-- [ ] **Daily Water Progress**
+- [x] **Daily Water Progress**
   - Dashboard card met circular progress
   - Total drunk today vs goal
   - Visual: 🟦🟦🟦⬜⬜ (8 glasses van 250ml)
 
+- [x] **Journal Integration**
+  - Water entries tonen per dag tussen meals
+  - 💧 icon voor water entries
+  - Edit/delete functionaliteit
+  - Entry.mealType === 'drink' telt mee als vochtinname
+
+**Nog te implementeren:**
 - [ ] **Water History**
-  - Journaal integratie: toon water entries per dag
   - Tracking tab: water heatmap (net als slaap/gewicht)
-  - Analyse tab: water trends over tijd
+  - Analyse tab: water trends over tijd (line chart)
+  - Historical overview per week/maand
 
 - [ ] **Hydration Insights**
   - Correlatie met activiteit (meer sporten = meer drinken?)
-  - Waarschuwing bij lage intake
-  - Weather integration? (warm weer → meer drinken reminder)
+  - Gemiddelde per dag over langere periode
+  - Streak tracking (consecutive days meeting goal)
 
 **UI/UX:**
 - QuickActions: 💧 Water knop (naast huidige 4)
@@ -471,13 +484,9 @@ interface UserSettings {
 - Inzicht in hydration patterns
 - Motivation door daily goal
 - Lichtgewicht feature (geen nutrition complexity)
+- Entry.mealType === 'drink' telt mee als vochtinname (voor dranken met voedingswaarde)
 
-**Effort:** ~3-4 uur
-- Database schema & service: ~1 uur
-- Quick-add UI in QuickActions: ~1 uur
-- Dashboard water card: ~1 uur
-- Journal integration & history: ~30 min
-- Cloud sync: ~30 min
+**Effort:** ~3-4 uur ✅ Voltooid
 
 ---
 

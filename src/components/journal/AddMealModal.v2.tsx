@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import type { Product, Entry, MealTemplate, ProductPortion, MealType } from '@/types';
+import type { Product, Entry, MealTemplate, ProductPortion, MealType, MealCategory } from '@/types';
 import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from '@/utils';
 import { useTemplates, usePortions, useDebounce } from '@/hooks';
 import { useModalLock } from '@/contexts/ModalStateContext';
@@ -37,8 +37,11 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
   const [mealType, setMealType] = useState<MealType | ''>('');
   const [productSearch, setProductSearch] = useState('');
   const [templateSearch, setTemplateSearch] = useState('');
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [newTemplateCategory, setNewTemplateCategory] = useState<MealCategory>('anders');
 
-  const { templates, recentTemplates, favoriteTemplates, trackUsage } = useTemplates();
+  const { templates, recentTemplates, favoriteTemplates, trackUsage, addTemplate } = useTemplates();
   const { portions: allPortions } = usePortions();
   const { markDirty, markClean } = useModalLock('add-meal-modal-v2');
 
@@ -163,6 +166,34 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
     await trackUsage(template.id!);
     setStep(2);
     markDirty(); // Mark modal as having unsaved changes
+  };
+
+  // Save current cart as template
+  const handleSaveAsTemplate = async () => {
+    if (!newTemplateName.trim()) {
+      alert('Vul een naam in voor de template');
+      return;
+    }
+
+    if (cart.length === 0) {
+      alert('Selecteer minimaal 1 product');
+      return;
+    }
+
+    const productDetails = cart.map(item => ({ name: item.product.name, grams: item.grams }));
+
+    await addTemplate({
+      name: newTemplateName,
+      category: newTemplateCategory,
+      products: productDetails,
+      isFavorite: false,
+      useCount: 0,
+    });
+
+    alert('Template opgeslagen!');
+    setShowSaveTemplateModal(false);
+    setNewTemplateName('');
+    setNewTemplateCategory('anders');
   };
 
   // Update cart item grams
@@ -624,6 +655,14 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
                 ✓ {isEditMode ? 'Opslaan' : 'Maaltijd toevoegen'}
               </button>
 
+              {/* Save as template button */}
+              <button
+                onClick={() => setShowSaveTemplateModal(true)}
+                className="w-full mt-2 px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg font-medium hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+              >
+                💾 Opslaan als template
+              </button>
+
               {/* Back button (mobile only) */}
               <button
                 onClick={() => setStep(1)}
@@ -635,6 +674,73 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
           )}
         </div>
       </div>
+
+      {/* Save Template Modal */}
+      {showSaveTemplateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Template opslaan</h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Naam template</label>
+                <input
+                  type="text"
+                  value={newTemplateName}
+                  onChange={(e) => setNewTemplateName(e.target.value)}
+                  placeholder="Bijv. Ontbijt standaard"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categorie</label>
+                <select
+                  value={newTemplateCategory}
+                  onChange={(e) => setNewTemplateCategory(e.target.value as MealCategory)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
+                >
+                  <option value="ontbijt">Ontbijt</option>
+                  <option value="lunch">Lunch</option>
+                  <option value="diner">Diner</option>
+                  <option value="snack">Snack</option>
+                  <option value="shake">Shake</option>
+                  <option value="anders">Anders</option>
+                </select>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">Geselecteerde producten:</p>
+                <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                  {cart.map((item, index) => (
+                    <li key={index}>• {item.product.name} ({item.grams}g)</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowSaveTemplateModal(false);
+                  setNewTemplateName('');
+                  setNewTemplateCategory('anders');
+                }}
+                className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-600 min-h-[44px]"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={handleSaveAsTemplate}
+                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 min-h-[44px]"
+              >
+                Opslaan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
