@@ -111,6 +111,9 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
           // Stop scanning FIRST to prevent multiple scans
           await stopScanning();
 
+          // Close the modal
+          onClose();
+
           // Then call the callback
           onScan(decodedText);
         },
