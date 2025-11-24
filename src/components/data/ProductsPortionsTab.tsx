@@ -114,6 +114,8 @@ export function ProductsPortionsTab() {
   const handleBarcodeScan = async (barcode: string) => {
     console.log('Barcode scanned:', barcode);
     setIsLoadingFromOff(true);
+    // Close scanner immediately after scan
+    setShowBarcodeScanner(false);
 
     try {
       const offProduct = await openFoodFactsService.getProductByBarcode(barcode);
@@ -148,7 +150,6 @@ export function ProductsPortionsTab() {
       alert(error.message || 'Fout bij ophalen product. Controleer je internetverbinding.');
     } finally {
       setIsLoadingFromOff(false);
-      setShowBarcodeScanner(false);
     }
   };
 

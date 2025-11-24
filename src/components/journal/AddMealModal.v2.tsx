@@ -264,10 +264,10 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-0 sm:p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-start justify-center p-0 sm:p-4 sm:pt-8 z-50 overflow-y-auto">
       {/* Mobile: Full screen with step transitions */}
       {/* Desktop: Two column layout */}
-      <div className="bg-white dark:bg-gray-800 w-full h-full sm:h-auto sm:max-h-[90vh] sm:rounded-xl sm:shadow-2xl sm:max-w-6xl flex flex-col sm:flex-row overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 w-full h-full sm:h-auto sm:max-h-[calc(100vh-4rem)] sm:rounded-xl sm:shadow-2xl sm:max-w-6xl flex flex-col sm:flex-row overflow-hidden">
 
         {/* LEFT COLUMN / STEP 1: Product Selection (hidden on mobile when step=2) */}
         <div className={`flex-1 flex flex-col overflow-hidden border-r border-gray-200 dark:border-gray-700 ${step === 2 ? 'hidden sm:flex' : 'flex'}`}>
@@ -627,7 +627,7 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
               {/* Totals */}
               <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 mb-3">
                 <div className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Totaal</div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
                     <span className="text-gray-600 dark:text-gray-400">Calorieën:</span>
                     <span className="font-semibold ml-1 text-gray-900 dark:text-gray-100">{mealTotals.calories}</span>
@@ -643,6 +643,14 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
                   <div>
                     <span className="text-gray-600 dark:text-gray-400">Vet:</span>
                     <span className="font-semibold ml-1 text-gray-900 dark:text-gray-100">{mealTotals.fat.toFixed(1)}g</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Vezels:</span>
+                    <span className="font-semibold ml-1 text-gray-900 dark:text-gray-100">{mealTotals.fiber.toFixed(1)}g</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Natrium:</span>
+                    <span className="font-semibold ml-1 text-gray-900 dark:text-gray-100">{mealTotals.sodium.toFixed(0)}mg</span>
                   </div>
                 </div>
               </div>
