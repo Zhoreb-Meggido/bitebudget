@@ -11,14 +11,15 @@ import { getTodayDate } from '@/utils';
 
 interface Props {
   onAddWater: () => void;
+  selectedDate?: string; // Optional: use this date instead of today
 }
 
-export function WaterIntakeCard({ onAddWater }: Props) {
+export function WaterIntakeCard({ onAddWater, selectedDate }: Props) {
   const { getTotalWaterByDate } = useWaterEntries();
   const { getEntriesByDate } = useEntries();
   const { settings } = useSettings();
 
-  const today = getTodayDate();
+  const today = selectedDate || getTodayDate();
 
   // Calculate total fluid intake for today
   const fluidIntake = useMemo(() => {
