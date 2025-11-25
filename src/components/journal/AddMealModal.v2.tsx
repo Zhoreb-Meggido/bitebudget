@@ -10,6 +10,24 @@ import { getCurrentTime, calculateProductNutrition, roundNutritionValues } from 
 import { useTemplates, usePortions, useDebounce } from '@/hooks';
 import { useModalLock } from '@/contexts/ModalStateContext';
 
+/**
+ * Parse optional number - returns 0 for empty values
+ */
+function parseDecimalSafe(value: string): number {
+  if (!value || value.trim() === '') return 0;
+  const parsed = parseFloat(value.replace(',', '.'));
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Parse optional integer - returns 0 for empty values
+ */
+function parseIntSafe(value: string): number {
+  if (!value || value.trim() === '') return 0;
+  const parsed = parseInt(value.replace(',', '.'));
+  return isNaN(parsed) ? 0 : parsed;
+}
+
 // Cart item - product with selected quantity
 interface CartItem {
   product: Product;
@@ -27,7 +45,7 @@ interface Props {
   quickAddTemplate?: MealTemplate | null;
 }
 
-type Tab = 'products' | 'templates';
+type Tab = 'products' | 'templates' | 'manual' | 'json';
 
 export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedDate, editEntry, onUpdateMeal, quickAddTemplate }: Props) {
   const [step, setStep] = useState<1 | 2>(1); // 1 = select products, 2 = review meal
@@ -40,6 +58,14 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateCategory, setNewTemplateCategory] = useState<MealCategory>('anders');
+
+  // Manual entry state
+  const [manualMeal, setManualMeal] = useState({
+    time: '', name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: ''
+  });
+
+  // JSON import state
+  const [mealJson, setMealJson] = useState('');
 
   const { templates, recentTemplates, favoriteTemplates, trackUsage, addTemplate } = useTemplates();
   const { portions: allPortions } = usePortions();
@@ -91,6 +117,8 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
       setMealType('');
       setProductSearch('');
       setTemplateSearch('');
+      setManualMeal({ time: '', name: '', calories: '', protein: '', carbohydrates: '', sugars: '', fat: '', saturatedFat: '', fiber: '', sodium: '' });
+      setMealJson('');
     }
   }, [editEntry, isOpen, products, markDirty]);
 
@@ -243,6 +271,63 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
     onClose();
   };
 
+  // Add manual meal
+  const handleAddManually = async () => {
+    if (!manualMeal.name.trim()) {
+      alert('Vul een naam in voor de maaltijd');
+      return;
+    }
+
+    const mealData = {
+      date: selectedDate,
+      time: manualMeal.time || getCurrentTime(),
+      name: manualMeal.name,
+      calories: parseIntSafe(manualMeal.calories),
+      protein: parseDecimalSafe(manualMeal.protein),
+      carbohydrates: parseDecimalSafe(manualMeal.carbohydrates),
+      sugars: parseDecimalSafe(manualMeal.sugars),
+      fat: parseDecimalSafe(manualMeal.fat),
+      saturatedFat: parseDecimalSafe(manualMeal.saturatedFat),
+      fiber: parseDecimalSafe(manualMeal.fiber),
+      sodium: parseIntSafe(manualMeal.sodium),
+    };
+
+    if (isEditMode && editEntry && onUpdateMeal) {
+      await onUpdateMeal(editEntry.id!, mealData);
+    } else {
+      await onAddMeal(mealData);
+    }
+
+    markClean();
+    onClose();
+  };
+
+  // Import from JSON
+  const handleImportJson = async () => {
+    try {
+      const data = JSON.parse(mealJson);
+      const mealData = {
+        date: selectedDate,
+        time: data.time || getCurrentTime(),
+        name: data.name || 'Geïmporteerde maaltijd',
+        calories: parseIntSafe(String(data.calories || 0)),
+        protein: parseDecimalSafe(String(data.protein || 0)),
+        carbohydrates: parseDecimalSafe(String(data.carbohydrates || 0)),
+        sugars: parseDecimalSafe(String(data.sugars || 0)),
+        fat: parseDecimalSafe(String(data.fat || 0)),
+        saturatedFat: parseDecimalSafe(String(data.saturatedFat || 0)),
+        fiber: parseDecimalSafe(String(data.fiber || 0)),
+        sodium: parseIntSafe(String(data.sodium || 0)),
+      };
+
+      await onAddMeal(mealData);
+      markClean();
+      onClose();
+    } catch (e) {
+      alert('Ongeldige JSON');
+    }
+  };
+
   // Calculate template totals for display
   const calculateTemplateTotals = (template: MealTemplate) => {
     let totals = { calories: 0, protein: 0, carbohydrates: 0, sugars: 0, saturatedFat: 0, fiber: 0, sodium: 0 };
@@ -285,19 +370,19 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
 
           {/* Tabs */}
           <div className="flex-shrink-0 px-4 pt-3">
-            <div className="grid grid-cols-2 gap-2">
-              {(['products', 'templates'] as Tab[]).map(t => (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {(['products', 'templates', 'manual', 'json'] as Tab[]).map(t => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  className={`px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 min-h-[44px] ${
+                  className={`px-2 py-2 rounded-lg font-medium transition flex flex-col sm:flex-row items-center justify-center gap-1 min-h-[44px] ${
                     tab === t
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                   }`}
                 >
-                  <span className="text-lg">{t === 'products' ? '📦' : '⭐'}</span>
-                  <span>{t === 'products' ? 'Producten' : 'Templates'}</span>
+                  <span className="text-lg">{t === 'products' ? '📦' : t === 'templates' ? '⭐' : t === 'manual' ? '✏️' : '📋'}</span>
+                  <span className="text-sm">{t === 'products' ? 'Producten' : t === 'templates' ? 'Templates' : t === 'manual' ? 'Handmatig' : 'JSON'}</span>
                 </button>
               ))}
             </div>
@@ -468,20 +553,117 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
             </div>
           )}
 
-          {/* Footer - Cart summary (mobile only) */}
-          <div className="sm:hidden flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
-            <button
-              onClick={() => setStep(2)}
-              disabled={cart.length === 0}
-              className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
-                cart.length === 0
-                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              Bekijk maaltijd ({cart.length})
-            </button>
-          </div>
+          {/* Manual Tab */}
+          {tab === 'manual' && (
+            <div className="flex-1 min-h-0 overflow-y-auto px-4 pt-4 pb-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Tijd (optioneel)</label>
+                  <input
+                    type="time"
+                    value={manualMeal.time}
+                    onChange={(e) => {
+                      setManualMeal({...manualMeal, time: e.target.value});
+                      markDirty();
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg min-h-[44px] text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Naam *</label>
+                  <input
+                    type="text"
+                    value={manualMeal.name}
+                    onChange={(e) => {
+                      setManualMeal({...manualMeal, name: e.target.value});
+                      markDirty();
+                    }}
+                    placeholder="Bijv. Lunch"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-base min-h-[44px] text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {(['calories', 'protein', 'carbohydrates', 'sugars', 'fat', 'saturatedFat', 'fiber', 'sodium'] as const).map(field => (
+                    <div key={field}>
+                      <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                        {field === 'calories' ? 'Calorieën' : field === 'protein' ? 'Eiwit (g)' : field === 'carbohydrates' ? 'Koolh (g)' : field === 'sugars' ? 'Suikers (g)' : field === 'fat' ? 'Vet (g)' : field === 'saturatedFat' ? 'Verz. vet (g)' : field === 'fiber' ? 'Vezels (g)' : 'Natrium (mg)'}
+                      </label>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step={field === 'calories' || field === 'sodium' ? '1' : '0.1'}
+                        value={manualMeal[field]}
+                        onChange={(e) => {
+                          setManualMeal({...manualMeal, [field]: e.target.value});
+                          markDirty();
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        placeholder="0"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg min-h-[44px] text-base text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={handleAddManually}
+                  disabled={!manualMeal.name.trim()}
+                  className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
+                    !manualMeal.name.trim()
+                      ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {isEditMode ? '✓ Opslaan' : '➕ Toevoegen'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* JSON Tab */}
+          {tab === 'json' && (
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-4 pt-4 pb-4">
+              <div className="flex-1 flex flex-col gap-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">JSON invoer</label>
+                <textarea
+                  value={mealJson}
+                  onChange={(e) => {
+                    setMealJson(e.target.value);
+                    markDirty();
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg font-mono text-sm text-gray-900 dark:text-gray-100 min-h-[200px]"
+                  placeholder='{"time": "12:00", "name": "Lunch", "calories": 500, "protein": 30, "carbohydrates": 50, "sugars": 10, "fat": 15, "saturatedFat": 5, "fiber": 8, "sodium": 500}'
+                />
+                <button
+                  onClick={handleImportJson}
+                  disabled={!mealJson.trim()}
+                  className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
+                    !mealJson.trim()
+                      ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  📥 Importeer JSON
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Footer - Cart summary (mobile only, for products/templates tabs) */}
+          {(tab === 'products' || tab === 'templates') && (
+            <div className="sm:hidden flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+              <button
+                onClick={() => setStep(2)}
+                disabled={cart.length === 0}
+                className={`w-full px-4 py-3 rounded-lg font-semibold transition ${
+                  cart.length === 0
+                    ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                Bekijk maaltijd ({cart.length})
+              </button>
+            </div>
+          )}
         </div>
 
         {/* RIGHT COLUMN / STEP 2: Review Meal (Cart) */}
