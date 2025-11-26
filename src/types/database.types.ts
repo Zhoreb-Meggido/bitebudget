@@ -331,6 +331,11 @@ export interface UserSettings {
   waterGoalMl: number;         // Daily water intake goal in ml (default: 2000)
   autoRefreshOAuth?: boolean;  // Enable automatic OAuth token refresh (default: true)
   theme?: ThemeMode;           // Theme preference (default: 'system')
+
+  // Intermittent Fasting settings
+  intermittentFasting?: boolean;  // Enable/disable IF tracking (default: false)
+  ifWindowStart?: string;         // Eating window start time in HH:mm format (default: '12:00')
+  ifWindowEnd?: string;           // Eating window end time in HH:mm format (default: '20:00')
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -345,6 +350,9 @@ export const DEFAULT_SETTINGS: UserSettings = {
   targetWeight: 78,
   waterGoalMl: 2000,
   theme: 'system',
+  intermittentFasting: false,
+  ifWindowStart: '12:00',
+  ifWindowEnd: '20:00',
 };
 
 export interface SettingsRecord {

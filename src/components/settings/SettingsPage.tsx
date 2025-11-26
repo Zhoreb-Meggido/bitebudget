@@ -17,8 +17,29 @@ export function SettingsPage() {
     setHasChanges(false);
   }, [settings]);
 
-  const handleChange = (field: keyof UserSettings, value: string) => {
-    const numValue = parseFloat(value);
+  const handleChange = (field: keyof UserSettings, value: string | number | boolean) => {
+    // Handle boolean directly
+    if (typeof value === 'boolean') {
+      setLocalSettings(prev => ({
+        ...prev,
+        [field]: value,
+      }));
+      setHasChanges(true);
+      return;
+    }
+
+    // Handle string time values (HH:mm)
+    if (typeof value === 'string' && value.includes(':')) {
+      setLocalSettings(prev => ({
+        ...prev,
+        [field]: value,
+      }));
+      setHasChanges(true);
+      return;
+    }
+
+    // Handle numeric values
+    const numValue = parseFloat(value as string);
     if (isNaN(numValue)) return;
 
     setLocalSettings(prev => ({
@@ -190,6 +211,104 @@ export function SettingsPage() {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+        </div>
+
+        {/* Water Intake */}
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">💧 Water Intake</h2>
+          <div className="max-w-xs">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Dagelijks doel (ml)
+            </label>
+            <input
+              type="number"
+              step="100"
+              value={localSettings.waterGoalMl}
+              onChange={(e) => handleChange('waterGoalMl', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Aanbevolen: 2000ml (8 glazen)
+            </p>
+          </div>
+        </div>
+
+        {/* Intermittent Fasting */}
+        <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">⏰ Intermittent Fasting</h2>
+
+          {/* Toggle */}
+          <div className="mb-4">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={localSettings.intermittentFasting || false}
+                onChange={(e) => handleChange('intermittentFasting', e.target.checked)}
+                className="w-5 h-5 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+              />
+              <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                IF tracking inschakelen
+              </span>
+            </label>
+            <p className="mt-2 ml-8 text-xs text-gray-500 dark:text-gray-400">
+              Visualiseer of maaltijden binnen je eating window vallen
+            </p>
+          </div>
+
+          {/* Time pickers (only shown when IF is enabled) */}
+          {localSettings.intermittentFasting && (
+            <div className="ml-8 space-y-3">
+              <div className="grid grid-cols-2 gap-3 max-w-md">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Window start
+                  </label>
+                  <input
+                    type="time"
+                    value={localSettings.ifWindowStart || '12:00'}
+                    onChange={(e) => handleChange('ifWindowStart', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Window eind
+                  </label>
+                  <input
+                    type="time"
+                    value={localSettings.ifWindowEnd || '20:00'}
+                    onChange={(e) => handleChange('ifWindowEnd', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Window duration preview */}
+              {localSettings.ifWindowStart && localSettings.ifWindowEnd && (() => {
+                const [startHour, startMin] = localSettings.ifWindowStart.split(':').map(Number);
+                const [endHour, endMin] = localSettings.ifWindowEnd.split(':').map(Number);
+                let durationHours = endHour - startHour;
+                let durationMins = endMin - startMin;
+                if (durationMins < 0) {
+                  durationHours -= 1;
+                  durationMins += 60;
+                }
+                if (durationHours < 0) durationHours += 24; // Handle overnight window
+
+                return (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-800">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-semibold">Eating window:</span> {localSettings.ifWindowStart} - {localSettings.ifWindowEnd}
+                      {' '}({durationHours}u {durationMins > 0 ? `${durationMins}m` : ''})
+                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      Maaltijden binnen dit window krijgen een groene border, maaltijden erbuiten een oranje border.
+                    </p>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}

@@ -673,7 +673,10 @@ export function AddMealModalV2({ isOpen, onClose, onAddMeal, products, selectedD
 
               {/* Back button (mobile only) */}
               <button
-                onClick={() => setStep(1)}
+                onClick={() => {
+                  setStep(1);
+                  setTab('products');
+                }}
                 className="sm:hidden w-full mt-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
               >
                 ← Meer producten toevoegen

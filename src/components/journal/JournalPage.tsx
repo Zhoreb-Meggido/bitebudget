@@ -13,6 +13,27 @@ import { MacroBreakdownModal } from './MacroBreakdownModal';
 import { AddWaterModal } from '@/components/modals/AddWaterModal';
 import { WaterIntakeCard } from '@/components/dashboard/WaterIntakeCard';
 
+/**
+ * Check if a meal time falls within the IF eating window
+ */
+function isWithinIFWindow(mealTime: string, windowStart: string, windowEnd: string): boolean {
+  const [mealHour, mealMin] = mealTime.split(':').map(Number);
+  const [startHour, startMin] = windowStart.split(':').map(Number);
+  const [endHour, endMin] = windowEnd.split(':').map(Number);
+
+  const mealMinutes = mealHour * 60 + mealMin;
+  const startMinutes = startHour * 60 + startMin;
+  const endMinutes = endHour * 60 + endMin;
+
+  // Handle overnight window (e.g., 20:00 - 12:00)
+  if (endMinutes < startMinutes) {
+    return mealMinutes >= startMinutes || mealMinutes <= endMinutes;
+  }
+
+  // Normal window (e.g., 12:00 - 20:00)
+  return mealMinutes >= startMinutes && mealMinutes <= endMinutes;
+}
+
 export function JournalPage() {
   const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
   const { products } = useProducts();
@@ -511,10 +532,19 @@ export function JournalPage() {
             <p className="text-gray-500 dark:text-gray-400 text-center py-4">Nog geen items toegevoegd</p>
           ) : (
             <div className="space-y-3">
-              {combinedEntries.map((item, index) => (
-                item.type === 'meal' ? (
+              {combinedEntries.map((item, index) => {
+                // Calculate IF border color for meals
+                let ifBorderClass = '';
+                if (item.type === 'meal' && settings.intermittentFasting && settings.ifWindowStart && settings.ifWindowEnd) {
+                  const withinWindow = isWithinIFWindow(item.data.time, settings.ifWindowStart, settings.ifWindowEnd);
+                  ifBorderClass = withinWindow
+                    ? 'border-l-4 border-green-500'
+                    : 'border-l-4 border-orange-400';
+                }
+
+                return item.type === 'meal' ? (
                   // Meal Entry
-                <div key={`meal-${item.data.id}`} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600">
+                <div key={`meal-${item.data.id}`} className={`bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 ${ifBorderClass}`}>
                   <div className="flex justify-between items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2 flex-wrap">
@@ -594,8 +624,8 @@ export function JournalPage() {
                       </div>
                     </div>
                   </div>
-                )
-              ))}
+                );
+              })}
             </div>
           )}
 
