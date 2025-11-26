@@ -522,7 +522,10 @@ export function JournalPage() {
 
         {/* Water Intake Progress */}
         <div className="mb-4 sm:mb-6">
-          <WaterIntakeCard onAddWater={() => setShowAddWater(true)} />
+          <WaterIntakeCard
+            onAddWater={() => setShowAddWater(true)}
+            selectedDate={selectedDate}
+          />
         </div>
 
         {/* Today's Meals & Water */}
