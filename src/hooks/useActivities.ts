@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { activitiesService } from '@/services/activities.service';
 import type { DailyActivity } from '@/types';
+import { scrollPositionManager } from '@/utils/scroll-position.utils';
 
 export function useActivities() {
   const [activities, setActivities] = useState<DailyActivity[]>([]);
@@ -21,9 +22,11 @@ export function useActivities() {
     loadActivities();
 
     // Listen for sync events to refresh data
-    const handleSync = () => {
+    const handleSync = async () => {
       console.log('🔄 useActivities: Reloading after sync');
-      loadActivities();
+      scrollPositionManager.savePosition('activities-sync');
+      await loadActivities();
+      setTimeout(() => scrollPositionManager.restorePosition('activities-sync'), 100);
     };
     window.addEventListener('data-synced', handleSync);
 

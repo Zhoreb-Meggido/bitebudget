@@ -12,6 +12,39 @@ import { DEFAULT_SETTINGS } from '@/types/database.types';
 import type { Entry, WaterEntry } from '@/types';
 import { waterEntriesService } from '@/services/water-entries.service';
 
+/**
+ * Helper function to save PDF with mobile support
+ * On mobile devices, opens the PDF in a new tab after downloading
+ */
+function savePdfWithMobileSupport(doc: jsPDF, fileName: string): void {
+  // Check if we're on a mobile device
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // On mobile: save the file AND open it in a new tab
+    const pdfBlob = doc.output('blob');
+    const blobUrl = URL.createObjectURL(pdfBlob);
+
+    // First, trigger download
+    doc.save(fileName);
+
+    // Then, after a short delay, open the PDF in a new tab
+    setTimeout(() => {
+      const newWindow = window.open(blobUrl, '_blank');
+      if (!newWindow) {
+        // If popup was blocked, show a message
+        console.log('PDF gedownload. Open de Downloads folder om het bestand te bekijken.');
+      }
+
+      // Clean up the blob URL after some time
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    }, 100);
+  } else {
+    // On desktop: just save normally
+    doc.save(fileName);
+  }
+}
+
 interface DayData {
   date: string;
   calories: number;
@@ -889,7 +922,7 @@ async function generateStandardPdfReport(entries: Entry[], options: ReportOption
 
   // Save PDF
   const fileName = `voedseljournaal_rapport_${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(fileName);
+  savePdfWithMobileSupport(doc, fileName);
 }
 
 /**
@@ -1293,7 +1326,7 @@ async function generateMonthlyPdfReport(entries: Entry[], options: ReportOptions
 
   // Save PDF
   const fileName = `voedseljournaal_maandrapport_${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(fileName);
+  savePdfWithMobileSupport(doc, fileName);
 }
 
 /**

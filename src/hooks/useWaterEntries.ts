@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { waterEntriesService } from '@/services/water-entries.service';
 import type { WaterEntry } from '@/types';
+import { scrollPositionManager } from '@/utils/scroll-position.utils';
 
 export function useWaterEntries() {
   const [waterEntries, setWaterEntries] = useState<WaterEntry[]>([]);
@@ -32,9 +33,11 @@ export function useWaterEntries() {
     loadWaterEntries();
 
     // Listen for sync events to refresh data
-    const handleSync = () => {
+    const handleSync = async () => {
       console.log('🔄 useWaterEntries: Reloading after sync');
-      loadWaterEntries();
+      scrollPositionManager.savePosition('water-sync');
+      await loadWaterEntries();
+      setTimeout(() => scrollPositionManager.restorePosition('water-sync'), 100);
     };
     window.addEventListener('data-synced', handleSync);
 

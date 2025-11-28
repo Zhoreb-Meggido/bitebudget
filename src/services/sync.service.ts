@@ -18,6 +18,7 @@ import { waterEntriesService } from './water-entries.service';
 import { db } from './database.service';
 import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
 import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, DayHeartRateSamples, DaySleepStages, DayStepsSamples, WaterEntry } from '@/types';
+import { userActivityTracker } from '@/utils/user-activity.utils';
 
 export interface SyncData {
   version: string;
@@ -98,6 +99,13 @@ class SyncService {
           return;
         }
 
+        // Wait for user to be idle before syncing
+        if (userActivityTracker.isActive()) {
+          console.log('⏰ Auto-sync: User is active, waiting for idle...');
+          await userActivityTracker.waitForIdle();
+          console.log('✓ User is now idle, proceeding with periodic sync');
+        }
+
         console.log('⏰ Auto-sync: Running periodic sync...');
         await this.syncToCloud(password, false); // Smart merge (not force)
       } catch (error) {
@@ -136,7 +144,7 @@ class SyncService {
   }
 
   /**
-   * Trigger auto-sync upload (debounced - waits 30 seconds after last change)
+   * Trigger auto-sync upload (debounced - waits 30 seconds after last change, then waits for idle)
    */
   triggerAutoSync(): void {
     if (!this.autoSyncEnabled) return;
@@ -156,9 +164,16 @@ class SyncService {
       clearTimeout(this.syncDebounceTimeout);
     }
 
-    // Set new timeout
+    // Set new timeout - wait 30 seconds after last change
     this.syncDebounceTimeout = window.setTimeout(async () => {
       try {
+        // Before syncing, wait for user to be idle (no interaction for 10+ seconds)
+        if (userActivityTracker.isActive()) {
+          console.log('⏳ Auto-sync: Waiting for user to be idle...');
+          await userActivityTracker.waitForIdle();
+          console.log('✓ User is now idle, proceeding with sync');
+        }
+
         await this.syncToCloud(password);
         console.log('Auto-sync: Data uploaded to Drive');
       } catch (error) {

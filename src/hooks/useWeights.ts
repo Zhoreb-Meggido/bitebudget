@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { weightsService } from '@/services/weights.service';
 import type { Weight } from '@/types';
+import { scrollPositionManager } from '@/utils/scroll-position.utils';
 
 export function useWeights() {
   const [weights, setWeights] = useState<Weight[]>([]);
@@ -33,9 +34,11 @@ export function useWeights() {
     loadWeights();
 
     // Listen for sync events to refresh data
-    const handleSync = () => {
+    const handleSync = async () => {
       console.log('🔄 useWeights: Reloading after sync');
-      loadWeights();
+      scrollPositionManager.savePosition('weights-sync');
+      await loadWeights();
+      setTimeout(() => scrollPositionManager.restorePosition('weights-sync'), 100);
     };
     window.addEventListener('data-synced', handleSync);
 

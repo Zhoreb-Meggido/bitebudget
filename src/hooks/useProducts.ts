@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { productsService } from '@/services/products.service';
 import type { Product } from '@/types';
+import { scrollPositionManager } from '@/utils/scroll-position.utils';
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -22,9 +23,11 @@ export function useProducts() {
     loadProducts();
 
     // Listen for sync events to refresh data
-    const handleSync = () => {
+    const handleSync = async () => {
       console.log('🔄 useProducts: Reloading after sync');
-      loadProducts();
+      scrollPositionManager.savePosition('products-sync');
+      await loadProducts();
+      setTimeout(() => scrollPositionManager.restorePosition('products-sync'), 100);
     };
     window.addEventListener('data-synced', handleSync);
 

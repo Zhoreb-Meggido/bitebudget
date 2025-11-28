@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { entriesService } from '@/services/entries.service';
 import type { Entry } from '@/types';
+import { scrollPositionManager } from '@/utils/scroll-position.utils';
 
 export function useEntries() {
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -22,9 +23,18 @@ export function useEntries() {
     loadEntries();
 
     // Listen for sync events to refresh data
-    const handleSync = () => {
+    const handleSync = async () => {
       console.log('🔄 useEntries: Reloading after sync');
-      loadEntries();
+
+      // Save scroll position before reload
+      scrollPositionManager.savePosition('entries-sync');
+
+      await loadEntries();
+
+      // Restore scroll position after reload (with small delay for DOM update)
+      setTimeout(() => {
+        scrollPositionManager.restorePosition('entries-sync');
+      }, 100);
     };
     window.addEventListener('data-synced', handleSync);
 
