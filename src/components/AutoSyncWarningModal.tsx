@@ -128,6 +128,8 @@ export function useAutoSyncWarning() {
       const isSignedIn = googleDriveService.isSignedIn();
 
       // Show warning if auto-sync is enabled but user is not signed in
+      // Note: isSignedIn() now returns true if automatic refresh is available,
+      // even if token is temporarily expired (will auto-refresh on next sync)
       if (autoSyncEnabled && !isSignedIn) {
         setShouldShowWarning(true);
       }

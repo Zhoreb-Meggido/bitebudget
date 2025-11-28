@@ -578,17 +578,44 @@ class GoogleDriveService {
 
   /**
    * Check if user is signed in
+   * Returns true if:
+   * - User has a valid (non-expired) token
+   * - User has automatic refresh enabled and token can be refreshed (even if currently expired)
    */
   isSignedIn(): boolean {
     const token = this.getAccessToken();
     if (!token) return false;
 
     // Check if token is expired (no buffer)
-    if (this.isTokenExpired(0)) {
-      return false;
+    const isExpired = this.isTokenExpired(0);
+
+    if (!isExpired) {
+      // Token is valid
+      return true;
     }
 
-    return true;
+    // Token is expired - check if we have automatic refresh capability
+    const method = localStorage.getItem('google_oauth_method');
+    if (method === 'authorization_code' && supabaseService.isAvailable()) {
+      // We have automatic refresh - consider user "signed in" even if token expired
+      // The refresh will happen automatically when ensureValidToken() is called
+
+      // But only if token hasn't been expired for too long (> 7 days)
+      const expiresAt = localStorage.getItem('google_token_expires_at');
+      if (expiresAt) {
+        const expiryTime = parseInt(expiresAt);
+        const expiredMs = Date.now() - expiryTime;
+        const maxRefreshAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+        if (expiredMs <= maxRefreshAge) {
+          // Token expired recently, automatic refresh should work
+          return true;
+        }
+      }
+    }
+
+    // Token expired and no automatic refresh available
+    return false;
   }
 
   /**

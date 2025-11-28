@@ -338,7 +338,7 @@ interface BarcodeMapping {
 
 ---
 
-### 8. Meal Timing & Intermittent Fasting Support
+### 8. Meal Timing & Intermittent Fasting Support ✅
 **Feature:** Maaltijd categorieën en intermittent fasting window tracking.
 
 **Database Schema:**
@@ -358,23 +358,24 @@ interface UserSettings {
 }
 ```
 
-**Features:**
-- [ ] **Settings Toggle voor IF**
+**Implemented:**
+- [x] **Settings Toggle voor IF**
   - Enable/disable intermittent fasting
   - Set eating window start/end time (time pickers)
   - Visual representation van window (bijv. "12:00 - 20:00")
 
-- [ ] **Meal Type Classification** (optioneel)
+- [x] **Meal Type Classification** (optioneel)
   - Dropdown bij maaltijd toevoegen: Ontbijt | Lunch | Diner | Snack
   - Default: geen categorisering (flexibel gebruik zoals nu)
   - Filter journaal op meal type
 
-- [ ] **IF Window Indicator**
+- [x] **IF Window Indicator**
   - Visual indicator op journaal tijdlijn
   - Groene zone = binnen window
   - Rode zone = buiten window
   - Niet-strict: alleen informatief, geen blocking
 
+**Nog te implementeren:**
 - [ ] **IF Statistics**
   - Percentage dagen binnen window
   - Gemiddelde eating window duration
@@ -387,14 +388,15 @@ interface UserSettings {
   - Correlatie met sleep/activiteit
 
 **UI/UX:**
-- Settings pagina: IF section met toggle en time pickers
-- Journaal: optionele meal type badges
-- Dashboard: IF adherence card (indien enabled)
-- Analyse tab: nieuwe "Timing" chart met eating patterns
+- ✅ Settings pagina: IF section met toggle en time pickers
+- ✅ Journaal: optionele meal type badges
+- ✅ IF window visualization op journaal
+- 🔲 Dashboard: IF adherence card (indien enabled)
+- 🔲 Analyse tab: nieuwe "Timing" chart met eating patterns
 
 **Cloud Sync:**
-- IF settings synced als onderdeel van UserSettings
-- Meal type synced met journal entries
+- ✅ IF settings synced als onderdeel van UserSettings
+- ✅ Meal type synced met journal entries
 
 **Voordelen:**
 - Inzicht in eating patterns
@@ -402,12 +404,7 @@ interface UserSettings {
 - Bewustwording van meal timing
 - Geen extra complexity als je IF niet gebruikt (opt-in)
 
-**Effort:** ~3-4 uur
-- Settings UI (IF toggle + time pickers): ~1 uur
-- Meal type dropdown op add meal: ~30 min
-- IF window visualization op journaal: ~1 uur
-- Dashboard IF card: ~30 min
-- Timing analysis chart: ~1 uur
+**Effort:** ~3-4 uur (basis features ✅ voltooid, advanced analytics nog open)
 
 ---
 

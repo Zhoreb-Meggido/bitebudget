@@ -66,6 +66,9 @@ npm run build
 - ✅ **Favorites** - Markeer producten en templates als favoriet
 - ✅ **Portie Templates** - 50+ voorgedefinieerde porties (snee brood, kop melk, etc.)
 - ✅ **8 Nutrition Metrics** - Calories, Protein, Carbs, Sugars, Fat, SatFat, Fiber, Sodium
+- ✅ **Meal Type Classification** - Optioneel categoriseren als Ontbijt/Lunch/Diner/Snack
+- ✅ **Intermittent Fasting Support** - IF window tracking met visuele indicator
+- ✅ **Water Tracking** - Dagelijkse water consumptie tracking met quick-add interface
 
 ### 🔍 Product Management
 - ✅ **OpenFoodFacts Integration** - 2+ miljoen producten database
@@ -118,6 +121,7 @@ npm run build
 - ✅ **Color-Coded Metrics** - Visual feedback voor goals
 - ✅ **Tooltips** - Helpful hover information
 - ✅ **Loading States** - Clear feedback tijdens data operations
+- ✅ **Sub-Tab Persistence** - Remember active tab across refreshes (v1.12+)
 
 ---
 
@@ -250,6 +254,7 @@ public/
   date: string;              // YYYY-MM-DD
   time: string;              // HH:MM
   name: string;
+  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack'; // IF support
   products?: Array<{name: string, grams: number}>;
   calories: number;
   protein: number;
@@ -422,7 +427,25 @@ public/
     fiberMin: number;
     sodiumMax: number;
     targetWeight: number;
+    waterGoalMl: number;                    // Water tracking goal (v1.11+)
+    intermittentFasting: boolean;           // IF enabled (v1.12+)
+    ifWindowStart: string;                  // IF eating window start (v1.12+)
+    ifWindowEnd: string;                    // IF eating window end (v1.12+)
   }
+}
+```
+
+**waterEntries** - Water Tracking (v1.11+)
+```typescript
+{
+  id: string;
+  date: string;              // YYYY-MM-DD
+  timestamp: number;         // Exact time
+  amount: number;            // ml
+  created_at: string;
+  updated_at: string;
+  deleted?: boolean;
+  deleted_at?: string;
 }
 ```
 
