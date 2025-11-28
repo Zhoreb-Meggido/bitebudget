@@ -35,12 +35,12 @@ function isWithinIFWindow(mealTime: string, windowStart: string, windowEnd: stri
 }
 
 export function JournalPage() {
-  const { entries, addEntry, updateEntry, deleteEntry, getEntriesByDate } = useEntries();
+  const { entries, addEntry, updateEntry, deleteEntry } = useEntries();
   const { products } = useProducts();
   const { settings } = useSettings();
   const { weights } = useWeights();
   const { recentTemplates, trackUsage } = useTemplates();
-  const { waterEntries, getEntriesByDate: getWaterEntriesByDate, deleteWaterEntry, reloadWaterEntries } = useWaterEntries();
+  const { waterEntries, deleteWaterEntry, reloadWaterEntries } = useWaterEntries();
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
   const [showAddMeal, setShowAddMeal] = useState(false);
@@ -66,11 +66,17 @@ export function JournalPage() {
     localStorage.setItem('journal_show_historical_data', String(showHistoricalData));
   }, [showHistoricalData]);
 
-  const todayEntries = getEntriesByDate(selectedDate);
+  // Get entries for selected date - use useMemo to ensure reactivity
+  const todayEntries = useMemo(() => {
+    return entries.filter(e => e.date === selectedDate).sort((a, b) => a.time.localeCompare(b.time));
+  }, [entries, selectedDate]);
+
   const totals = calculateTotals(todayEntries);
 
-  // Get water entries for selected date
-  const todayWaterEntries = getWaterEntriesByDate(selectedDate);
+  // Get water entries for selected date - use useMemo to ensure reactivity
+  const todayWaterEntries = useMemo(() => {
+    return waterEntries.filter(e => e.date === selectedDate);
+  }, [waterEntries, selectedDate]);
 
   // Combine and sort meal entries and water entries by time
   type CombinedEntry =
@@ -719,9 +725,7 @@ export function JournalPage() {
             setEditingEntry(undefined);
             setQuickAddTemplate(null);
           }}
-          onAddMeal={async (entry) => {
-            await addEntry(entry);
-          }}
+          onAddMeal={addEntry}
           onUpdateMeal={updateEntry}
           editEntry={editingEntry}
           products={products}
