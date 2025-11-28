@@ -10,7 +10,7 @@ import { templatesService } from '@/services/templates.service';
 import { activitiesService } from '@/services/activities.service';
 import { waterEntriesService } from '@/services/water-entries.service';
 import { downloadTextFile } from '@/utils/download.utils';
-import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, WaterEntry, HeartRateSample, SleepSample, StepsSample } from '@/types';
+import type { Entry, Product, Weight, UserSettings, ProductPortion, MealTemplate, DailyActivity, WaterEntry, DayHeartRateSamples, DaySleepStages, DayStepsSamples } from '@/types';
 import { GarminImportSection } from './GarminImportSection';
 import { HealthConnectImportSection } from './HealthConnectImportSection';
 import { BACKUP_SCHEMA_VERSION } from '@/constants/versions';
@@ -27,9 +27,9 @@ interface BackupData {
   mealTemplates?: MealTemplate[];
   dailyActivities?: DailyActivity[];
   waterEntries?: WaterEntry[];
-  heartRateSamples?: HeartRateSample[];
-  sleepSamples?: SleepSample[];
-  stepsSamples?: StepsSample[];
+  heartRateSamples?: DayHeartRateSamples[];
+  sleepStages?: DaySleepStages[];
+  stepsSamples?: DayStepsSamples[];
 }
 
 export function ImportExportTab() {
@@ -50,7 +50,7 @@ export function ImportExportTab() {
   const handleExportAll = async () => {
     // Load health data samples from IndexedDB
     const heartRateSamples = await db.heartRateSamples.toArray();
-    const sleepSamples = await db.sleepSamples.toArray();
+    const sleepStages = await db.sleepStages.toArray();
     const stepsSamples = await db.stepsSamples.toArray();
 
     const backup: BackupData = {
@@ -65,7 +65,7 @@ export function ImportExportTab() {
       dailyActivities: activities,
       waterEntries,
       heartRateSamples,
-      sleepSamples,
+      sleepStages,
       stepsSamples,
     };
 
@@ -179,14 +179,14 @@ export function ImportExportTab() {
 
   const handleExportHealthData = async () => {
     const heartRateSamples = await db.heartRateSamples.toArray();
-    const sleepSamples = await db.sleepSamples.toArray();
+    const sleepStages = await db.sleepStages.toArray();
     const stepsSamples = await db.stepsSamples.toArray();
 
     const backup: BackupData = {
       version: BACKUP_SCHEMA_VERSION.CURRENT,
       exportDate: new Date().toISOString(),
       heartRateSamples,
-      sleepSamples,
+      sleepStages,
       stepsSamples,
     };
 
@@ -292,10 +292,10 @@ export function ImportExportTab() {
         console.log(`✅ Imported ${data.heartRateSamples.length} heart rate samples`);
       }
 
-      // Import sleep samples (v1.13+)
-      if (data.sleepSamples && data.sleepSamples.length > 0) {
-        await db.sleepSamples.bulkPut(data.sleepSamples);
-        console.log(`✅ Imported ${data.sleepSamples.length} sleep samples`);
+      // Import sleep stages (v1.13+)
+      if (data.sleepStages && data.sleepStages.length > 0) {
+        await db.sleepStages.bulkPut(data.sleepStages);
+        console.log(`✅ Imported ${data.sleepStages.length} sleep stages`);
       }
 
       // Import steps samples (v1.13+)
