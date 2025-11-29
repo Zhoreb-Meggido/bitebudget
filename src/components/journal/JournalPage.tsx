@@ -66,9 +66,14 @@ export function JournalPage() {
     localStorage.setItem('journal_show_historical_data', String(showHistoricalData));
   }, [showHistoricalData]);
 
+  // Helper function to get entries by date
+  const getEntriesByDate = (date: string) => {
+    return entries.filter(e => e.date === date).sort((a, b) => a.time.localeCompare(b.time));
+  };
+
   // Get entries for selected date - use useMemo to ensure reactivity
   const todayEntries = useMemo(() => {
-    return entries.filter(e => e.date === selectedDate).sort((a, b) => a.time.localeCompare(b.time));
+    return getEntriesByDate(selectedDate);
   }, [entries, selectedDate]);
 
   const totals = calculateTotals(todayEntries);
@@ -725,7 +730,9 @@ export function JournalPage() {
             setEditingEntry(undefined);
             setQuickAddTemplate(null);
           }}
-          onAddMeal={addEntry}
+          onAddMeal={async (meal) => {
+            await addEntry(meal);
+          }}
           onUpdateMeal={updateEntry}
           editEntry={editingEntry}
           products={products}
