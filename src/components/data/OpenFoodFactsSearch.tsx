@@ -2,9 +2,10 @@
  * OpenFoodFactsSearch - Search products from OpenFoodFacts database
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Product } from '@/types';
 import { openFoodFactsService } from '@/services/openfoodfacts.service';
+import { useModalState } from '@/contexts/ModalStateContext';
 
 interface Props {
   isOpen: boolean;
@@ -17,6 +18,25 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Register modal state to prevent auto-sync from clearing search results
+  const { registerModal, unregisterModal } = useModalState();
+
+  useEffect(() => {
+    if (isOpen) {
+      // Register modal with dirty state check
+      registerModal('openfoodfacts-search', () => {
+        // Modal has "unsaved changes" if there are search results displayed
+        return searchResults.length > 0 || isSearching;
+      });
+    } else {
+      unregisterModal('openfoodfacts-search');
+    }
+
+    return () => {
+      unregisterModal('openfoodfacts-search');
+    };
+  }, [isOpen, searchResults.length, isSearching, registerModal, unregisterModal]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;

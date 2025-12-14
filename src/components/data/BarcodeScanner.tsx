@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { useModalState } from '@/contexts/ModalStateContext';
 
 interface Props {
   isOpen: boolean;
@@ -23,6 +24,24 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   const readerDivRef = useRef<HTMLDivElement>(null);
   const hasScannedRef = useRef(false); // Prevent multiple scans
   const [showCameraSelector, setShowCameraSelector] = useState(false);
+
+  // Register modal state to prevent auto-sync from interrupting scanning
+  const { registerModal, unregisterModal } = useModalState();
+
+  useEffect(() => {
+    if (isOpen) {
+      // Register modal - scanner is always considered "dirty" when open
+      registerModal('barcode-scanner', () => {
+        return isScanning; // Modal has unsaved state when actively scanning
+      });
+    } else {
+      unregisterModal('barcode-scanner');
+    }
+
+    return () => {
+      unregisterModal('barcode-scanner');
+    };
+  }, [isOpen, isScanning, registerModal, unregisterModal]);
 
   // Define stopScanning as a ref function to avoid dependency issues
   const stopScanning = async (showSelector = false) => {
