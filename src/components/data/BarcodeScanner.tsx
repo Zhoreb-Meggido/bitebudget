@@ -26,22 +26,21 @@ export function BarcodeScanner({ isOpen, onClose, onScan }: Props) {
   const [showCameraSelector, setShowCameraSelector] = useState(false);
 
   // Register modal state to prevent auto-sync from interrupting scanning
-  const { registerModal, unregisterModal } = useModalState();
+  const { registerDirtyModal, unregisterDirtyModal } = useModalState();
 
   useEffect(() => {
-    if (isOpen) {
-      // Register modal - scanner is always considered "dirty" when open
-      registerModal('barcode-scanner', () => {
-        return isScanning; // Modal has unsaved state when actively scanning
-      });
+    if (isOpen && isScanning) {
+      // Register modal when actively scanning
+      registerDirtyModal('barcode-scanner');
     } else {
-      unregisterModal('barcode-scanner');
+      // Unregister when closed or not scanning
+      unregisterDirtyModal('barcode-scanner');
     }
 
     return () => {
-      unregisterModal('barcode-scanner');
+      unregisterDirtyModal('barcode-scanner');
     };
-  }, [isOpen, isScanning, registerModal, unregisterModal]);
+  }, [isOpen, isScanning, registerDirtyModal, unregisterDirtyModal]);
 
   // Define stopScanning as a ref function to avoid dependency issues
   const stopScanning = async (showSelector = false) => {

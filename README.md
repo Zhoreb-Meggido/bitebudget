@@ -1,10 +1,10 @@
-# BiteBudget v1.13.0
+# BiteBudget v1.15.2
 
 **Progressive Web App (PWA) voor food tracking - werkt volledig offline met cloud sync!**
 
 Modern React + TypeScript food tracking app met OpenFoodFacts integratie en end-to-end encrypted Google Drive synchronisatie. Installeerbaar als native app op desktop en mobile - alle data lokaal met optionele cloud backup.
 
-**🎉 Nieuw in v1.13.0:** Steps Intraday Tracking - Volledige stappen tracking met Health Connect import, bar chart visualisatie en 👣 heatmap integratie!
+**🎉 Nieuw in v1.15.2:** Modal Guard Fixes - OpenFoodFacts zoekresultaten en barcode scanner worden nu beschermd tegen auto-sync onderbrekingen + Health Connect preview scrollbar!
 
 **📜 [Volledige Versiegeschiedenis →](VERSION_HISTORY.md)**
 
@@ -38,7 +38,7 @@ npm run build
 
 ---
 
-## ✨ Current Features (v1.13.0)
+## ✨ Current Features (v1.15.2)
 
 ### 📱 PWA Features
 - ✅ **Installeerbaar** - "Add to Home Screen" op iOS/Android
@@ -569,8 +569,8 @@ Personal project - All rights reserved
 
 ---
 
-**Current Version:** v1.13.0 (January 23, 2025)
-**Status:** Stable - Steps Intraday Tracking met Health Connect import
+**Current Version:** v1.15.2 (December 14, 2025)
+**Status:** Stable - Modal guard fixes en UX improvements
 **Next:** TBD
 
 **📜 [Complete Version History →](VERSION_HISTORY.md)**

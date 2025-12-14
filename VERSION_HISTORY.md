@@ -6,6 +6,29 @@ Complete changelog van alle releases met feature details en bugfixes.
 
 ## 📋 Detailed Changelog
 
+### **v1.15.2 - Modal Guard Fixes** (2025-12-14)
+
+#### **Bug Fixes** 🐛
+- ✅ **OpenFoodFacts Search Modal Guard** - Zoekresultaten worden niet meer gewist tijdens auto-sync
+  - Registreert modal als "dirty" wanneer er zoekresultaten zijn
+  - Auto-sync wordt uitgesteld totdat gebruiker klaar is met zoeken
+  - Voorkomt dataverlies bij actieve zoekopdrachten
+- ✅ **Barcode Scanner Modal Guard** - Scanner wordt niet meer onderbroken tijdens scannen
+  - Registreert modal als "dirty" wanneer actief aan het scannen
+  - Auto-sync wacht totdat scan voltooid is
+  - Betere gebruikerservaring bij barcode scanning
+
+#### **UX Improvements** 🎯
+- ✅ **Health Connect Preview Scrollbar** - Import preview krijgt max-height met scrollbar
+  - Toegevoegd `max-h-96 overflow-y-auto` aan data preview tabel
+  - Voorkomt ongelimiteerde hoogte bij grote datasets
+  - Betere leesbaarheid van import preview
+
+#### **Technical Changes** 🔧
+- ✅ **Modal State Context Integration** - Correct gebruik van `registerDirtyModal` / `unregisterDirtyModal` API
+- ✅ **Dependency Management** - useEffect hooks met correcte dependencies
+- ✅ **Code Cleanup** - Consistente modal guard implementatie
+
 ### **v1.13.0 - Steps Intraday Tracking** (2025-01-23)
 
 #### **Steps Tracking System** 👣

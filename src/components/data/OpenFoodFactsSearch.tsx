@@ -20,23 +20,21 @@ export function OpenFoodFactsSearch({ isOpen, onClose, onSelectProduct }: Props)
   const [error, setError] = useState<string | null>(null);
 
   // Register modal state to prevent auto-sync from clearing search results
-  const { registerModal, unregisterModal } = useModalState();
+  const { registerDirtyModal, unregisterDirtyModal } = useModalState();
 
   useEffect(() => {
-    if (isOpen) {
-      // Register modal with dirty state check
-      registerModal('openfoodfacts-search', () => {
-        // Modal has "unsaved changes" if there are search results displayed
-        return searchResults.length > 0 || isSearching;
-      });
+    if (isOpen && (searchResults.length > 0 || isSearching)) {
+      // Register modal when there are search results or actively searching
+      registerDirtyModal('openfoodfacts-search');
     } else {
-      unregisterModal('openfoodfacts-search');
+      // Unregister when closed or no results
+      unregisterDirtyModal('openfoodfacts-search');
     }
 
     return () => {
-      unregisterModal('openfoodfacts-search');
+      unregisterDirtyModal('openfoodfacts-search');
     };
-  }, [isOpen, searchResults.length, isSearching, registerModal, unregisterModal]);
+  }, [isOpen, searchResults.length, isSearching, registerDirtyModal, unregisterDirtyModal]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;

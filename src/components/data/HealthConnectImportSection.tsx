@@ -596,7 +596,7 @@ export function HealthConnectImportSection() {
 
             {/* Data Table */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-900">
                     <tr>
