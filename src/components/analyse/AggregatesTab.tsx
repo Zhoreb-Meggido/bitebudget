@@ -141,7 +141,10 @@ export function AggregatesTab() {
 
   // Prepare nutrition chart data
   const nutritionChartData = useMemo(() => {
-    const labels = currentAggregates.map(agg => {
+    // Reverse the order so oldest is on the left, newest on the right
+    const reversedAggregates = [...currentAggregates].reverse();
+
+    const labels = reversedAggregates.map(agg => {
       if (aggregationLevel === 'week') {
         return `W${agg.weekNumber} ${agg.year}`;
       } else {
@@ -152,7 +155,7 @@ export function AggregatesTab() {
     const datasets = NUTRITION_METRICS
       .filter(metric => selectedNutritionMetrics.has(metric.key))
       .map(metric => {
-        const data = currentAggregates.map(agg => {
+        const data = reversedAggregates.map(agg => {
           const nutritionData = agg.nutrition;
           switch (metric.key) {
             case 'calories': return nutritionData.avgCalories;
@@ -185,7 +188,7 @@ export function AggregatesTab() {
         if (targetValue > 0) {
           datasets.push({
             label: `${metric.label} doel`,
-            data: currentAggregates.map(() => targetValue),
+            data: reversedAggregates.map(() => targetValue),
             borderColor: metric.color,
             backgroundColor: 'transparent',
             borderDash: [5, 5],
@@ -203,7 +206,10 @@ export function AggregatesTab() {
 
   // Prepare activity chart data
   const activityChartData = useMemo(() => {
-    const labels = currentAggregates.map(agg => {
+    // Reverse the order so oldest is on the left, newest on the right
+    const reversedAggregates = [...currentAggregates].reverse();
+
+    const labels = reversedAggregates.map(agg => {
       if (aggregationLevel === 'week') {
         return `W${agg.weekNumber} ${agg.year}`;
       } else {
@@ -214,7 +220,7 @@ export function AggregatesTab() {
     const datasets = ACTIVITY_METRICS
       .filter(metric => selectedActivityMetrics.has(metric.key))
       .map(metric => {
-        const data = currentAggregates.map(agg => {
+        const data = reversedAggregates.map(agg => {
           const activityData = agg.activity;
           if (!activityData) return 0;
 

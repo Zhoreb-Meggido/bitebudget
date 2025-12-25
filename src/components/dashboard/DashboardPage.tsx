@@ -72,7 +72,14 @@ export function DashboardPage() {
   }, []);
 
   const [selectedMetrics, setSelectedMetrics] = useState<Set<MetricKey>>(new Set(['calories', 'protein', 'carbohydrates']));
-  const [filteredEntries, setFilteredEntries] = useState<Entry[]>(entries.filter(e => e.date <= yesterday));
+
+  // Initialize with last 14 days (matching defaultTimeRange)
+  const [filteredEntries, setFilteredEntries] = useState<Entry[]>(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 14);
+    const startDate = date.toISOString().split('T')[0];
+    return entries.filter(e => e.date >= startDate && e.date <= yesterday);
+  });
 
   // Aggregate entries per day
   const dailyData = useMemo(() => {
@@ -107,9 +114,18 @@ export function DashboardPage() {
       });
     });
 
-    // Aggregate water entries (exclude today)
+    // Get date range from filtered entries
+    let minDate = yesterday;
+    let maxDate = yesterday;
+    if (filteredEntries.length > 0) {
+      const dates = filteredEntries.map(e => e.date).sort();
+      minDate = dates[0];
+      maxDate = dates[dates.length - 1];
+    }
+
+    // Aggregate water entries (only for dates in filtered range)
     waterEntries
-      .filter(waterEntry => waterEntry.date <= yesterday)
+      .filter(waterEntry => waterEntry.date >= minDate && waterEntry.date <= maxDate)
       .forEach(waterEntry => {
         const existing = days.get(waterEntry.date) || {
           date: waterEntry.date,
@@ -218,7 +234,7 @@ export function DashboardPage() {
 
   // Prepare chart data
   const labels = dailyData.map(d => {
-    const date = new Date(d.date);
+    const date = new Date(d.date + 'T00:00:00');
     return `${date.getDate()}/${date.getMonth() + 1}`;
   });
 
